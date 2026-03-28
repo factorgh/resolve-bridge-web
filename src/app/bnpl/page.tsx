@@ -1,13 +1,39 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Zap, ShoppingCart, ArrowRight, Shield, Globe, Cpu, Users } from 'lucide-react';
+import { 
+  Box, 
+  Container, 
+  Typography, 
+  Grid, 
+  Card, 
+  CardContent, 
+  Stack, 
+  Button, 
+  Paper,
+  Divider,
+  Avatar,
+  Chip
+} from '@mui/material';
+import { 
+  BoltRounded, 
+  ShoppingCartRounded, 
+  ArrowForwardRounded, 
+  ShieldRounded, 
+  PublicRounded, 
+  SettingsSuggestRounded, 
+  GroupsRounded,
+  AddShoppingCartRounded,
+  LocalMallRounded,
+  StorefrontRounded,
+  VerifiedUserRounded
+} from '@mui/icons-material';
 import Link from 'next/link';
 import PageTemplate from '../components/PageTemplate';
 
-export default function BnplPage() {
-  const vendors = ["iStore Africa", "Samsung Store", "Shoprite Mall", "Jumia Ghana", "Konga Nigeria", "Decathlon Africa"];
+const vendors = ["iStore Africa", "Samsung Store", "Shoprite Mall", "Jumia Ghana", "Konga Nigeria", "Decathlon Africa"];
 
+export default function BnplPage() {
   return (
     <PageTemplate 
       title="Split Your" 
@@ -15,96 +41,152 @@ export default function BnplPage() {
       subtitle="Experience financial freedom with our integrated Buy Now Pay Later partners. Split your bill, not your dreams."
       noCard={true}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8rem', paddingBottom: '8rem' }}>
+      <Box className="pb-32 flex flex-col gap-16 md:gap-32">
         
         {/* Story Section */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '8rem', alignItems: 'center' }}>
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}
-          >
-            <div>
-              <span className="section-label">Retail Expansion</span>
-              <h2 style={{ fontSize: '4.5rem', fontWeight: 900, marginBottom: '2.5rem', letterSpacing: '-0.04em', lineHeight: 1 }}>Experience <br/> <span className="gradient-text italic">Financial Freedom</span> At Every Store.</h2>
-              <p style={{ color: 'var(--muted)', fontSize: '1.25rem', lineHeight: 1.8, marginBottom: '3.5rem', fontWeight: 500 }}>
-                Boost your purchasing power with our integrated BNPL partners across major retail categories. No hidden fees. Just seamless split payments across 4 major African markets.
-              </p>
-            </div>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem', padding: '2rem', background: 'rgba(0,0,0,0.02)', borderRadius: '32px', border: '1px solid var(--card-border)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f59e0b' }}>
-                   <Zap size={24} />
-                </div>
-                <p style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)' }}>Instant POS Approval</p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(37, 99, 235, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
-                   <Shield size={24} />
-                </div>
-                <p style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)' }}>Zero Interest on selected</p>
-              </div>
-            </div>
+        <Grid container spacing={{ xs: 8, lg: 12 }} alignItems="center">
+          <Grid size={{ xs: 12, lg: 6 }}>
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1 }}
+              className="flex flex-col gap-10 text-center lg:text-left items-center lg:items-start"
+            >
+              <Box>
+                <Typography variant="caption" className="text-blue-600 font-black uppercase tracking-[0.3em] block mb-4 text-[10px] md:text-xs">Retail Expansion</Typography>
+                <Typography variant="h2" className="font-black tracking-tighter leading-[1] md:leading-[0.95] mb-8 text-slate-900 text-3xl sm:text-4xl md:text-5xl lg:text-7xl">
+                  Experience <br/> <span className="text-blue-600 italic">Financial Freedom</span> <br/> At Every Store.
+                </Typography>
+                <Typography className="text-slate-500 text-base md:text-lg lg:text-xl font-medium leading-relaxed max-w-xl">
+                  Boost your purchasing power with our integrated BNPL partners across major retail categories. No hidden fees. Just seamless split payments across 4 major African markets.
+                </Typography>
+              </Box>
+              
+              <Grid container spacing={2.5} className="w-full">
+                {[
+                  { icon: <BoltRounded className="text-amber-500" />, label: "Instant POS Approval" },
+                  { icon: <ShieldRounded className="text-blue-500" />, label: "Zero Interest Cycles" }
+                ].map((item, i) => (
+                  <Grid size={{ xs: 12, sm: 6 }} key={i}>
+                    <Paper className="p-5 md:p-6 rounded-[32px] bg-slate-50 border border-slate-100 flex items-center gap-4 h-full">
+                      <Box className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center flex-shrink-0">
+                        {item.icon}
+                      </Box>
+                      <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-400 text-[9px] md:text-xs">{item.label}</Typography>
+                    </Paper>
+                  </Grid>
+                ))}
+              </Grid>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-               <p style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--muted)' }}>Integrated Retail Partners</p>
-               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-                  {vendors.map((v, idx) => (
-                    <div key={idx} className="glass-card" style={{ padding: '0.75rem 1.5rem', fontSize: '0.8rem', fontWeight: 800, borderRadius: '50px', background: 'rgba(0,0,0,0.03)', border: '1px solid var(--card-border)' }}>{v}</div>
-                  ))}
-               </div>
-            </div>
-          </motion.div>
+              <Box className="w-full">
+                 <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-300 block mb-6 px-1 text-[9px] md:text-xs">Integrated Retail Partners</Typography>
+                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap justifyContent={{ xs: 'center', lg: 'flex-start' }}>
+                    {vendors.map((v, idx) => (
+                      <Chip 
+                        key={idx} 
+                        label={v} 
+                        className="rounded-xl font-black text-[9px] md:text-[10px] tracking-widest bg-white border border-slate-100 py-5 md:py-6 px-3 md:px-4 hover:border-blue-400 transition-colors shadow-sm"
+                      />
+                    ))}
+                 </Stack>
+              </Box>
+            </motion.div>
+          </Grid>
 
-          {/* Visual Floating Mock UI */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            style={{ position: 'relative' }}
-          >
-             <div className="glass-card" style={{ padding: '0.75rem', borderRadius: '44px', boxShadow: 'var(--shadow-lg), var(--shadow-glow)' }}>
-                <div style={{ background: 'var(--foreground)', height: '550px', borderRadius: '38px', overflow: 'hidden', padding: '4rem 2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
-                   <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '300px', height: '300px', background: 'radial-gradient(circle, var(--primary-glow), transparent)', opacity: 0.3 }}></div>
-                   
-                   <ShoppingCart size={120} style={{ color: 'var(--primary)', marginBottom: '3rem', opacity: 0.8 }} />
-                   <h3 style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '2rem', textAlign: 'center', color: 'white', lineHeight: 1.1 }}>Your Next Purchase <br/>Is <span className="gradient-text italic">Ready.</span></h3>
-                   <p style={{ color: 'rgba(255,255,255,0.6)', textAlign: 'center', fontSize: '1.2rem', maxWidth: '350px', margin: '0 auto 4rem', fontWeight: 500 }}>Split your bill into 3, 6 or 12 easy monthly installments at zero risk to the merchant.</p>
-                   
-                   <Link href="/get-started" className="btn btn-primary" style={{ background: 'white', color: 'black', width: '100%', padding: '1.5rem', fontSize: '1.1rem' }}>Deploy BNPL Credit Now <ArrowRight size={20} style={{ marginLeft: '1rem' }} /></Link>
-                </div>
-             </div>
-             
-             {/* Floating Info */}
-             <div className="glass-card" style={{ position: 'absolute', bottom: '10%', right: '-10%', padding: '1.5rem 2rem', display: 'flex', gap: '1rem', alignItems: 'center', background: 'white', border: '1px solid var(--card-border)', boxShadow: 'var(--shadow-lg)' }}>
-                <Cpu size={24} className="text-primary" />
-                <div>
-                   <p style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--muted)', opacity: 0.6, letterSpacing: '0.1em' }}>Market Adoption</p>
-                   <p style={{ fontSize: '1rem', fontWeight: 900 }}>40% ⬆ Year-over-Year</p>
-                </div>
-             </div>
-          </motion.div>
-        </div>
+          {/* Visual UI Mock */}
+          <Grid size={{ xs: 12, lg: 6 }}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, rotate: 2 }}
+              whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1.2 }}
+              className="relative"
+            >
+               <Paper className="p-2 md:p-3 rounded-[40px] md:rounded-[64px] bg-white border border-slate-100 shadow-2xl relative z-10 overflow-hidden">
+                  <Box className="bg-[#020617] h-[450px] md:h-[600px] rounded-[32px] md:rounded-[56px] overflow-hidden p-8 md:p-12 flex flex-col items-center justify-center text-center relative">
+                     <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_rgba(37,99,235,0.15)_0%,_transparent_100%)]" />
+                     
+                     <Avatar className="w-20 h-20 md:w-32 md:h-32 bg-blue-600/10 text-blue-500 mb-8 md:mb-10 shadow-lg shadow-blue-600/5">
+                       <ShoppingCartRounded sx={{ fontSize: { xs: 40, md: 60 } }} />
+                     </Avatar>
+                     
+                     <Typography variant="h2" className="text-white font-black tracking-tighter mb-6 leading-[1.1] md:leading-none text-3xl md:text-5xl lg:text-6xl">
+                       Your Next <br/> Purchase Is <br/> <span className="text-blue-500 italic">Ready.</span>
+                     </Typography>
+                     <Typography className="text-slate-500 text-sm md:text-lg font-medium max-w-sm mb-10 md:mb-12">
+                       Split your bill into 3, 6 or 12 easy monthly installments at zero risk to the merchant.
+                     </Typography>
+                     
+                     <Button 
+                        fullWidth
+                        component={Link}
+                        href="/get-started"
+                        variant="contained"
+                        className="bg-white hover:bg-blue-600 hover:text-white text-slate-900 py-4 md:py-5 rounded-2xl font-black lowercase text-base md:text-xl transition-all shadow-xl shadow-blue-600/10"
+                        sx={{ textTransform: 'none' }}
+                        endIcon={<ArrowForwardRounded />}
+                     >
+                        Deploy BNPL Credit
+                     </Button>
+                  </Box>
+               </Paper>
+               
+               {/* Decorative floating stats */}
+               <motion.div 
+                 animate={{ y: [0, -10, 0] }} 
+                 transition={{ duration: 3, repeat: Infinity }}
+                 className="absolute -bottom-5 -right-5 md:-right-10 z-20 hidden md:block"
+               >
+                 <Paper className="p-8 rounded-[32px] border border-slate-100 bg-white shadow-2xl flex items-center gap-6">
+                    <Box className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                       <StorefrontRounded />
+                    </Box>
+                    <Box>
+                       <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-400 block opacity-60">Market Adoption</Typography>
+                       <Typography className="text-slate-900 font-black text-xl">40% ⬆ <span className="text-xs opacity-50 ml-1">YoY</span></Typography>
+                    </Box>
+                 </Paper>
+               </motion.div>
+            </motion.div>
+          </Grid>
+        </Grid>
 
-        {/* Closing CTA Box */}
-        <section style={{ paddingTop: '4rem' }}>
-           <div className="glass-card" style={{ padding: '6rem 4rem', borderRadius: '40px', background: 'rgba(0,0,0,0.02)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(37, 99, 235, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', marginBottom: '2.5rem' }}>
-                 <Users size={32} />
-              </div>
-              <h2 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '1.5rem', letterSpacing: '-0.04em' }}>Ready to Scale With <span className="gradient-text italic">BNPL?</span></h2>
-              <p style={{ color: 'var(--muted)', fontSize: '1.25rem', maxWidth: '600px', margin: '0 auto 4.5rem', fontWeight: 500 }}>Join the thousands of African consumers and merchants scaling their commerce with our unified split-payment search engine.</p>
-              <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                 <Link href="/get-started" className="btn btn-primary" style={{ padding: '1.25rem 3.5rem', fontSize: '1.1rem' }}>Apply for Checkout Credit</Link>
-                 <Link href="/contact" className="btn btn-secondary" style={{ padding: '1.25rem 3.5rem', fontSize: '1.1rem' }}>Merchant Partnership</Link>
-              </div>
-           </div>
-        </section>
-      </div>
+        {/* Closing Merchant Box */}
+        <Box className="px-4 md:px-0">
+           <Paper className="p-8 md:p-24 rounded-[40px] md:rounded-[64px] border border-slate-100 bg-slate-50/50 text-center flex flex-col items-center">
+              <Avatar className="w-16 h-16 md:w-20 md:h-20 bg-white text-blue-600 mb-8 md:mb-10 shadow-sm border border-slate-100">
+                 <GroupsRounded fontSize="large" />
+              </Avatar>
+              <Typography variant="h2" className="font-black tracking-tighter mb-6 leading-[1.1] md:leading-none text-slate-900 text-3xl sm:text-4xl md:text-6xl">
+                Ready to Scale With <br/> Institutional <span className="text-blue-600 italic">BNPL?</span>
+              </Typography>
+              <Typography className="text-slate-500 font-medium text-lg md:text-xl max-w-2xl mx-auto mb-12 md:mb-16 leading-relaxed">
+                Join the thousands of African consumers and merchants scaling their commerce with our unified split-payment search engine.
+              </Typography>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} justifyContent="center" alignItems="center" className="w-full sm:w-auto">
+                 <Button 
+                    href="/get-started"
+                    component={Link}
+                    variant="contained"
+                    className="bg-slate-900 hover:bg-blue-600 w-full sm:w-auto px-10 md:px-12 py-4 md:py-5 rounded-2xl text-lg md:text-xl font-black lowercase shadow-lg shadow-blue-600/10 transition-all"
+                    sx={{ textTransform: 'none' }}
+                 >
+                    Apply for Checkout Credit
+                 </Button>
+                 <Button 
+                    href="/contact"
+                    component={Link}
+                    variant="outlined"
+                    className="border-slate-200 text-slate-900 hover:bg-slate-50 w-full sm:w-auto px-10 md:px-12 py-4 md:py-5 rounded-2xl text-lg md:text-xl font-black lowercase transition-all"
+                    sx={{ textTransform: 'none' }}
+                 >
+                    Merchant Partnership
+                 </Button>
+              </Stack>
+           </Paper>
+        </Box>
+      </Box>
     </PageTemplate>
   );
 }

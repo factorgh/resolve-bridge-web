@@ -1,17 +1,42 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Shield, Lock, Eye, ArrowLeft, Globe, Zap, CheckCircle } from 'lucide-react';
+import { 
+  Box, 
+  Container, 
+  Typography, 
+  Grid, 
+  Card, 
+  CardContent, 
+  Stack, 
+  Button, 
+  Paper,
+  Divider,
+  Avatar
+} from '@mui/material';
+import { 
+  ShieldRounded, 
+  LockRounded, 
+  VisibilityRounded, 
+  ArrowBackRounded, 
+  PublicRounded, 
+  BoltRounded, 
+  CheckCircleRounded,
+  VerifiedUserRounded,
+  SecurityRounded,
+  PolicyRounded,
+  HistoryEduRounded
+} from '@mui/icons-material';
 import Link from 'next/link';
 import PageTemplate from '../components/PageTemplate';
 
-export default function PrivacyPage() {
-  const sections = [
-    { icon: Lock, title: "Data Architecture", content: "We use 256-bit AES encryption to protect your financial and personal data at all times. Our systems are audited by third-party security firms regularly." },
-    { icon: Eye, title: "Radical Transparency", content: "We only collect data that is strictly necessary for matching you with financial products. We never sell your data to third parties without explicit consent." },
-    { icon: Globe, title: "Global Compliance", content: "We comply with GDPR and local data protection regulations in Ghana, Nigeria, Kenya, and South Africa to ensure cross-border security." }
-  ];
+const sections = [
+  { icon: <LockRounded fontSize="large" />, title: "Data Architecture", content: "We use 256-bit AES encryption to protect your financial and personal data at all times. Our systems are audited by third-party security firms regularly." },
+  { icon: <VisibilityRounded fontSize="large" />, title: "Radical Transparency", content: "We only collect data that is strictly necessary for matching you with financial products. We never sell your data to third parties without explicit consent." },
+  { icon: <PublicRounded fontSize="large" />, title: "Global Compliance", content: "We comply with GDPR and local data protection regulations in Ghana, Nigeria, Kenya, and South Africa to ensure cross-border security." }
+];
 
+export default function PrivacyPage() {
   return (
     <PageTemplate 
       title="Privacy" 
@@ -19,10 +44,10 @@ export default function PrivacyPage() {
       subtitle="Your data is your most valuable asset. Our commitment is to protect it with institutional-grade security protocols."
       noCard={true}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6rem', paddingBottom: '8rem' }}>
+      <Box className="pb-32 flex flex-col gap-12 md:gap-24 px-4 md:px-0">
         
-        <div style={{ maxWidth: '900px', margin: '0 auto', width: '100%' }}>
-           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <Box className="max-w-4xl mx-auto w-full">
+           <Stack spacing={4}>
               {sections.map((s, idx) => (
                 <motion.div 
                   key={idx} 
@@ -30,53 +55,56 @@ export default function PrivacyPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.1, duration: 0.8 }}
-                  className="glass-card" 
-                  style={{ padding: '4rem', borderRadius: '32px', display: 'flex', gap: '3rem', alignItems: 'center', background: 'rgba(0,0,0,0.02)', border: '1px solid var(--card-border)' }}
                 >
-                   <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', flexShrink: 0, boxShadow: 'var(--shadow-md)' }}>
-                      <s.icon size={40} />
-                   </div>
-                   <div>
-                      <h3 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: '1rem', letterSpacing: '-0.02em' }}>{s.title}</h3>
-                      <p style={{ color: 'var(--muted)', fontSize: '1.1rem', lineHeight: 1.7, fontWeight: 500 }}>{s.content}</p>
-                   </div>
+                  <Paper className="p-8 md:p-10 rounded-[32px] md:rounded-[40px] border border-slate-100 bg-white hover:bg-slate-50 transition-all group shadow-sm flex flex-col md:flex-row gap-8 md:gap-10 items-center md:items-start text-center md:text-left">
+                     <Avatar className="w-16 h-16 md:w-20 md:h-20 rounded-[20px] md:rounded-[28px] bg-blue-50 text-blue-600 flex-shrink-0 shadow-sm transition-transform group-hover:scale-110">
+                        {s.icon}
+                     </Avatar>
+                     <Box>
+                        <Typography variant="h4" className="font-black text-slate-900 mb-4 tracking-tighter leading-[1.1] md:leading-none text-2xl md:text-3xl lg:text-4xl">{s.title}</Typography>
+                        <Typography className="text-slate-500 font-medium text-base md:text-lg leading-relaxed">{s.content}</Typography>
+                     </Box>
+                  </Paper>
                 </motion.div>
               ))}
-           </div>
+           </Stack>
 
            <motion.div 
-             initial={{ opacity: 0 }}
-             whileInView={{ opacity: 1 }}
+             initial={{ opacity: 0, scale: 0.95 }}
+             whileInView={{ opacity: 1, scale: 1 }}
              viewport={{ once: true }}
-             style={{ marginTop: '6rem', padding: '4rem', borderRadius: '40px', background: 'var(--foreground)', color: 'white', position: 'relative', overflow: 'hidden' }}
+             className="mt-16 md:mt-20"
            >
-              <div className="ambient-glow" style={{ top: '-40%', right: '-20%', opacity: 0.2 }}></div>
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(37, 99, 235, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
-                       <Zap size={20} />
-                    </div>
-                    <h4 style={{ fontSize: '1.25rem', fontWeight: 900 }}>Resolution & Updates</h4>
-                 </div>
-                 <p style={{ opacity: 0.7, fontSize: '1.1rem', lineHeight: 1.8, marginBottom: '2rem', fontWeight: 500 }}>
-                    This policy was last updated on March 25, 2026. We may update this policy as our services evolve and to comply with new regulations. Continued use of ResolveBridge after an update constitutes acceptance of the modified policy.
-                 </p>
-                 <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', marginBottom: '2rem' }}></div>
-                 <p style={{ opacity: 0.9, fontSize: '1rem', fontWeight: 600 }}>
-                    For any privacy-related inquiries, contact our Data Protection Officer: <br/>
-                    <span className="gradient-text italic" style={{ fontSize: '1.25rem', fontWeight: 900 }}>privacy@resolvebridge.com</span>
-                 </p>
-              </div>
+              <Paper className="p-10 md:p-20 rounded-[40px] md:rounded-[56px] bg-[#020617] text-white relative overflow-hidden shadow-2xl">
+                <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-600/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                <Box className="relative z-10 text-center md:text-left">
+                   <Stack direction="row" spacing={3} alignItems="center" justifyContent={{ xs: 'center', md: 'flex-start' }} className="mb-8 md:mb-10">
+                      <Avatar className="w-12 h-12 bg-white/5 border border-white/10 text-blue-500">
+                         <BoltRounded />
+                      </Avatar>
+                      <Typography variant="h5" className="font-black text-white text-xl md:text-2xl">Resolution & Updates</Typography>
+                   </Stack>
+                   <Typography className="text-slate-400 text-base md:text-lg font-medium leading-relaxed mb-8 md:mb-10 max-w-2xl mx-auto md:mx-0">
+                      This policy was last updated on March 25, 2026. We may update this policy as our services evolve and to comply with new regulations. Continued use of ResolveBridge after an update constitutes acceptance of the modified policy.
+                   </Typography>
+                   <Divider className="border-white/5 mb-8 md:mb-10" />
+                   <Box>
+                      <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-500 block mb-2 text-[10px] md:text-xs">Data Protection Officer</Typography>
+                      <Typography variant="h4" className="text-blue-500 font-black italic tracking-tighter text-xl md:text-3xl">privacy@resolvebridge.com</Typography>
+                   </Box>
+                </Box>
+              </Paper>
            </motion.div>
-        </div>
+        </Box>
 
         {/* Closing Action */}
-        <section style={{ textAlign: 'center', paddingTop: '4rem' }}>
-           <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', alignItems: 'center', color: 'var(--muted)', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-              <CheckCircle size={16} style={{ color: '#16a34a' }} /> ISO/IEC 27001 Certified Environment
-           </div>
-        </section>
-      </div>
+        <Box className="text-center py-8">
+           <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center" className="text-slate-400 font-black uppercase tracking-widest text-[9px] md:text-[10px] opacity-60">
+              <VerifiedUserRounded fontSize="small" className="text-emerald-500" />
+              <Typography variant="inherit">ISO/IEC 27001 Certified Environment</Typography>
+           </Stack>
+        </Box>
+      </Box>
     </PageTemplate>
   );
 }

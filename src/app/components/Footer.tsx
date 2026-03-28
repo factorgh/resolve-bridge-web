@@ -1,81 +1,121 @@
 'use client';
 
 import Link from 'next/link';
-import { Globe, Users, Shield, Mail, Phone, MapPin } from 'lucide-react';
+import { 
+  Box, 
+  Container, 
+  Typography, 
+  Grid, 
+  Stack, 
+  IconButton, 
+  Divider 
+} from '@mui/material';
+import { 
+  LinkedIn as LinkedInIcon,
+  Twitter as TwitterIcon,
+  Facebook as FacebookIcon,
+  Instagram as InstagramIcon,
+  MailRounded,
+  PhoneRounded,
+  RoomRounded
+} from '@mui/icons-material';
 
 export default function Footer() {
   return (
-    <footer className="footer-section">
-      <div className="container footer-container" style={{ paddingBottom: '4rem' }}>
-        <div className="footer-brand">
-          <Link href="/" className="footer-logo" style={{ fontSize: '1.75rem', fontWeight: '900', display: 'block', marginBottom: '1.5rem' }}>
-            Resolve<span className="gradient-text italic">Bridge</span>
-          </Link>
-          <p className="footer-desc" style={{ color: 'var(--muted)', fontSize: '0.95rem', lineHeight: '1.7', marginBottom: '2.5rem' }}>
-            The most comprehensive financial search engine across Africa. Bridging the gap for a better financial future through transparency and technology.
-          </p>
-          <div className="social-links" style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-            <a href="#" className="social-icon"><Globe size={18} /></a>
-            <a href="#" className="social-icon"><Users size={18} /></a>
-            <a href="#" className="social-icon"><Shield size={18} /></a>
-          </div>
-        </div>
+    <Box component="footer" className="bg-slate-50 border-t border-slate-100 pt-20 pb-12">
+      <Container maxWidth="lg">
+        <Grid container spacing={8}>
+          {/* Brand Column */}
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Stack spacing={4}>
+              <Link href="/" className="flex items-center gap-3">
+                <Box className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                  <img src="/resolve_icon.png" alt="Resolve" className="w-6 h-6" />
+                </Box>
+                <Typography variant="h5" className="font-black text-slate-900 tracking-tight">
+                  Resolve<span className="text-blue-600 italic">Bridge</span>
+                </Typography>
+              </Link>
+              <Typography className="text-slate-400 font-medium leading-relaxed max-w-sm">
+                The most comprehensive institutional financial engine across the African continent. Bridging the credit gap through technology and direct-to-bank transparency.
+              </Typography>
+              <Stack direction="row" spacing={2}>
+                {[LinkedInIcon, TwitterIcon, FacebookIcon, InstagramIcon].map((Icon, i) => (
+                  <IconButton key={i} className="bg-white border border-slate-100 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all shadow-sm">
+                    <Icon fontSize="small" />
+                  </IconButton>
+                ))}
+              </Stack>
+            </Stack>
+          </Grid>
 
-        <div className="footer-links" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem', flex: '1' }}>
-          <div className="footer-col">
-            <h4 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1.5rem', color: 'var(--foreground)' }}>Hub Modules</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <Link href="/loans" style={{ fontSize: '0.875rem', color: 'var(--muted)', transition: 'color 0.2s' }} onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--primary)')} onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--muted)')}>Credit & Loans</Link>
-              <Link href="/bnpl" style={{ fontSize: '0.875rem', color: 'var(--muted)', transition: 'color 0.2s' }}>BNPL Installments</Link>
-              <Link href="/insurance" style={{ fontSize: '0.875rem', color: 'var(--muted)', transition: 'color 0.2s' }}>Insurance Marketplace</Link>
-              <Link href="/resolve-vehicles" style={{ fontSize: '0.875rem', color: 'var(--muted)', transition: 'color 0.2s' }}>Resolve Vehicles</Link>
-            </div>
-          </div>
-          <div className="footer-col">
-            <h4 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1.5rem', color: 'var(--foreground)' }}>Organization</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <Link href="/about" style={{ fontSize: '0.875rem', color: 'var(--muted)', transition: 'color 0.2s' }}>Our Mission</Link>
-              <Link href="/features" style={{ fontSize: '0.875rem', color: 'var(--muted)', transition: 'color 0.2s' }}>Platform Features</Link>
-              <Link href="/contact" style={{ fontSize: '0.875rem', color: 'var(--muted)', transition: 'color 0.2s' }}>Join Our Team</Link>
-              <Link href="/privacy" style={{ fontSize: '0.875rem', color: 'var(--muted)', transition: 'color 0.2s' }}>Privacy Commitments</Link>
-            </div>
-          </div>
-          <div className="footer-col">
-            <h4 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1.5rem', color: 'var(--foreground)' }}>Connect</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', gap: '0.75rem', color: 'var(--muted)', fontSize: '0.875rem' }}><Mail size={16} /> support@resolvebridge.com</div>
-              <div style={{ display: 'flex', gap: '0.75rem', color: 'var(--muted)', fontSize: '0.875rem' }}><Phone size={16} /> +233 24 000 0000</div>
-              <div style={{ display: 'flex', gap: '0.75rem', color: 'var(--muted)', fontSize: '0.875rem', lineHeight: '1.4' }}><MapPin size={16} /> Airport City, Accra, Ghana</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="footer-bottom" style={{ borderTop: '1px solid var(--card-border)', paddingTop: '3rem', textAlign: 'center', background: 'var(--background)', position: 'relative', zIndex: '10' }}>
-         <p style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: '600', letterSpacing: '0.05em', textTransform: 'uppercase' }}>© {new Date().getFullYear()} ResolveBridge Global. Built for Pan-African Expansion.</p>
-      </div>
+          {/* Links Columns */}
+          <Grid size={{ xs: 12, md: 8 }}>
+            <Grid container spacing={4}>
+              <Grid size={{ xs: 6, sm: 4 }}>
+                <Typography variant="subtitle2" className="font-black text-slate-900 uppercase tracking-widest mb-6">Marketplace</Typography>
+                <Stack spacing={2}>
+                  <FooterLink href="/loans">Credit & Loans</FooterLink>
+                  <FooterLink href="/bnpl">BNPL Plans</FooterLink>
+                  <FooterLink href="/insurance">Insurance Hub</FooterLink>
+                  <FooterLink href="/resolve-vehicles">Resolve Vehicles</FooterLink>
+                </Stack>
+              </Grid>
+              <Grid size={{ xs: 6, sm: 4 }}>
+                <Typography variant="subtitle2" className="font-black text-slate-900 uppercase tracking-widest mb-6">Organization</Typography>
+                <Stack spacing={2}>
+                  <FooterLink href="/about">Our Mission</FooterLink>
+                  <FooterLink href="/features">Integrations</FooterLink>
+                  <FooterLink href="/contact">Join Network</FooterLink>
+                  <FooterLink href="/privacy">Legal Policy</FooterLink>
+                </Stack>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <Typography variant="subtitle2" className="font-black text-slate-900 uppercase tracking-widest mb-6">Contact Hub</Typography>
+                <Stack spacing={3}>
+                  <Box className="flex items-start gap-4 text-slate-400">
+                    <MailRounded fontSize="small" className="mt-1" />
+                    <Box>
+                      <Typography variant="caption" className="font-black uppercase text-slate-300 block">General Inquiry</Typography>
+                      <Typography className="font-bold text-slate-900 text-sm">support@resolvebridge.com</Typography>
+                    </Box>
+                  </Box>
+                  <Box className="flex items-start gap-4 text-slate-400">
+                    <RoomRounded fontSize="small" className="mt-1" />
+                    <Box>
+                      <Typography variant="caption" className="font-black uppercase text-slate-300 block">Regional Office</Typography>
+                      <Typography className="font-bold text-slate-900 text-sm">Airport City Business Park,<br />Accra, Ghana</Typography>
+                    </Box>
+                  </Box>
+                </Stack>
+              </Grid>
+            </Grid>
+          </Grid>
+        </Grid>
 
-      <style jsx>{`
-        .social-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: rgba(0,0,0,0.03);
-          border: 1px solid var(--card-border);
-          color: var(--muted);
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .social-icon:hover {
-          background: var(--primary);
-          color: white;
-          transform: translateY(-4px);
-          box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
-          border-color: var(--primary);
-        }
-      `}</style>
-    </footer>
+        <Divider className="my-12 border-slate-200" />
+
+        <Box className="flex flex-col md:flex-row justify-between items-center gap-6">
+          <Typography variant="caption" className="text-slate-400 font-bold uppercase tracking-widest">
+            © {new Date().getFullYear()} ResolveBridge Global Financial Engine. All Institutional Rights Reserved.
+          </Typography>
+          <Stack direction="row" spacing={4}>
+            <Link href="/privacy" className="text-[10px] font-black uppercase text-slate-300 hover:text-blue-600 transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="text-[10px] font-black uppercase text-slate-300 hover:text-blue-600 transition-colors">Terms of Service</Link>
+          </Stack>
+        </Box>
+      </Container>
+    </Box>
+  );
+}
+
+function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link 
+      href={href} 
+      className="text-slate-400 hover:text-blue-600 font-medium text-sm transition-all hover:translate-x-1 inline-block"
+    >
+      {children}
+    </Link>
   );
 }

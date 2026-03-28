@@ -1,266 +1,300 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Car, 
-  Fuel, 
-  Zap, 
-  Settings, 
-  ArrowLeft, 
-  Phone, 
-  ChevronRight, 
-  Shield, 
-  Award, 
-  TrendingUp, 
-  Star,
-  Cpu,
-  ArrowRight,
-  Globe
-} from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { 
+  Box, 
+  Typography, 
+  Grid, 
+  Card, 
+  CardContent, 
+  CardMedia, 
+  TextField, 
+  Button, 
+  Chip, 
+  InputAdornment, 
+  IconButton,
+  Paper,
+  Stack
+} from '@mui/material';
+import { 
+  SearchRounded as SearchIcon, 
+  SettingsRounded, 
+  LocalGasStationRounded, 
+  SpeedRounded, 
+  ChevronRightRounded,
+  FilterListRounded,
+  FavoriteBorderRounded,
+  StarRounded
+} from '@mui/icons-material';
 import PageTemplate from '../components/PageTemplate';
 
-const vehicles = [
-  {
-    id: 1,
-    name: "Atlas Luxury SUV",
-    price: "GH₵ 450,000",
-    priceOld: "GH₵ 495,000",
-    specs: { type: "SUV", fuel: "Petrol", drive: "AWD", year: "2024", seats: "7", power: "380hp" },
-    gallery: [
-      "https://images.unsplash.com/photo-1617469767011-2a12e23d3e78?w=1200&q=80",
-      "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=600&q=80",
-      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&q=80",
-    ],
-    tag: "Premium",
-    tagColor: "var(--primary)",
-    description: "Commanding presence meets uncompromising comfort. The Atlas redefines what it means to arrive in style.",
-    rating: 4.9,
-    reviews: 124,
-  },
-  {
-    id: 2,
-    name: "Nebula Electric Sedan",
-    price: "GH₵ 380,000",
-    priceOld: "GH₵ 418,000",
-    specs: { type: "Sedan", fuel: "Electric", drive: "RWD", year: "2024", seats: "5", power: "310hp" },
-    gallery: [
-      "https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=1200&q=80",
-      "https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=600&q=80",
-      "https://images.unsplash.com/photo-1593941707882-a5bba53b0998?w=600&q=80",
-    ],
-    tag: "Eco-Friendly",
-    tagColor: "#16a34a",
-    description: "Zero emissions, infinite possibilities. Built for those who demand performance without compromise.",
-    rating: 4.8,
-    reviews: 89,
-  },
-  {
-    id: 3,
-    name: "Titan 4x4 Off-Roader",
-    price: "GH₵ 520,000",
-    priceOld: "GH₵ 572,000",
-    specs: { type: "4x4", fuel: "Diesel", drive: "4WD", year: "2024", seats: "5", power: "450hp" },
-    gallery: [
-      "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=1200&q=80",
-      "https://images.unsplash.com/photo-1625047509248-ec889cbff17f?w=600&q=80",
-      "https://images.unsplash.com/photo-1566008757892-c42de3cb5a0f?w=600&q=80",
-    ],
-    tag: "Adventure",
-    tagColor: "var(--secondary)",
-    description: "Built for the road less travelled. The Titan conquers every terrain while keeping you in complete control.",
-    rating: 4.9,
-    reviews: 201,
-  }
+const initialVehicles = [
+  { id: 1, name: "Mercedes G-Wagon", manufacturer: "Mercedes-Benz", type: "SUV", fuel: "Petrol", transmission: "Auto", year: "2024", miles: "0 KM", image: "/cars/car-1.jpg", tag: "NEW" },
+  { id: 2, name: "BMW X7 M-Sport", manufacturer: "BMW", type: "SUV", fuel: "Petrol", transmission: "Auto", year: "2023", miles: "1,200 KM", image: "/cars/car-2.jpg", tag: "PREMIUM" },
+  { id: 3, name: "Toyota Land Cruiser 300", manufacturer: "Toyota", type: "4x4", fuel: "Diesel", transmission: "Auto", year: "2023", miles: "0 KM", image: "/cars/car-3.jpg", tag: "IN STOCK" },
+  { id: 4, name: "Range Rover Velar", manufacturer: "Land Rover", type: "SUV", fuel: "Petrol", transmission: "Auto", year: "2023", miles: "5,400 KM", image: "/cars/car-4.jpg", tag: "FEATURED" },
+  { id: 5, name: "Hyundai Tucson Premium", manufacturer: "Hyundai", type: "SUV", fuel: "Petrol", transmission: "Auto", year: "2024", miles: "0 KM", image: "/cars/car-5.jpg", tag: "NEW" },
+  { id: 6, name: "Kia Sportage GT-Line", manufacturer: "Kia", type: "SUV", fuel: "Hybrid", transmission: "Auto", year: "2024", miles: "0 KM", image: "/cars/car-6.jpg", tag: "ECO" },
+  { id: 7, name: "Audi Q7 S-Line", manufacturer: "Audi", type: "SUV", fuel: "Petrol", transmission: "Auto", year: "2023", miles: "4,500 KM", image: "/cars/car-7.jpg", tag: "" },
+  { id: 8, name: "Ford F-150 Raptor", manufacturer: "Ford", type: "Pick-up", fuel: "Petrol", transmission: "Auto", year: "2023", miles: "0 KM", image: "/cars/car-8.jpg", tag: "OFF-ROAD" },
+  { id: 9, name: "Tesla Model Y", manufacturer: "Tesla", type: "Sedan", fuel: "Electric", transmission: "Auto", year: "2024", miles: "0 KM", image: "/cars/car-9.jpg", tag: "EV" },
+  { id: 10, name: "Lexus LX 600", manufacturer: "Lexus", type: "SUV", fuel: "Petrol", transmission: "Auto", year: "2023", miles: "2,000 KM", image: "/cars/car-10.jpg", tag: "" },
 ];
 
-const stats = [
-  { icon: Shield, label: "Verified Listings", value: "500+" },
-  { icon: Award, label: "Years in Market", value: "12+" },
-  { icon: TrendingUp, label: "Financing Approved", value: "98%" },
-  { icon: Car, label: "Happy Clients", value: "3,200+" },
-];
+const segments = ["All", "SUV", "Sedan", "4x4", "Pick-up"];
 
-function VehicleCard({ vehicle, idx }: { vehicle: typeof vehicles[0]; idx: number }) {
-  const [activeImg, setActiveImg] = useState(0);
-
+function VehicleCard({ vehicle, idx }: { vehicle: typeof initialVehicles[0]; idx: number }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 50 }}
+      initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ delay: idx * 0.1, duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
-      className="glass-card"
-      style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
-        borderRadius: '32px', 
-        overflow: 'hidden', 
-        boxShadow: 'var(--shadow-lg)',
-        border: '1px solid var(--card-border)',
-        marginBottom: '4rem'
-      }}
+      transition={{ delay: idx * 0.05, duration: 0.6 }}
+      className="h-full"
     >
-      {/* Image Side */}
-      <div style={{ position: 'relative', overflow: 'hidden', minHeight: '400px' }}>
-        <AnimatePresence mode="wait">
-          <motion.img
-            key={activeImg}
-            src={vehicle.gallery[activeImg]}
+      <Card className="group relative h-full transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_60px_-15px_rgba(37,99,235,0.2)] overflow-hidden rounded-[32px] border border-slate-100 bg-white shadow-sm">
+        <Box className="relative overflow-hidden aspect-[4/3]">
+          <CardMedia
+            component="img"
+            image={vehicle.image}
             alt={vehicle.name}
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6 }}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
-        </AnimatePresence>
-        <span style={{ position: 'absolute', top: '24px', left: '24px', background: vehicle.tagColor, color: 'white', padding: '0.5rem 1rem', borderRadius: '50px', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{vehicle.tag}</span>
-        <div style={{ position: 'absolute', top: '24px', right: '24px', background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)', padding: '0.5rem 1rem', borderRadius: '50px', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: 'var(--shadow-md)' }}>
-          <Star size={14} fill="#facc15" stroke="none" />
-          <span style={{ fontWeight: 800, fontSize: '0.85rem' }}>{vehicle.rating}</span>
-        </div>
-        <div style={{ position: 'absolute', bottom: '24px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '0.5rem' }}>
-          {vehicle.gallery.map((img, i) => (
-            <button key={i} onClick={() => setActiveImg(i)} style={{ width: '60px', height: '40px', borderRadius: '8px', overflow: 'hidden', border: i === activeImg ? '2px solid white' : '2px solid transparent', cursor: 'pointer', padding: 0 }}>
-              <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            </button>
-          ))}
-        </div>
-      </div>
+          <Box className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          
+          {vehicle.tag && (
+            <Chip 
+              label={vehicle.tag} 
+              className="absolute top-4 left-4 bg-blue-600 font-black text-[9px] md:text-[10px] tracking-widest text-white rounded-xl"
+              size="small"
+            />
+          )}
+          
+          <IconButton className="absolute top-4 right-4 bg-white/70 backdrop-blur-md hover:bg-white text-slate-800 transition-all scale-0 group-hover:scale-100 duration-300">
+            <FavoriteBorderRounded fontSize="small" />
+          </IconButton>
+        </Box>
 
-      {/* Content Side */}
-      <div style={{ padding: '3.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '2rem' }}>
-        <div>
-           <p style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '1rem' }}>Inventory #RB-00{vehicle.id} · {vehicle.specs.year}</p>
-           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '2rem' }}>
-              <h3 style={{ fontSize: '2rem', fontWeight: 900, lineHeight: 1.1 }}>{vehicle.name}</h3>
-              <div style={{ textAlign: 'right' }}>
-                 <p style={{ fontSize: '0.85rem', color: 'var(--muted)', textDecoration: 'line-through', marginBottom: '0.25rem' }}>{vehicle.priceOld}</p>
-                 <p style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--primary)' }}>{vehicle.price}</p>
-              </div>
-           </div>
-        </div>
-        
-        <p style={{ color: 'var(--muted)', lineHeight: 1.7, fontSize: '1.05rem', fontWeight: 500 }}>{vehicle.description}</p>
-        
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-           {[
-             { icon: <Settings size={14} />, val: vehicle.specs.type },
-             { icon: vehicle.specs.fuel === 'Electric' ? <Zap size={14} /> : <Fuel size={14} />, val: vehicle.specs.fuel },
-             { icon: <Car size={14} />, val: vehicle.specs.drive },
-             { icon: <Cpu size={14} />, val: vehicle.specs.power },
-           ].map((s, i) => (
-             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(0,0,0,0.03)', padding: '0.5rem 1rem', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 800, color: 'var(--muted)' }}>
-               {s.icon} <span>{s.val}</span>
-             </div>
-           ))}
-        </div>
+        <CardContent className="p-5 md:p-6 h-full flex flex-col">
+          <Stack direction="row" justifyContent="space-between" alignItems="flex-start" className="mb-4">
+            <Box>
+              <Typography variant="body2" className="text-blue-600 font-bold uppercase tracking-widest text-[9px] md:text-[10px] mb-1">
+                {vehicle.manufacturer}
+              </Typography>
+              <Typography variant="h6" className="font-black tracking-tight text-slate-900 line-clamp-1 text-base md:text-lg">
+                {vehicle.name}
+              </Typography>
+            </Box>
+            <Typography className="text-emerald-500 font-black text-[10px] md:text-xs whitespace-nowrap pt-1 uppercase tracking-widest">
+              Available
+            </Typography>
+          </Stack>
 
-        <div style={{ display: 'flex', gap: '1rem', paddingTop: '1rem' }}>
-           <Link href={`/get-started?product=vehicle&id=${vehicle.id}`} className="btn btn-primary" style={{ flex: 1, padding: '1.25rem' }}>
-              Secure Financing <ArrowRight size={18} style={{ marginLeft: '0.75rem' }} />
-           </Link>
-           <a href="tel:0249709299" className="btn btn-secondary" style={{ padding: '1.25rem' }}>
-              <Phone size={18} />
-           </a>
-        </div>
-      </div>
+          <Grid container spacing={1} className="mb-6">
+            <Grid size={{ xs: 4 }}>
+              <Box className="bg-slate-50 p-2 rounded-2xl text-center border border-slate-100 h-full flex flex-col items-center justify-center">
+                <LocalGasStationRounded sx={{ fontSize: 16 }} className="text-slate-400 mb-1" />
+                <Typography className="text-[9px] md:text-[10px] font-bold text-slate-600 block leading-tight">{vehicle.fuel}</Typography>
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 4 }}>
+              <Box className="bg-slate-50 p-2 rounded-2xl text-center border border-slate-100 h-full flex flex-col items-center justify-center">
+                <SettingsRounded sx={{ fontSize: 16 }} className="text-slate-400 mb-1" />
+                <Typography className="text-[9px] md:text-[10px] font-bold text-slate-600 block leading-tight">{vehicle.transmission}</Typography>
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 4 }}>
+              <Box className="bg-slate-50 p-2 rounded-2xl text-center border border-slate-100 h-full flex flex-col items-center justify-center">
+                <SpeedRounded sx={{ fontSize: 16 }} className="text-slate-400 mb-1" />
+                <Typography className="text-[9px] md:text-[10px] font-bold text-slate-600 block leading-tight">{vehicle.year}</Typography>
+              </Box>
+            </Grid>
+          </Grid>
+
+          <Box className="mt-auto">
+            <Button 
+              fullWidth 
+              component={Link}
+              href={`/get-started?vehicle=${encodeURIComponent(vehicle.name)}`}
+              variant="contained" 
+              disableElevation
+              endIcon={<ChevronRightRounded />}
+              className="rounded-2xl py-3 bg-slate-900 hover:bg-blue-600 text-white font-bold transition-all text-sm md:text-base"
+              sx={{ textTransform: 'none' }}
+            >
+              Get Financed
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
     </motion.div>
   );
 }
 
 export default function ResolveVehiclesPage() {
   const [mounted, setMounted] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeSegment, setActiveSegment] = useState('All');
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  const filteredVehicles = useMemo(() => {
+    return initialVehicles.filter(v => {
+      const matchSegment = activeSegment === 'All' || v.type === activeSegment;
+      const matchSearch = v.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          v.manufacturer.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchSegment && matchSearch;
+    });
+  }, [activeSegment, searchQuery]);
+
   if (!mounted) return null;
 
   return (
     <PageTemplate 
-      title="Drive Your" 
-      gradientTitle="Best Life"
-      subtitle="Institutional-grade financing for world-class vehicles. Curated inventory, tailored to your financial profile."
+      title="Luxury & Commercial" 
+      gradientTitle="Marketplace"
+      subtitle="Experience the next generation of automotive procurement. Transparent, verified inventory with immediate ResolveBridge institutional financing."
       noCard={true}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8rem', paddingBottom: '8rem' }}>
+      <Box className="pb-32 flex flex-col gap-12 md:gap-24 px-4 md:px-0">
         
-        {/* Stats Strip */}
-        <section className="glass-card" style={{ padding: '3.5rem', borderRadius: '40px', background: 'rgba(0,0,0,0.02)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '3rem' }}>
-           {stats.map((s, i) => (
-             <motion.div 
-               key={i} 
-               initial={{ opacity: 0, y: 20 }} 
-               whileInView={{ opacity: 1, y: 0 }} 
-               viewport={{ once: true }} 
-               transition={{ delay: 0.1 * i }}
-               style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', textAlign: 'left' }}
-             >
-                <div style={{ padding: '1rem', borderRadius: '20px', background: 'white', color: 'var(--primary)', boxShadow: 'var(--shadow-md)' }}>
-                   <s.icon size={28} />
-                </div>
-                <div>
-                   <p style={{ fontSize: '1.85rem', fontWeight: 900, lineHeight: 1 }}>{s.value}</p>
-                   <p style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)' }}>{s.label}</p>
-                </div>
-             </motion.div>
-           ))}
-        </section>
+        {/* Modern Filter Hub */}
+        <Paper 
+          elevation={0}
+          className="relative -mt-16 z-10 p-5 md:p-8 rounded-[32px] md:rounded-[40px] border border-slate-100 bg-white/80 backdrop-blur-xl shadow-[0_30px_100px_-20px_rgba(0,0,0,0.12)]"
+        >
+          <Grid container spacing={{ xs: 3, md: 4 }} alignItems="center">
+            <Grid size={{ xs: 12, md: 5 }}>
+              <Typography variant="caption" className="font-black uppercase tracking-[0.2em] text-slate-400 block mb-3 text-[10px] md:text-xs">
+                Quick Marketplace Search
+              </Typography>
+              <TextField 
+                fullWidth
+                placeholder="Search models, brands, or types..."
+                variant="outlined"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                autoComplete="off"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon className="text-slate-400" />
+                    </InputAdornment>
+                  ),
+                  className: "rounded-2xl bg-slate-50/50 font-medium h-14"
+                }}
+                sx={{ '& .MuiOutlinedInput-notchedOutline': { border: 'none' } }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 7 }}>
+              <Typography variant="caption" className="font-black uppercase tracking-[0.2em] text-slate-400 block mb-3 text-[10px] md:text-xs text-center md:text-left">
+                Vehicle Categories
+              </Typography>
+              <Stack direction="row" spacing={1} className="overflow-x-auto pb-2 noscrollbar w-full justify-center md:justify-start">
+                {segments.map((seg) => (
+                  <Button
+                    key={seg}
+                    onClick={() => setActiveSegment(seg)}
+                    className={`rounded-2xl px-5 md:px-6 py-2.5 md:py-3 font-bold transition-all whitespace-nowrap text-sm ${
+                      activeSegment === seg 
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' 
+                        : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+                    }`}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    {seg}
+                  </Button>
+                ))}
+              </Stack>
+            </Grid>
+          </Grid>
+        </Paper>
 
-        {/* Inventory Header */}
-        <section>
-           <div style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto 6rem' }}>
-              <span className="section-label">Curated Selection</span>
-              <h2 style={{ fontSize: '4rem', fontWeight: 900, marginBottom: '1.5rem', letterSpacing: '-0.04em' }}>Featured Vehicles</h2>
-              <p style={{ color: 'var(--muted)', fontSize: '1.25rem', fontWeight: 500 }}>{vehicles.length} high-performance vehicles available today — all with ResolveBridge instant funding.</p>
-           </div>
-
-           <div style={{ display: 'flex', flexDirection: 'column' }}>
-             {vehicles.map((v, i) => (
-               <VehicleCard key={v.id} vehicle={v} idx={i} />
-             ))}
-           </div>
-        </section>
-
-        {/* Procurement CTA */}
-        <section className="glass-card" style={{ padding: '7rem 4rem', borderRadius: '48px', background: 'linear-gradient(135deg, var(--foreground), #1e293b)', color: 'white', position: 'relative', overflow: 'hidden' }}>
-           <div className="ambient-glow" style={{ top: '-30%', left: '-10%', opacity: 0.2 }}></div>
-           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '6rem', alignItems: 'center', position: 'relative', zIndex: 1 }}>
-              <div>
-                 <span className="section-label" style={{ color: 'var(--primary)' }}>Specialist Sourcing</span>
-                 <h2 style={{ fontSize: '4.5rem', fontWeight: 900, marginBottom: '2.5rem', letterSpacing: '-0.04em', lineHeight: 1 }}>Can't find your <br/> <span className="gradient-text italic">Dream Vehicle?</span></h2>
-                 <p style={{ opacity: 0.7, fontSize: '1.25rem', lineHeight: 1.8, marginBottom: '4rem', fontWeight: 500 }}>Our global procurement team scours the market daily. Tell us what you want and we'll source it with ResolveBridge financing built right in.</p>
-                 <Link href="/contact" className="btn btn-primary" style={{ background: 'white', color: 'black', padding: '1.5rem 3.5rem', fontSize: '1.1rem' }}>Contact Procurement Team <ArrowRight size={20} style={{ marginLeft: '1rem' }} /></Link>
+        {/* Inventory Body */}
+        <Box>
+          <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'center', md: 'flex-end' }} className="mb-12 gap-6 text-center md:text-left">
+            <Box>
+              <div className="flex items-center gap-2 mb-2 justify-center md:justify-start">
+                <StarRounded className="text-blue-600" fontSize="small" />
+                <Typography variant="caption" className="font-black uppercase tracking-widest text-blue-600 text-[10px] md:text-xs">
+                  Live Global Inventory
+                </Typography>
               </div>
-              
-              <div style={{ position: 'relative' }}>
-                 <div className="glass-card" style={{ padding: '0.75rem', borderRadius: '40px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <img 
-                      src="https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=1200&q=80" 
-                      alt="Global Sourcing" 
-                      style={{ width: '100%', borderRadius: '34px', filter: 'brightness(1.1) contrast(1.1)' }} 
-                    />
-                 </div>
-                 {/* Floating Badge */}
-                 <div className="glass-card" style={{ position: 'absolute', top: '10%', right: '-10%', padding: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center', background: 'var(--primary)', color: 'white', border: 'none', boxShadow: 'var(--shadow-lg)' }}>
-                    <Globe size={24} />
-                    <span style={{ fontWeight: 900, fontSize: '0.9rem' }}>Global Sourcing Unit</span>
-                 </div>
-              </div>
-           </div>
-        </section>
+              <Typography variant="h3" className="font-black tracking-tighter mb-2 text-2xl md:text-4xl">
+                Our Curated <span className="text-blue-600 italic">Selection.</span>
+              </Typography>
+              <Typography variant="body1" className="text-slate-500 font-medium text-sm md:text-base">
+                {filteredVehicles.length} vehicles available for immediate pickup or delivery.
+              </Typography>
+            </Box>
+            
+            <Button 
+              variant="outlined" 
+              startIcon={<FilterListRounded />}
+              className="rounded-xl border-slate-200 text-slate-900 font-bold px-6 py-3 hover:bg-slate-50 w-full md:w-auto"
+              sx={{ textTransform: 'none' }}
+            >
+              Custom Sourcing
+            </Button>
+          </Stack>
 
-        {/* Floating Call Action moved into the page better */}
-        <div style={{ position: 'fixed', bottom: '3rem', right: '3rem', zIndex: 100 }}>
-           <a href="tel:0249709299" className="btn btn-primary" style={{ height: '70px', width: '70px', borderRadius: '50%', padding: 0, boxShadow: '0 15px 40px var(--primary-glow)' }}>
-              <Phone size={32} />
-           </a>
-        </div>
-      </div>
+          <Grid container spacing={{ xs: 3, md: 4 }}>
+            {filteredVehicles.map((v, i) => (
+              <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={v.id}>
+                <VehicleCard vehicle={v} idx={i} />
+              </Grid>
+            ))}
+          </Grid>
+
+          {filteredVehicles.length === 0 && (
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }}
+              className="text-center py-20 md:py-32 bg-slate-50 rounded-[32px] md:rounded-[48px] border-2 border-dashed border-slate-200 mx-4 md:mx-0"
+            >
+              <Box className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+                <SearchIcon sx={{ fontSize: { xs: 32, md: 40 } }} className="text-slate-300" />
+              </Box>
+              <Typography variant="h5" className="font-black text-slate-900 mb-2 text-lg md:text-xl">No matches found</Typography>
+              <Typography className="text-slate-500 font-medium max-w-sm mx-auto text-sm md:text-base px-6">
+                We couldn&apos;t find any vehicles matching your current selection. Global sourcing is available upon request.
+              </Typography>
+            </motion.div>
+          )}
+        </Box>
+
+        {/* Sourcing CTA */}
+        <Box className="relative rounded-[40px] md:rounded-[64px] bg-[#020617] p-8 md:p-20 overflow-hidden text-center text-white mx-4 md:mx-0">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/20 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="relative z-10">
+            <Typography variant="h3" className="font-black tracking-tight mb-6 max-w-2xl mx-auto text-xl md:text-3xl lg:text-4xl leading-[1.2]">
+              Can&apos;t find your specific <span className="text-blue-500 italic">dream configuration?</span>
+            </Typography>
+            <Typography variant="body1" className="text-slate-400 mb-10 max-w-lg mx-auto font-medium text-sm md:text-lg">
+              ResolveBridge maintains a private sourcing network across Europe and North America. We can procure, ship, and finance any vehicle within 21 days.
+            </Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} justifyContent="center" alignItems="center">
+              <Button 
+                component={Link}
+                href="/contact"
+                variant="contained" 
+                className="bg-blue-600 hover:bg-blue-700 rounded-2xl px-10 py-4 font-bold text-lg w-full sm:w-auto"
+                sx={{ textTransform: 'none' }}
+              >
+                Start Sourcing Request
+              </Button>
+              <Typography className="text-slate-500 font-bold uppercase tracking-widest text-[9px] md:text-[10px]">
+                or call an advisor
+              </Typography>
+            </Stack>
+          </div>
+        </Box>
+
+      </Box>
     </PageTemplate>
   );
 }

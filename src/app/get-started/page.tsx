@@ -2,15 +2,34 @@
 
 import { motion } from 'framer-motion';
 import { 
-  ArrowRight, 
-  User, 
-  Mail, 
-  Lock, 
-  ShieldCheck,
-  Check,
-  Globe,
-  ChevronLeft
-} from 'lucide-react';
+  Box, 
+  Container, 
+  Typography, 
+  Grid, 
+  Card, 
+  CardContent, 
+  Stack, 
+  Button, 
+  Paper,
+  Divider,
+  Avatar,
+  TextField,
+  InputAdornment,
+  Checkbox,
+  FormControlLabel
+} from '@mui/material';
+import { 
+  ArrowForwardRounded, 
+  PersonRounded, 
+  EmailRounded, 
+  LockRounded, 
+  ShieldRounded,
+  CheckRounded,
+  PublicRounded,
+  ChevronLeftRounded,
+  VerifiedUserRounded,
+  BoltRounded
+} from '@mui/icons-material';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
@@ -30,142 +49,166 @@ export default function GetStartedPage() {
   ];
 
   return (
-    <main className="internal-page min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-white" style={{ position: 'relative', overflow: 'hidden' }}>
+    <main className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-white selection:bg-blue-100">
       
       {/* Visual Side */}
-      <section style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', position: 'relative', overflow: 'hidden', background: 'var(--foreground)', color: 'white', padding: '6rem' }} className="hidden lg:flex">
-         <div className="ambient-glow" style={{ top: '-10%', left: '-10%', opacity: 0.3 }}></div>
-         <div className="ambient-glow" style={{ bottom: '-20%', right: '-10%', width: '600px', height: '600px', background: 'radial-gradient(circle, var(--secondary-glow) 0%, transparent 70%)', opacity: 0.2 }}></div>
+      <section className="hidden lg:flex flex-col justify-center items-center relative overflow-hidden bg-[#020617] text-white p-24">
+         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.15)_0%,_transparent_100%)]" />
+         <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-blue-600/10 blur-[150px] rounded-full translate-y-1/2 translate-x-1/2" />
          
-         <div style={{ position: 'relative', zIndex: 10, maxWidth: '500px' }}>
-            <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '1rem', marginBottom: '6rem', color: 'white', fontWeight: 900, fontSize: '1.5rem', letterSpacing: '-0.04em' }}>
-               <img src="/resolve_icon.png" alt="Resolve" style={{ height: '40px', width: 'auto' }} />
-               <span>Resolve<span className="gradient-text italic">Bridge</span></span>
+         <Box className="relative z-10 max-w-lg">
+            <Link href="/" className="inline-flex items-center gap-4 mb-24 hover:opacity-80 transition-opacity">
+               <img src="/resolve_icon.png" alt="Resolve" className="h-10 w-auto" />
+               <Typography variant="h4" className="font-black tracking-tighter text-white">Resolve<span className="text-blue-500 italic">Bridge</span></Typography>
             </Link>
             
-            <motion.h1 
+            <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1 }}
-              style={{ fontSize: '4.5rem', fontWeight: 900, lineHeight: 0.95, marginBottom: '2.5rem', letterSpacing: '-0.06em' }}
             >
-              Start Your Financial Journey with <span className="gradient-text italic">Confidence.</span>
-            </motion.h1>
-            
-            <p style={{ fontSize: '1.25rem', opacity: 0.6, marginBottom: '6rem', fontWeight: 500, lineHeight: 1.7 }}>
-               Join thousands of visionaries scaling their financial footprint across the continent with Africa's premier search engine.
-            </p>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '3.5rem' }}>
-               {steps.map((s, i) => (
-                  <div key={i} style={{ display: 'flex', gap: '2rem' }}>
-                     <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: 900, flexShrink: 0 }}>
-                        {i + 1}
-                     </div>
-                     <div>
-                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>{s.title}</h4>
-                        <p style={{ opacity: 0.5, fontSize: '0.95rem', fontWeight: 500, lineHeight: 1.6 }}>{s.description}</p>
-                     </div>
-                  </div>
-               ))}
-            </div>
-         </div>
+              <Typography variant="h1" className="text-6xl font-black tracking-tighter leading-[0.9] mb-10">
+                Start Your Financial Journey with <br/><span className="text-blue-500 italic">Confidence.</span>
+              </Typography>
+              
+              <Typography className="text-xl text-slate-400 font-medium leading-relaxed mb-20">
+                 Join thousands of visionaries scaling their financial footprint across the continent with Africa's premier search engine.
+              </Typography>
+              
+              <Stack spacing={8}>
+                 {steps.map((s, i) => (
+                    <Stack key={i} direction="row" spacing={4} alignItems="flex-start">
+                       <Box className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-blue-500 font-black flex-shrink-0">
+                          {i + 1}
+                       </Box>
+                       <Box>
+                          <Typography variant="h6" className="font-black text-white mb-2 leading-none">{s.title}</Typography>
+                          <Typography variant="body2" className="text-slate-500 font-medium leading-relaxed">{s.description}</Typography>
+                       </Box>
+                    </Stack>
+                 ))}
+              </Stack>
+            </motion.div>
+         </Box>
          
-         {/* Floating Globe Ornament */}
-         <Globe size={400} style={{ position: 'absolute', bottom: '-10%', left: '-10%', opacity: 0.03, color: 'white' }} />
+         <PublicRounded sx={{ fontSize: 400 }} className="absolute -bottom-10 -left-10 opacity-[0.02] text-white pointer-events-none" />
       </section>
 
       {/* Form Side */}
-      <section style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '4rem', position: 'relative' }}>
-         <div style={{ position: 'absolute', top: '3rem', left: '3rem' }}>
-            <Link href="/" style={{ color: 'var(--muted)', fontWeight: 800, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: '0.5rem' }} className="hover-primary">
-               <ChevronLeft size={16} /> Back to Search
+      <section className="flex flex-col justify-center items-center p-8 md:p-24 relative bg-white">
+         <Box className="absolute top-10 left-10 md:top-20 md:left-20">
+            <Link href="/" className="flex items-center gap-2 text-slate-400 hover:text-blue-600 font-black uppercase tracking-widest text-[10px] transition-colors">
+               <ChevronLeftRounded fontSize="small" /> Back to Search
             </Link>
-         </div>
+         </Box>
 
          <motion.div 
            initial={{ opacity: 0, y: 20 }}
            animate={{ opacity: 1, y: 0 }}
            transition={{ duration: 0.8 }}
-           style={{ width: '100%', maxWidth: '420px' }}
+           className="w-full max-w-md"
          >
-            <div style={{ marginBottom: '4.5rem' }}>
-               <h2 style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '1rem', letterSpacing: '-0.04em' }}>Create Free <span className="gradient-text italic">Account</span></h2>
-               <p style={{ color: 'var(--muted)', fontWeight: 500, fontSize: '1.1rem' }}>Match with premium financial products in under 2 minutes.</p>
-            </div>
+            <Box className="mb-16">
+               <Typography variant="h2" className="text-4xl md:text-5xl font-black tracking-tighter mb-4 text-slate-900 leading-none">Create Free <br/><span className="text-blue-600 italic">Account</span></Typography>
+               <Typography className="text-slate-400 font-medium text-lg leading-relaxed">Match with premium financial products in under 2 minutes.</Typography>
+            </Box>
 
-            <form style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                     <label style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--muted)' }}>First Name</label>
-                     <div style={{ position: 'relative' }}>
-                        <User size={16} style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
-                        <input 
-                           type="text" 
-                           placeholder="John"
-                           style={{ width: '100%', padding: '1.25rem 1.25rem 1.25rem 3.5rem', borderRadius: '16px', border: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.02)', outline: 'none', fontWeight: 500 }}
-                        />
-                     </div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                     <label style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--muted)' }}>Last Name</label>
-                     <div style={{ position: 'relative' }}>
-                        <User size={16} style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
-                        <input 
-                           type="text" 
-                           placeholder="Doe"
-                           style={{ width: '100%', padding: '1.25rem 1.25rem 1.25rem 3.5rem', borderRadius: '16px', border: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.02)', outline: 'none', fontWeight: 500 }}
-                        />
-                     </div>
-                  </div>
-               </div>
+            <form className="flex flex-col gap-6">
+               <Grid container spacing={3}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <Stack spacing={1}>
+                       <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-400 text-[10px] px-1">First Name</Typography>
+                       <TextField 
+                         fullWidth
+                         placeholder="John"
+                         variant="outlined"
+                         InputProps={{
+                           startAdornment: <InputAdornment position="start"><PersonRounded className="text-slate-300" fontSize="small" /></InputAdornment>,
+                           className: "rounded-2xl bg-slate-50/50"
+                         }}
+                         sx={{ '& .MuiOutlinedInput-notchedOutline': { borderColor: '#f1f5f9' }, '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#e2e8f0' } }}
+                       />
+                    </Stack>
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <Stack spacing={1}>
+                       <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-400 text-[10px] px-1">Last Name</Typography>
+                       <TextField 
+                         fullWidth
+                         placeholder="Doe"
+                         variant="outlined"
+                         InputProps={{
+                           startAdornment: <InputAdornment position="start"><PersonRounded className="text-slate-300" fontSize="small" /></InputAdornment>,
+                           className: "rounded-2xl bg-slate-50/50"
+                         }}
+                         sx={{ '& .MuiOutlinedInput-notchedOutline': { borderColor: '#f1f5f9' } }}
+                       />
+                    </Stack>
+                  </Grid>
+               </Grid>
 
-               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  <label style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--muted)' }}>Work Email Address</label>
-                  <div style={{ position: 'relative' }}>
-                     <Mail size={16} style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
-                     <input 
-                        type="email" 
-                        placeholder="john@example.com"
-                        style={{ width: '100%', padding: '1.25rem 1.25rem 1.25rem 3.5rem', borderRadius: '16px', border: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.02)', outline: 'none', fontWeight: 500 }}
-                     />
-                  </div>
-               </div>
+               <Stack spacing={1}>
+                  <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-400 text-[10px] px-1">Work Email Address</Typography>
+                  <TextField 
+                    fullWidth
+                    placeholder="john@example.com"
+                    variant="outlined"
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start"><EmailRounded className="text-slate-300" fontSize="small" /></InputAdornment>,
+                      className: "rounded-2xl bg-slate-50/50"
+                    }}
+                    sx={{ '& .MuiOutlinedInput-notchedOutline': { borderColor: '#f1f5f9' } }}
+                  />
+               </Stack>
 
-               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  <label style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--muted)' }}>Secure Password</label>
-                  <div style={{ position: 'relative' }}>
-                     <Lock size={16} style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
-                     <input 
-                        type="password" 
-                        placeholder="••••••••"
-                        style={{ width: '100%', padding: '1.25rem 1.25rem 1.25rem 3.5rem', borderRadius: '16px', border: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.02)', outline: 'none', fontWeight: 500 }}
-                     />
-                  </div>
-               </div>
+               <Stack spacing={1}>
+                  <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-400 text-[10px] px-1">Secure Password</Typography>
+                  <TextField 
+                    fullWidth
+                    type="password"
+                    placeholder="••••••••"
+                    variant="outlined"
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start"><LockRounded className="text-slate-300" fontSize="small" /></InputAdornment>,
+                      className: "rounded-2xl bg-slate-50/50"
+                    }}
+                    sx={{ '& .MuiOutlinedInput-notchedOutline': { borderColor: '#f1f5f9' } }}
+                  />
+               </Stack>
 
-               <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                  <div style={{ width: '20px', height: '20px', borderRadius: '6px', border: '1px solid var(--card-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: 'var(--primary)', color: 'white', flexShrink: 0 }}>
-                     <Check size={14} />
-                  </div>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--muted)', fontWeight: 500, lineHeight: 1.5 }}>
-                     I agree to the <Link href="/terms" style={{ fontWeight: 800, color: 'var(--foreground)' }}>Terms of Service</Link> and <Link href="/privacy" style={{ fontWeight: 800, color: 'var(--foreground)' }}>Privacy Policy</Link>.
-                  </p>
-               </div>
+               <Box className="mt-4 pt-2">
+                  <FormControlLabel 
+                    control={<Checkbox defaultChecked sx={{ color: '#cbd5e1', '&.Mui-checked': { color: '#2563eb' } }} />}
+                    label={
+                      <Typography variant="body2" className="text-slate-500 font-medium">
+                        I agree to the <Link href="/terms" className="font-black text-slate-900 border-b border-slate-200">Terms of Service</Link> and <Link href="/privacy" className="font-black text-slate-900 border-b border-slate-200">Privacy Policy</Link>.
+                      </Typography>
+                    }
+                  />
+               </Box>
 
-               <button className="btn btn-primary" style={{ padding: '1.5rem', fontSize: '1.1rem', borderRadius: '20px', marginTop: '1rem' }}>
-                  Initialize Account <ArrowRight size={20} style={{ marginLeft: '1rem' }} />
-               </button>
+               <Button 
+                  variant="contained" 
+                  fullWidth
+                  className="bg-slate-900 hover:bg-blue-600 py-5 rounded-2xl text-xl font-black lowercase transition-all shadow-xl shadow-blue-600/10 mt-6"
+                  sx={{ textTransform: 'none' }}
+                  endIcon={<ArrowForwardRounded />}
+               >
+                  Initialize Account
+               </Button>
 
-               <div style={{ textAlign: 'center', marginTop: '3rem' }}>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--muted)', fontWeight: 500 }}>Already a member? <Link href="/login" style={{ fontWeight: 800, color: 'var(--primary)' }}>Secure Sign In</Link></p>
-               </div>
+               <Box className="text-center mt-12">
+                  <Typography variant="body2" className="text-slate-500 font-medium">
+                    Already a member? <Link href="/login" className="font-black text-blue-600 hover:text-blue-700">Secure Sign In</Link>
+                  </Typography>
+               </Box>
             </form>
          </motion.div>
          
-         <div style={{ position: 'absolute', bottom: '3rem', fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', opacity: 0.5, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <ShieldCheck size={14} style={{ color: '#16a34a' }} /> Bank-Grade Encryption Protocol V.4.0
-         </div>
+         <Box className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3 opacity-30 whitespace-nowrap">
+            <VerifiedUserRounded fontSize="small" className="text-emerald-500" />
+            <Typography variant="caption" className="font-black uppercase tracking-widest text-[8px] text-slate-900">Bank-Grade Encryption Protocol V.4.0</Typography>
+         </Box>
       </section>
     </main>
   );

@@ -1,18 +1,43 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Shield, CheckCircle, ArrowRight, HeartPulse, Car, Globe, Ship, Zap } from 'lucide-react';
+import { 
+  Box, 
+  Container, 
+  Typography, 
+  Grid, 
+  Card, 
+  CardContent, 
+  Stack, 
+  Button, 
+  Paper,
+  Divider,
+  Avatar
+} from '@mui/material';
+import { 
+  ShieldRounded, 
+  CheckCircleRounded, 
+  ArrowForwardRounded, 
+  FavoriteRounded, 
+  DirectionsCarRounded, 
+  PublicRounded, 
+  LocalShippingRounded, 
+  BoltRounded, 
+  VerifiedUserRounded, 
+  SecurityRounded, 
+  HealthAndSafetyRounded 
+} from '@mui/icons-material';
 import Link from 'next/link';
 import PageTemplate from '../components/PageTemplate';
 
-export default function InsurancePage() {
-  const insuranceTypes = [
-    { icon: Car, title: "Automotive & Fleet", description: "Comprehensive coverage for your vehicles and commercial fleets across 4 markets.", color: "var(--primary)" },
-    { icon: HeartPulse, title: "Health & Life", description: "Secure your future with affordable family and team health coverage options.", color: "var(--secondary)" },
-    { icon: Ship, title: "Transport & Logistics", description: "Specialized coverage for high-value assets and goods in transit internationally.", color: "#10b981" },
-    { icon: Globe, title: "Travel Protection", description: "Global travel insurance with direct payouts and local emergency support.", color: "#f59e0b" }
-  ];
+const insuranceTypes = [
+  { icon: <DirectionsCarRounded fontSize="large" />, title: "Automotive & Fleet", description: "Comprehensive coverage for your vehicles and commercial fleets across 4 markets.", color: "#2563eb" },
+  { icon: <HealthAndSafetyRounded fontSize="large" />, title: "Health & Life", description: "Secure your future with affordable family and team health coverage options.", color: "#7c3aed" },
+  { icon: <LocalShippingRounded fontSize="large" />, title: "Transport & Logistics", description: "Specialized coverage for high-value assets and goods in transit internationally.", color: "#10b981" },
+  { icon: <PublicRounded fontSize="large" />, title: "Travel Protection", description: "Global travel insurance with direct payouts and local emergency support.", color: "#f59e0b" }
+];
 
+export default function InsurancePage() {
   return (
     <PageTemplate 
       title="Uncompromising" 
@@ -20,108 +45,154 @@ export default function InsurancePage() {
       subtitle="One search engine. Infinite insurance possibilities. Secure your assets and health with Africa's most trusted partners."
       noCard={true}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8rem', paddingBottom: '8rem' }}>
+      <Box className="pb-32 flex flex-col gap-16 md:gap-32">
         
         {/* Insurance Grid */}
-        <section>
-          <div style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto 6rem' }}>
-             <span className="section-label">Coverage Modules</span>
-             <h2 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '1.5rem' }}>Asset & Health <span className="gradient-text italic">Protection</span></h2>
-             <p style={{ color: 'var(--muted)', fontSize: '1.15rem', fontWeight: 500 }}>Comprehensive coverage options tailored for the African continent's unique business and personal environments.</p>
-          </div>
+        <Box>
+          <Box className="text-center max-w-3xl mx-auto mb-16 md:mb-20 px-4">
+             <Typography variant="caption" className="text-blue-600 font-black uppercase tracking-[0.3em] block mb-4 text-[10px] md:text-xs">Coverage Modules</Typography>
+             <Typography variant="h2" className="font-black tracking-tighter mb-4 text-3xl md:text-5xl lg:text-6xl leading-[1]">Asset & Health <span className="text-blue-600 italic">Protection</span></Typography>
+             <Typography className="text-slate-400 font-medium text-base md:text-lg leading-relaxed">Comprehensive coverage options tailored for the African continent's unique business and personal environments.</Typography>
+          </Box>
 
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={{
-              visible: { transition: { staggerChildren: 0.1 } }
-            }}
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}
-          >
+          <Grid container spacing={{ xs: 3, md: 4 }}>
             {insuranceTypes.map((t, idx) => (
-              <motion.div 
-                key={idx} 
-                variants={{
-                  hidden: { opacity: 0, y: 30 },
-                  visible: { opacity: 1, y: 0, transition: { duration: 0.8 } }
-                }}
-                className="glass-card" 
-                style={{ padding: '3.5rem 2.5rem', borderRadius: '32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem', boxShadow: 'var(--shadow-md)' }}
-              >
-                <div style={{ width: '72px', height: '72px', borderRadius: '20px', background: 'rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.color }}>
-                  <t.icon size={32} />
-                </div>
-                <div>
-                   <h3 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '1rem' }}>{t.title}</h3>
-                   <p style={{ color: 'var(--muted)', fontSize: '0.95rem', lineHeight: 1.7, fontWeight: 500 }}>{t.description}</p>
-                </div>
-                <Link href="/get-started" className="btn btn-secondary" style={{ padding: '0.75rem 1.5rem', borderRadius: '50px', fontSize: '0.85rem' }}>
-                  Get Quote <ArrowRight size={16} style={{ marginLeft: '0.5rem' }} />
-                </Link>
-              </motion.div>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={idx}>
+                <motion.div 
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="h-full"
+                >
+                  <Card className="rounded-[40px] border border-slate-100 bg-white p-8 md:p-10 h-full shadow-sm hover:shadow-2xl hover:shadow-blue-900/5 transition-all duration-500 group flex flex-col items-center text-center">
+                    <Box 
+                      className="w-16 h-16 md:w-20 md:h-20 rounded-[24px] md:rounded-[28px] bg-slate-50 flex items-center justify-center mb-8 md:mb-10 transition-transform group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white"
+                      style={{ color: t.color }}
+                    >
+                      {t.icon}
+                    </Box>
+                    <Box className="flex-grow mb-8">
+                       <Typography variant="h5" className="font-black text-slate-900 mb-4 tracking-tight text-xl md:text-2xl">{t.title}</Typography>
+                       <Typography className="text-slate-400 font-medium leading-relaxed text-sm">{t.description}</Typography>
+                    </Box>
+                    <Button 
+                      fullWidth
+                      component={Link}
+                      href="/get-started"
+                      variant="outlined"
+                      className="rounded-2xl border-slate-200 text-slate-900 font-bold hover:bg-slate-50 lowercase text-sm py-3"
+                      sx={{ textTransform: 'none' }}
+                      endIcon={<ArrowForwardRounded />}
+                    >
+                      Get Quote
+                    </Button>
+                  </Card>
+                </motion.div>
+              </Grid>
             ))}
-          </motion.div>
-        </section>
+          </Grid>
+        </Box>
 
-        {/* CTA Section */}
-        <section style={{ paddingTop: '4rem' }}>
-           <div className="glass-card" style={{ padding: '8rem 4rem', borderRadius: '48px', background: 'linear-gradient(135deg, var(--foreground), #1e293b)', color: 'white', position: 'relative', overflow: 'hidden' }}>
-              <div className="ambient-glow" style={{ top: '-30%', left: '-10%', opacity: 0.2 }}></div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '6rem', alignItems: 'center', position: 'relative', zIndex: 1 }}>
-                 <div>
-                    <h2 style={{ fontSize: '4rem', fontWeight: 900, marginBottom: '2.5rem', letterSpacing: '-0.04em', lineHeight: 1 }}>Secure Your <br/> <span className="gradient-text italic">Dreams</span> Today.</h2>
-                    <p style={{ opacity: 0.7, fontSize: '1.25rem', lineHeight: 1.8, marginBottom: '4rem', fontWeight: 500 }}>Don't wait for the unexpected. Our integrated marketplace allows you to compare and procure the best insurance products in under 5 minutes.</p>
-                    
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                       {[
-                         "Verified Insurers Only",
-                         "Instant Quote Generation",
-                         "Direct Digitized Claim Support",
-                         "Multi-Market Regulatory Compliance"
-                       ].map((item, i) => (
-                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                           <Shield className="text-primary" size={20} />
-                           <span style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.8 }}>{item}</span>
-                         </div>
-                       ))}
-                    </div>
-                 </div>
+        {/* Strategic CTA Section */}
+        <Paper className="p-8 md:p-24 rounded-[40px] md:rounded-[64px] bg-[#020617] text-white relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-blue-600/10 blur-[200px] rounded-full -translate-y-1/2 -translate-x-1/2" />
+          
+          <Grid container spacing={{ xs: 8, lg: 12 }} alignItems="center" className="relative z-10">
+            <Grid size={{ xs: 12, lg: 7 }}>
+              <Stack spacing={4} className="text-center lg:text-left">
+                <Typography variant="h1" className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter leading-[1] md:leading-[0.9]">
+                  Secure Your <br/> <span className="text-blue-500 italic">Dreams</span> Today.
+                </Typography>
+                <Typography className="text-slate-400 text-base md:text-xl font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
+                  Don't wait for the unexpected. Our integrated marketplace allows you to compare and procure the best insurance products in under 5 minutes.
+                </Typography>
+                
+                <Grid container spacing={3} md-spacing={4} className="pt-8">
+                   {[
+                     "Verified Insurers Only",
+                     "Instant Quote Generation",
+                     "Direct Digitized Claims",
+                     "Regulatory Compliance"
+                   ].map((item, i) => (
+                     <Grid size={{ xs: 12, sm: 6 }} key={i}>
+                       <Stack direction="row" spacing={2} alignItems="center" justifyContent={{ xs: 'center', lg: 'flex-start' }}>
+                         <VerifiedUserRounded className="text-blue-500" fontSize="small" />
+                         <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-500 text-[10px] md:text-xs">{item}</Typography>
+                       </Stack>
+                     </Grid>
+                   ))}
+                </Grid>
+              </Stack>
+            </Grid>
 
-                 <motion.div 
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.8 }}
+            <Grid size={{ xs: 12, lg: 5 }}>
+              <motion.div 
+                 initial={{ opacity: 0, scale: 0.9 }}
+                 whileInView={{ opacity: 1, scale: 1 }}
+                 viewport={{ once: true }}
+              >
+                <Paper className="p-10 md:p-16 rounded-[40px] md:rounded-[48px] bg-white text-center shadow-2xl">
+                  <Avatar className="w-20 h-20 md:w-24 md:h-24 bg-blue-50 text-blue-600 mx-auto mb-8 shadow-sm">
+                    <ShieldRounded sx={{ fontSize: { xs: 32, md: 40 } }} />
+                  </Avatar>
+                  <Typography variant="h4" className="font-black text-slate-900 mb-4 tracking-tighter leading-[1] text-2xl md:text-3xl lg:text-4xl">Institutional <br/> Security Profile.</Typography>
+                  <Typography className="text-slate-400 font-bold text-[10px] md:text-xs uppercase tracking-widest mb-10 px-4">Access 50+ partners instantly.</Typography>
+                  <Button 
+                    fullWidth
+                    component={Link}
+                    href="/get-started"
+                    variant="contained"
+                    className="py-4 md:py-5 rounded-2xl bg-blue-600 font-black lowercase text-base md:text-lg shadow-xl shadow-blue-600/20"
+                    sx={{ textTransform: 'none' }}
+                  >
+                    Start Quote Application
+                  </Button>
+                </Paper>
+              </motion.div>
+            </Grid>
+          </Grid>
+        </Paper>
+
+        {/* Final Closing Action */}
+        <Box className="text-center py-12 md:py-20 px-4">
+           <motion.div 
+             initial={{ opacity: 0, y: 30 }}
+             whileInView={{ opacity: 1, y: 0 }}
+             viewport={{ once: true }}
+           >
+              <Box className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-slate-50 text-blue-600 flex items-center justify-center mx-auto mb-8 md:mb-10 shadow-sm">
+                 <BoltRounded fontSize="large" />
+              </Box>
+              <Typography variant="h2" className="font-black tracking-tighter mb-6 leading-[1] text-3xl md:text-6xl">
+                Protect What <span className="text-blue-600 italic">Matters.</span>
+              </Typography>
+              <Typography className="text-slate-500 font-medium text-lg md:text-xl max-w-2xl mx-auto mb-10 md:mb-12 leading-relaxed">
+                Join thousands of Africans scaling their financial future with complete institutional insurance security.
+              </Typography>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} justifyContent="center" alignItems="center">
+                 <Button 
+                    href="/get-started"
+                    component={Link}
+                    variant="contained"
+                    className="bg-slate-900 hover:bg-blue-600 w-full sm:w-auto px-10 md:px-12 py-4 md:py-5 rounded-2xl text-lg md:text-xl font-black lowercase shadow-lg shadow-blue-600/10 transition-all"
+                    sx={{ textTransform: 'none' }}
                  >
-                    <div className="glass-card" style={{ padding: '6rem 4rem', background: 'white', border: 'none', textAlign: 'center', borderRadius: '40px', boxShadow: 'var(--shadow-lg)' }}>
-                       <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: 'rgba(37, 99, 235, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', margin: '0 auto 3rem' }}>
-                          <Shield size={50} />
-                       </div>
-                       <h3 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '1.5rem', color: 'var(--foreground)' }}>Uncompromising <br/> Security Profile.</h3>
-                       <p style={{ color: 'var(--muted)', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '3.5rem' }}>Get a comprehensive quote across 50+ partners instantly.</p>
-                       <Link href="/get-started" className="btn btn-primary" style={{ width: '100%', padding: '1.5rem', fontSize: '1.1rem' }}>Get Insurance Quote <ArrowRight size={20} style={{ marginLeft: '1rem' }} /></Link>
-                    </div>
-                 </motion.div>
-              </div>
-           </div>
-        </section>
-
-        {/* Closing Action */}
-        <section style={{ textAlign: 'center', paddingTop: '6rem' }}>
-           <div className="glass-card" style={{ padding: '6rem 2rem', background: 'rgba(0,0,0,0.02)', borderRadius: '40px', border: '1px solid var(--card-border)' }}>
-              <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'rgba(37, 99, 235, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', margin: '0 auto 2.5rem' }}>
-                 <Zap size={32} />
-              </div>
-              <h2 style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '1.5rem' }}>Protect What <span className="gradient-text italic">Matters.</span></h2>
-              <p style={{ color: 'var(--muted)', fontSize: '1.2rem', maxWidth: '600px', margin: '0 auto 4rem', fontWeight: 500 }}>Join thousands of Africans scaling their financial future with complete insurance security.</p>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-                 <Link href="/get-started" className="btn btn-primary" style={{ padding: '1.25rem 3rem' }}>Search Insurance Now</Link>
-                 <Link href="/contact" className="btn btn-secondary" style={{ padding: '1.25rem 3rem' }}>Contact Insurance Agent</Link>
-              </div>
-           </div>
-        </section>
-      </div>
+                    Search Coverage
+                 </Button>
+                 <Button 
+                    href="/contact"
+                    component={Link}
+                    variant="outlined"
+                    className="border-slate-200 text-slate-900 hover:bg-slate-50 w-full sm:w-auto px-10 md:px-12 py-4 md:py-5 rounded-2xl text-lg md:text-xl font-black lowercase transition-all"
+                    sx={{ textTransform: 'none' }}
+                 >
+                    Speak with Agent
+                 </Button>
+              </Stack>
+           </motion.div>
+        </Box>
+      </Box>
     </PageTemplate>
   );
 }

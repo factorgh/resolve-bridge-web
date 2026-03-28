@@ -2,20 +2,32 @@
 
 import { motion } from 'framer-motion';
 import { 
-  ArrowRight, 
-  Shield, 
-  Search, 
-  CreditCard, 
-  Globe, 
-  Zap, 
-  CheckCircle,
-  Users,
-  LineChart,
-  Target,
-  BarChart3,
-  Lock,
-  MessageSquare
-} from 'lucide-react';
+  Box, 
+  Container, 
+  Typography, 
+  Grid, 
+  Button, 
+  Stack, 
+  Paper,
+  IconButton,
+  Avatar,
+  AvatarGroup,
+  Divider,
+  Card,
+  CardContent
+} from '@mui/material';
+import { 
+  ArrowForwardRounded, 
+  SearchRounded, 
+  BoltRounded as ZapRounded, 
+  VerifiedUserRounded,
+  GroupsRounded,
+  ShieldRounded,
+  AutoGraphRounded,
+  KeyboardArrowRightRounded,
+  PublicRounded,
+  ShowChartRounded
+} from '@mui/icons-material';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
@@ -28,243 +40,233 @@ export default function Home() {
 
   if (!mounted) return null;
 
-  const fadeInUp = {
-    initial: { opacity: 0, y: 40 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.8, ease: [0.23, 1, 0.32, 1] }
-  };
-
-  const staggerContainer = {
-    animate: {
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
   return (
-    <main className="landing-page" style={{ position: 'relative', overflow: 'hidden' }}>
-      {/* Background Ambience */}
-      <div className="ambient-glow" style={{ top: '-10%', left: '-10%', transform: 'scale(1.5)', opacity: 0.2 }}></div>
-      <div className="ambient-glow" style={{ bottom: '10%', right: '-10%', transform: 'scale(1.2)', background: 'radial-gradient(circle, var(--secondary-glow) 0%, transparent 70%)', opacity: 0.15 }}></div>
+    <main className="min-h-screen bg-white overflow-hidden">
+      {/* Background Orbs */}
+      <Box className="fixed inset-0 pointer-events-none select-none overflow-hidden">
+        <div className="absolute -top-[10%] -left-[10%] w-[60%] h-[60%] bg-blue-600/5 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute top-[20%] -right-[10%] w-[40%] h-[40%] bg-purple-600/5 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute -bottom-[10%] left-[20%] w-[50%] h-[50%] bg-emerald-600/5 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+      </Box>
 
       {/* Hero Section */}
-      <header className="hero-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', paddingTop: '10rem', paddingBottom: '6rem' }}>
-        <div className="container" style={{ position: 'relative', zIndex: 2 }}>
-          <div style={{ textAlign: 'center', maxWidth: '1000px', margin: '0 auto' }}>
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 1.25rem', borderRadius: '50px', background: 'rgba(0,0,0,0.03)', border: '1px solid var(--card-border)', marginBottom: '3rem', fontSize: '0.85rem', fontWeight: '700' }}
-            >
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 10px var(--primary)' }}></div>
-              Secure & Verified Financial Services Across Africa
-            </motion.div>
-            
-            <motion.h1 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, ease: [0.23, 1, 0.32, 1] }}
-              style={{ fontSize: 'clamp(3rem, 8vw, 6rem)', lineHeight: 0.95, marginBottom: '2.5rem' }}
-            >
-              The Next Frontier of <br/>
-              <span className="gradient-text italic">Financial Search</span>
-            </motion.h1>
-            
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.2, ease: [0.23, 1, 0.32, 1] }}
-              style={{ fontSize: 'clamp(1.1rem, 2vw, 1.35rem)', color: 'var(--muted)', maxWidth: '750px', margin: '0 auto 4rem', fontWeight: '500' }}
-            >
-              Bridging the gap between Africa's top financial institutions and 400M+ consumers. Loans, Insurance, and BNPL, all searched and secured in one place.
-            </motion.p>
-            
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.4 }}
-              style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', flexWrap: 'wrap' }}
-            >
-              <Link href="/get-started" className="btn btn-primary" style={{ padding: '1.25rem 3rem', fontSize: '1.1rem' }}>
-                Start Searching <ArrowRight size={20} style={{ marginLeft: '0.75rem' }} />
-              </Link>
-              <Link href="/solutions" className="btn btn-secondary" style={{ padding: '1.25rem 3rem', fontSize: '1.1rem' }}>
-                Explore Services
-              </Link>
-            </motion.div>
-          </div>
+      <section className="relative pt-32 pb-16 md:pt-48 md:pb-32 overflow-hidden">
+        <Container maxWidth="lg">
+          <Grid container spacing={{ xs: 8, lg: 12 }} alignItems="center">
+            <Grid size={{ xs: 12, lg: 7 }}>
+              <motion.div 
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 1, ease: [0.23, 1, 0.32, 1] }}
+              >
+                <Stack spacing={{ xs: 3, md: 4 }}>
+                  <Box className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-slate-100 w-fit shadow-sm">
+                    <VerifiedUserRounded className="text-blue-600 text-[10px] md:text-sm" />
+                    <Typography variant="caption" className="font-black tracking-widest text-slate-400 uppercase text-[9px] md:text-xs">Africa's Premiere Financial Hub</Typography>
+                  </Box>
+                  
+                  <Typography variant="h1" className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter text-slate-900 leading-[0.9] md:leading-[0.85]">
+                    The New Era of <br />
+                    <span className="text-blue-600 italic">Financial Search.</span>
+                  </Typography>
 
-          {/* Floating Visual Elements */}
-          <motion.div 
-            initial={{ opacity: 0, y: 60 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.5, delay: 0.8, ease: [0.23, 1, 0.32, 1] }}
-            style={{ marginTop: '8rem', width: '100%', maxWidth: '1100px', margin: '8rem auto 0' }}
-          >
-            <div className="glass-card" style={{ padding: '0.75rem', overflow: 'hidden', boxShadow: '0 40px 100px -20px rgba(0,0,0,0.15)' }}>
-               <div style={{ background: 'var(--background)', borderRadius: '24px', overflow: 'hidden', height: '500px', position: 'relative' }}>
-                  {/* Mock UI Content */}
-                  <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3rem' }}>
-                        <div style={{ display: 'flex', gap: '1rem' }}>
-                           <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(0,0,0,0.03)' }}></div>
-                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                              <div style={{ width: '100px', height: '8px', background: 'rgba(0,0,0,0.05)', borderRadius: '20px' }}></div>
-                              <div style={{ width: '60px', height: '8px', background: 'rgba(0,0,0,0.03)', borderRadius: '20px' }}></div>
-                           </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: '0.75rem' }}>
-                           <div style={{ width: '80px', height: '32px', borderRadius: '8px', background: 'var(--foreground)', opacity: 0.05 }}></div>
-                           <div style={{ width: '40px', height: '32px', borderRadius: '8px', background: 'var(--primary)', opacity: 0.1 }}></div>
-                        </div>
-                     </div>
+                  <Typography className="text-slate-500 font-medium max-w-xl leading-relaxed text-base md:text-xl lg:text-2xl">
+                    Bridging the gap between 400M+ consumers and top-tier institutions. Search, compare, and secure Capital with institutional transparency.
+                  </Typography>
 
-                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem', flex: 1 }}>
-                        {[1, 2, 3].map((item) => (
-                           <div key={item} style={{ border: '1px solid var(--card-border)', borderRadius: '20px', padding: '1.5rem', opacity: item === 2 ? 1 : 0.6, transform: item === 2 ? 'scale(1.05)' : 'scale(1)', boxShadow: item === 2 ? '0 20px 40px -10px rgba(0,0,0,0.1)' : 'none' }}>
-                               <div style={{ width: '32px', height: '32px', background: item === 2 ? 'var(--primary)' : 'rgba(0,0,0,0.05)', borderRadius: '8px', marginBottom: '1.5rem' }}></div>
-                               <div style={{ width: '80%', height: '12px', background: 'rgba(0,0,0,0.1)', borderRadius: '20px', marginBottom: '1rem' }}></div>
-                               <div style={{ width: '50%', height: '8px', background: 'rgba(0,0,0,0.05)', borderRadius: '20px', marginBottom: '2rem' }}></div>
-                               <div style={{ marginTop: 'auto', display: 'flex', gap: '0.5rem' }}>
-                                 <div style={{ flex: 1, height: '32px', background: 'rgba(0,0,0,0.03)', borderRadius: '6px' }}></div>
-                               </div>
-                           </div>
-                        ))}
-                     </div>
-                  </div>
-                  {/* Ambient Light Over UI */}
-                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '300px', height: '300px', background: 'radial-gradient(circle, var(--primary-glow) 0%, transparent 70%)', opacity: 0.2, pointerEvents: 'none' }}></div>
-               </div>
-            </div>
-          </motion.div>
-        </div>
-      </header>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5} className="pt-4">
+                    <Button 
+                      component={Link}
+                      href="/get-started"
+                      variant="contained" 
+                      disableElevation
+                      className="bg-slate-900 hover:bg-blue-600 px-8 md:px-10 py-4 md:py-5 rounded-2xl text-base md:text-lg font-black lowercase transition-all"
+                      sx={{ textTransform: 'none' }}
+                      endIcon={<ArrowForwardRounded />}
+                    >
+                      Start Free Application
+                    </Button>
+                    <Button 
+                      component={Link}
+                      href="/solutions"
+                      variant="outlined" 
+                      className="border-slate-200 text-slate-900 px-8 md:px-10 py-4 md:py-5 rounded-2xl text-base md:text-lg font-black lowercase hover:bg-slate-50 transition-all"
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Explore Solutions
+                    </Button>
+                  </Stack>
 
-      {/* Trust Ticker / Stats */}
-      <section style={{ borderTop: '1px solid var(--card-border)', borderBottom: '1px solid var(--card-border)', padding: '4rem 0', background: 'rgba(0,0,0,0.01)' }}>
-        <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '3rem', textAlign: 'center' }}>
-            <div>
-              <h3 style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '0.25rem' }}>4 <span className="gradient-text">Countries</span></h3>
-              <p style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)' }}>Ghana • Nigeria • Kenya • SA</p>
-            </div>
-            <div>
-              <h3 style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '0.25rem' }}>50+</h3>
-              <p style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)' }}>Banks & Lenders</p>
-            </div>
-            <div>
-              <h3 style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '0.25rem' }}>$15M+</h3>
-              <p style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)' }}>Facilitated Funding</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features - The "Marketable" Part */}
-      <section style={{ padding: '10rem 0' }}>
-        <div className="container">
-          <div style={{ maxWidth: '800px', marginBottom: '6rem' }}>
-            <span className="section-label">Engine Capabilities</span>
-            <h2 style={{ fontSize: '3.5rem', maxWidth: '600px' }}>Powered by Intelligence, Built for <span className="gradient-text">Scale</span></h2>
-            <p style={{ color: 'var(--muted)', fontSize: '1.25rem', marginTop: '1.5rem' }}>Our platform isn't just a list; it's a dynamic ecosystem syncing real-time data from across Africa's financial landscape.</p>
-          </div>
-
-          <motion.div 
-            variants={staggerContainer}
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true }}
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}
-          >
-            {[
-              { icon: <Search />, title: "Hyper-Personalized Matching", desc: "No generic lists. Our AI analyzes your history and goals to suggest financial products you'll actually qualify for.", color: "blue" },
-              { icon: <Lock />, title: "Bank-Grade Verification", desc: "Built-in KYC and AML compliance for rapid approval across West and East Africa's regulatory zones.", color: "purple" },
-              { icon: <Zap />, title: "Instant Approval SDK", desc: "Merchants can integrate our entire marketplace into their own app in less than 2 hours using our developer-first API.", color: "orange" },
-            ].map((feature, idx) => (
-              <motion.div key={idx} variants={fadeInUp} className="glass-card" style={{ padding: '3rem', height: '100%', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: idx === 1 ? 'var(--secondary)' : 'var(--primary)' }}>
-                   {feature.icon}
-                </div>
-                <div>
-                   <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>{feature.title}</h3>
-                   <p style={{ color: 'var(--muted)', fontSize: '1rem' }}>{feature.desc}</p>
-                </div>
+                  <Stack direction="row" spacing={3} alignItems="center" className="pt-8">
+                    <AvatarGroup max={4}>
+                      {[1,2,3,4].map(i => <Avatar key={i} src={`/avatars/${i}.jpg`} sx={{ width: { xs: 32, md: 40 }, height: { xs: 32, md: 40 } }} />)}
+                    </AvatarGroup>
+                    <Box>
+                      <Typography className="font-black text-slate-900 tracking-tight text-sm md:text-lg">400k+ Active Users</Typography>
+                      <Typography variant="caption" className="text-slate-400 font-bold text-[10px] md:text-xs">Trusted across Ghana, Nigeria & Kenya</Typography>
+                    </Box>
+                  </Stack>
+                </Stack>
               </motion.div>
-            ))}
-          </motion.div>
-        </div>
+            </Grid>
+
+            {/* Visual Dashboard Mockup */}
+            <Grid size={{ xs: 12, lg: 5 }} className="hidden lg:block">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, rotate: 5 }}
+                animate={{ opacity: 1, scale: 1, rotate: -2 }}
+                transition={{ duration: 1.2, ease: [0.23, 1, 0.32, 1] }}
+              >
+                <Paper className="p-4 rounded-[40px] bg-slate-900/10 backdrop-blur-3xl border border-white/50 shadow-2xl relative overflow-hidden">
+                  <Box className="bg-white rounded-[32px] p-8 shadow-2xl">
+                    <Stack direction="row" justifyContent="space-between" className="mb-12">
+                      <Box className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white">
+                        <AutoGraphRounded />
+                      </Box>
+                      <Box className="text-right">
+                        <Typography variant="caption" className="font-black text-slate-400 block">Total Facilitated</Typography>
+                        <Typography className="font-black text-2xl text-slate-900">$15,480,000</Typography>
+                      </Box>
+                    </Stack>
+                    
+                    <Stack spacing={4}>
+                      {[
+                        { label: 'SME Loan Match', value: '82%', icon: <ZapRounded className="text-blue-500" />, color: 'blue' },
+                        { label: 'Approval Speed', value: '4.2s', icon: <ShowChartRounded className="text-purple-500" />, color: 'purple' },
+                        { label: 'Network Reach', value: '50+', icon: <PublicRounded className="text-emerald-500" />, color: 'emerald' }
+                      ].map((stat, i) => (
+                        <Box key={i} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                          <Stack direction="row" spacing={2} alignItems="center">
+                            <Box className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm">
+                              {stat.icon}
+                            </Box>
+                            <Typography className="font-black text-slate-900 text-sm">{stat.label}</Typography>
+                          </Stack>
+                          <Typography className="font-black text-slate-900">{stat.value}</Typography>
+                        </Box>
+                      ))}
+                    </Stack>
+                    
+                    <Divider className="my-8" />
+                    <Button fullWidth className="rounded-xl py-3 bg-blue-600 text-white font-black lowercase" variant="contained">
+                      View Real-time Data
+                    </Button>
+                  </Box>
+                  <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-600 blur-[80px] rounded-full opacity-20" />
+                </Paper>
+              </motion.div>
+            </Grid>
+          </Grid>
+        </Container>
       </section>
 
-      {/* Solutions Story-telling Section */}
-      <section style={{ background: 'var(--foreground)', color: 'var(--background)', padding: '10rem 0', position: 'relative', overflow: 'hidden' }}>
-        <div className="ambient-glow" style={{ top: '0', right: '0', opacity: 0.1 }}></div>
-        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '8rem', alignItems: 'center' }}>
-            <motion.div initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 1 }} viewport={{ once: true }}>
-               <h2 style={{ fontSize: '4.5rem', lineHeight: 1, marginBottom: '2.5rem' }}>One Search. <br/><span className="gradient-text italic">Infinite Reach.</span></h2>
-               <p style={{ fontSize: '1.25rem', opacity: 0.7, marginBottom: '3.5rem', maxWidth: '500px' }}>Stop jumping between websites. We aggregate the finest financial products from top-tier institutions so you can decide with clarity.</p>
-               
-               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '4rem' }}>
-                  {[
-                    "SME Growth & Working Capital",
-                    "Retail BNPL Integrations",
-                    "Modular Insurance Packages",
-                    "Cross-border Merchant Payments"
-                  ].map((item, idx) => (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <CheckCircle size={18} className="text-primary" style={{ color: 'var(--primary)' }} />
-                      <span style={{ fontWeight: 700 }}>{item}</span>
-                    </div>
-                  ))}
-               </div>
-               
-               <Link href="/solutions" className="btn btn-primary" style={{ background: 'white', color: 'black' }}>
-                 Explore Solutions <ArrowRight size={20} style={{ marginLeft: '1rem' }} />
-               </Link>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} transition={{ duration: 1.2 }} viewport={{ once: true }} style={{ position: 'relative' }}>
-               <div className="glass-card" style={{ padding: '0.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <img src="/hero-image.png" alt="Marketplace" style={{ width: '100%', borderRadius: '24px', filter: 'brightness(1.1)' }} />
-               </div>
-               {/* Floating Badges */}
-               <div className="glass-card" style={{ position: 'absolute', top: '10%', right: '-10%', padding: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center', background: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <Users size={24} className="text-primary" />
-                  <div style={{ color: 'white' }}>
-                    <p style={{ fontSize: '0.7rem', opacity: 0.6 }}>Active Users</p>
-                    <p style={{ fontSize: '1rem', fontWeight: 900 }}>400k+</p>
-                  </div>
-               </div>
-            </motion.div>
-          </div>
-        </div>
+      {/* Partners Ticker */}
+      <section className="py-20 bg-slate-50/50 border-y border-slate-100 overflow-hidden">
+        <Container maxWidth="lg">
+          <Stack spacing={6}>
+            <Typography variant="caption" className="text-center block font-black text-slate-400 tracking-[0.3em] uppercase text-[10px] md:text-sm">Trusted by Global Institutions</Typography>
+            <Grid container spacing={{ xs: 4, md: 8 }} justifyContent="center" alignItems="center" className="opacity-40 grayscale hover:grayscale-0 transition-all cursor-crosshair">
+              {['Absa', 'Standard Chartered', 'MTN Mobile Money', 'Flutterwave', 'Ecobank', 'Kuda'].map((brand) => (
+                <Grid key={brand} size={{ xs: 6, sm: 4, md: 2 }}>
+                  <Typography className="text-center font-black text-xl md:text-2xl tracking-tighter text-slate-900 underline decoration-blue-600 decoration-4 underline-offset-8 italic">{brand}</Typography>
+                </Grid>
+              ))}
+            </Grid>
+          </Stack>
+        </Container>
       </section>
 
-      {/* Dynamic CTA */}
-      <section style={{ padding: '12rem 0' }}>
-        <div className="container">
-          <motion.div 
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-            viewport={{ once: true }}
-            className="glass-card" 
-            style={{ padding: '8rem 4rem', textAlign: 'center', background: 'radial-gradient(circle at center, var(--primary-glow) 0%, transparent 100%), var(--foreground)', color: 'white', position: 'relative', overflow: 'hidden' }}
-          >
-             <div style={{ position: 'relative', zIndex: 1 }}>
-               <h2 style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)', maxWidth: '900px', margin: '0 auto 2rem' }}>The Future of African Finance is <span className="gradient-text italic">ResolveBridge.</span></h2>
-               <p style={{ fontSize: '1.25rem', opacity: 0.7, maxWidth: '600px', margin: '0 auto 4rem' }}>Join the thousands of forward-thinking Africans scaling their financial future with our search engine.</p>
-               <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <Link href="/get-started" className="btn btn-primary lg" style={{ background: 'white', color: 'black' }}>Apply Now</Link>
-                  <Link href="/contact" className="btn btn-secondary lg" style={{ border: '1px solid rgba(255,255,255,0.2)', color: 'white' }}>Consult Sales</Link>
-               </div>
-             </div>
-             {/* Abstract light rays */}
-             <div style={{ position: 'absolute', top: '-50%', left: '50%', width: '1px', height: '200%', background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.2), transparent)', transform: 'rotate(45deg)', opacity: 0.5 }}></div>
-          </motion.div>
-        </div>
+      {/* Core Features */}
+      <section className="py-24 md:py-48">
+        <Container maxWidth="lg">
+          <Grid container spacing={{ xs: 8, lg: 12 }}>
+            <Grid size={{ xs: 12, lg: 4 }}>
+              <Stack spacing={4}>
+                <Box className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/30">
+                  <ShieldRounded />
+                </Box>
+                <Typography variant="h2" className="font-black tracking-tight leading-[1] text-3xl md:text-5xl lg:text-7xl">
+                  Engineered for <br/> <span className="text-blue-600 italic">Institutional</span> <br/> Transparency.
+                </Typography>
+                <Typography className="text-slate-500 font-medium text-lg lg:text-xl leading-relaxed max-w-xl">
+                  We don't just aggregate data; we audit every financial product in our network to ensure zero hidden fees and direct-to-institutional rates.
+                </Typography>
+                <Link href="/features" className="group flex items-center gap-2 font-black text-blue-600 hover:text-slate-900 transition-colors uppercase tracking-widest text-xs">
+                  Full Feature Set <KeyboardArrowRightRounded className="group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Stack>
+            </Grid>
+            <Grid size={{ xs: 12, lg: 8 }}>
+              <Grid container spacing={{ xs: 3, md: 4 }}>
+                {[
+                  { title: 'Hyper-Personalized Search', icon: <SearchRounded />, desc: 'Proprietary matching algorithms that align your credit profile with institutional risk appetites for 90%+ approval rates.' },
+                  { title: 'Rapid KYC Engine', icon: <VerifiedUserRounded />, desc: 'Instant verification across ECOWAS and EAC zones, reducing loan processing time from weeks to minutes.' },
+                  { title: 'Merchant API Ecosystem', icon: <ZapRounded />, desc: 'Embed our marketplace directly into your retail or fintech application with our developer-first SDK.' },
+                  { title: 'Global Liquidity Pools', icon: <PublicRounded />, desc: 'Bridging local African demand with global institutional capital pools for lower interest rates.' }
+                ].map((item, i) => (
+                  <Grid size={{ xs: 12, md: 6 }} key={i}>
+                    <Card className="rounded-[40px] border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-blue-900/5 transition-all duration-500 overflow-hidden group h-full">
+                      <CardContent className="p-8 md:p-12">
+                        <Box className={`w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center mb-8 md:mb-10 transition-transform group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white text-slate-400`}>
+                          {item.icon}
+                        </Box>
+                        <Typography variant="h5" className="font-black text-slate-900 mb-4 text-xl md:text-2xl">{item.title}</Typography>
+                        <Typography className="text-slate-400 font-medium leading-relaxed text-sm md:text-base">{item.desc}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </Grid>
+          </Grid>
+        </Container>
+      </section>
+
+      {/* Integrated Dashboard CTA */}
+      <section className="pb-32 px-4 md:px-0">
+        <Container maxWidth="lg">
+          <Paper className="rounded-[40px] md:rounded-[64px] bg-[#020617] overflow-hidden relative p-8 md:p-24 text-center text-white">
+            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_rgba(37,99,235,0.15)_0%,_transparent_100%)]" />
+            
+            <Box className="relative z-10">
+              <Stack spacing={4} alignItems="center">
+                <AvatarGroup max={6} className="mb-4">
+                  {[1, 2, 3, 4, 5, 6].map(i => <Avatar key={i} sx={{ width: { xs: 32, md: 48 }, height: { xs: 32, md: 48 } }} />)}
+                </AvatarGroup>
+                <Typography variant="h2" className="font-black tracking-tighter max-w-5xl mx-auto leading-[1] md:leading-[0.9] text-3xl sm:text-5xl md:text-7xl lg:text-8xl">
+                  Stop searching. <br/> Start <span className="text-blue-500 italic">Capitalizing</span> on the Future.
+                </Typography>
+                <Typography className="text-slate-400 font-medium max-w-2xl mx-auto text-base md:text-xl lg:text-2xl leading-relaxed">
+                  ResolveBridge is more than a platform—it's your private gateway to the institutional financial landscape of the continent.
+                </Typography>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} className="pt-8 w-full sm:w-auto">
+                  <Button 
+                    href="/get-started"
+                    component={Link}
+                    variant="contained" 
+                    className="bg-blue-600 hover:bg-white hover:text-slate-900 px-12 py-5 rounded-2xl text-xl font-black lowercase transition-all w-full sm:w-auto"
+                    sx={{ textTransform: 'none' }}
+                    endIcon={<ArrowForwardRounded />}
+                  >
+                    Open Account
+                  </Button>
+                  <Button 
+                    href="/contact"
+                    component={Link}
+                    variant="outlined" 
+                    className="border-white/20 text-white hover:bg-white/10 px-12 py-5 rounded-2xl text-xl font-black lowercase transition-all w-full sm:w-auto"
+                    sx={{ textTransform: 'none' }}
+                  >
+                    Consult Advisor
+                  </Button>
+                </Stack>
+              </Stack>
+            </Box>
+
+            {/* Glowing lines decorative */}
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50 shadow-[0_0_20px_blue]" />
+          </Paper>
+        </Container>
       </section>
     </main>
   );

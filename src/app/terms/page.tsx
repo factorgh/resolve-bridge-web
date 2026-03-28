@@ -1,7 +1,31 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowLeft, CheckCircle, ShieldCheck, Zap, Globe, Lock } from 'lucide-react';
+import { 
+  Box, 
+  Container, 
+  Typography, 
+  Grid, 
+  Card, 
+  CardContent, 
+  Stack, 
+  Button, 
+  Paper,
+  Divider,
+  Avatar
+} from '@mui/material';
+import { 
+  ArrowBackRounded, 
+  CheckCircleRounded, 
+  VerifiedUserRounded, 
+  BoltRounded, 
+  PublicRounded, 
+  LockRounded,
+  SecurityRounded,
+  GavelRounded,
+  HistoryEduRounded,
+  MenuOpenRounded
+} from '@mui/icons-material';
 import Link from 'next/link';
 import PageTemplate from '../components/PageTemplate';
 
@@ -20,64 +44,90 @@ export default function TermsPage() {
       subtitle="The digital agreement that governs the ResolveBridge ecosystem and ensures a transparent financial landscape."
       noCard={true}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8rem', paddingBottom: '8rem' }}>
+      <Box className="pb-32 flex flex-col gap-12 md:gap-32 px-4 md:px-0">
         
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '2rem' }}>
+        <Grid container spacing={{ xs: 3, md: 4 }}>
            {sections.map((s, idx) => (
-             <motion.div 
-               key={idx} 
-               initial={{ opacity: 0, y: 30 }}
-               whileInView={{ opacity: 1, y: 0 }}
-               viewport={{ once: true }}
-               transition={{ delay: idx * 0.1, duration: 0.8 }}
-               className="glass-card" 
-               style={{ padding: '4.5rem', borderRadius: '40px', background: 'rgba(0,0,0,0.02)', border: '1px solid var(--card-border)', display: 'flex', flexDirection: 'column', gap: '2rem' }}
-             >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                   <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--foreground)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.9rem' }}>{idx + 1}</div>
-                   <h3 style={{ fontSize: '1.75rem', fontWeight: 900, letterSpacing: '-0.02em' }}>{s.title}</h3>
-                </div>
-                <p style={{ color: 'var(--muted)', fontSize: '1.1rem', lineHeight: 1.7, fontWeight: 500 }}>{s.description}</p>
-             </motion.div>
+             <Grid size={{ xs: 12, md: 6 }} key={idx}>
+               <motion.div 
+                 initial={{ opacity: 0, y: 30 }}
+                 whileInView={{ opacity: 1, y: 0 }}
+                 viewport={{ once: true }}
+                 transition={{ delay: idx * 0.1, duration: 0.8 }}
+                 className="h-full"
+               >
+                  <Paper className="p-8 md:p-16 rounded-[32px] md:rounded-[48px] border border-slate-100 bg-white hover:bg-slate-50 transition-all group shadow-sm flex flex-col gap-8 h-full">
+                     <Stack direction="row" spacing={3} alignItems="center">
+                        <Avatar className="w-10 h-10 md:w-12 md:h-12 bg-slate-900 text-white font-black text-xs">0{idx + 1}</Avatar>
+                        <Typography variant="h4" className="text-xl md:text-3xl font-black text-slate-900 tracking-tighter leading-[1.1] md:leading-none">{s.title}</Typography>
+                     </Stack>
+                     <Typography className="text-slate-500 font-medium text-base md:text-lg leading-relaxed">{s.description}</Typography>
+                  </Paper>
+               </motion.div>
+             </Grid>
            ))}
-        </div>
+        </Grid>
 
         {/* Binding Box */}
-        <section>
-           <div className="glass-card" style={{ padding: '8rem 4rem', borderRadius: '48px', background: 'var(--foreground)', color: 'white', position: 'relative', overflow: 'hidden', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div className="ambient-glow" style={{ top: '-40%', left: '-20%', opacity: 0.2 }}></div>
-              <div style={{ position: 'relative', zIndex: 1, maxWidth: '800px' }}>
-                 <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(37, 99, 235, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', margin: '0 auto 3.5rem' }}>
-                    <ShieldCheck size={48} />
-                 </div>
-                 <h2 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '2.5rem', letterSpacing: '-0.04em', lineHeight: 1 }}>By continuing, you agree to the <span className="gradient-text italic">Bridge Protocol.</span></h2>
-                 <p style={{ opacity: 0.7, fontSize: '1.25rem', lineHeight: 1.8, marginBottom: '4.5rem', fontWeight: 500 }}>This agreement is binding and ensures a safe, transparent, and fair environment for all financial operations within the ResolveBridge ecosystem.</p>
+        <Box>
+           <Paper className="p-8 md:p-24 rounded-[40px] md:rounded-[64px] bg-[#020617] text-white relative overflow-hidden text-center flex flex-col items-center">
+              <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-600/10 blur-[120px] rounded-full -translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+              
+              <Box className="relative z-10 max-w-4xl px-4">
+                 <Avatar className="w-20 h-20 md:w-24 md:h-24 bg-blue-600/10 border border-blue-600/20 text-blue-500 mx-auto mb-8 md:mb-10 shadow-lg">
+                    <HistoryEduRounded sx={{ fontSize: { xs: 32, md: 48 } }} />
+                 </Avatar>
+                 <Typography variant="h2" className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter mb-8 leading-[1.1] md:leading-[0.9]">
+                   By continuing, you agree to the <br/> <span className="text-blue-500 italic">Bridge Protocol.</span>
+                 </Typography>
+                 <Typography className="text-slate-400 text-base md:text-xl font-medium leading-relaxed mb-10 md:mb-16">
+                   This agreement is binding and ensures a safe, transparent, and fair environment for all financial operations within the ResolveBridge ecosystem.
+                 </Typography>
                  
-                 <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-                    <Link href="/get-started" className="btn btn-primary" style={{ padding: '1.5rem 4rem', fontSize: '1.1rem' }}>Accept & Get Started</Link>
-                    <Link href="/" className="btn btn-secondary" style={{ padding: '1.5rem 4rem', fontSize: '1.1rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'white' }}>Cancel</Link>
-                 </div>
+                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} justifyContent="center" alignItems="center" className="w-full sm:w-auto">
+                    <Button 
+                       href="/get-started"
+                       component={Link}
+                       variant="contained"
+                       className="bg-white hover:bg-blue-600 hover:text-white text-slate-900 w-full sm:w-auto px-12 md:px-16 py-4 md:py-6 rounded-2xl text-lg md:text-xl font-black lowercase transition-all shadow-xl shadow-blue-600/10"
+                       sx={{ textTransform: 'none' }}
+                    >
+                       Accept & Get Started
+                    </Button>
+                    <Button 
+                       href="/"
+                       component={Link}
+                       variant="outlined"
+                       className="border-white/20 text-white hover:bg-white/10 w-full sm:w-auto px-12 py-4 md:py-6 rounded-2xl text-lg md:text-xl font-black lowercase transition-all"
+                       sx={{ textTransform: 'none' }}
+                    >
+                       Cancel
+                    </Button>
+                 </Stack>
 
-                 <p style={{ marginTop: '5rem', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.4 }}>Version Control: RB-2026.03.25</p>
-              </div>
-           </div>
-        </section>
+                 <Typography variant="caption" className="mt-12 md:mt-16 block font-black uppercase tracking-[0.2em] text-slate-500 opacity-60 text-[9px] md:text-[10px]">Version Control: RB-2026.03.25</Typography>
+              </Box>
+           </Paper>
+        </Box>
 
-        {/* Legal Footer Info */}
-        <section style={{ textAlign: 'center' }}>
-           <div style={{ display: 'flex', justifyContent: 'center', gap: '3rem', flexWrap: 'wrap' }}>
+        {/* Legal Footer Links */}
+        <Box>
+           <Grid container spacing={{ xs: 2.5, sm: 4 }} justifyContent="center" className="text-slate-400 font-black uppercase tracking-widest text-[9px] md:text-[10px] opacity-60">
               {[
-                { icon: Lock, label: "Encrypted Agreement" },
-                { icon: Globe, label: "Multi-Jurisdiction Valid" },
-                { icon: Zap, label: "Instant Digital Signature" }
+                { icon: <LockRounded fontSize="small" />, label: "Encrypted Agreement" },
+                { icon: <PublicRounded fontSize="small" />, label: "Multi-Jurisdiction Valid" },
+                { icon: <BoltRounded fontSize="small" />, label: "Instant Digital Signature" }
               ].map((item, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--muted)', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                   <item.icon size={18} className="text-primary" /> {item.label}
-                </div>
+                <Grid size={{ xs: 12, sm: 4 }} key={i}>
+                   <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
+                      <Box className="text-blue-600">{item.icon}</Box>
+                      <Typography variant="inherit">{item.label}</Typography>
+                   </Stack>
+                </Grid>
               ))}
-           </div>
-        </section>
-      </div>
+           </Grid>
+        </Box>
+      </Box>
     </PageTemplate>
   );
 }

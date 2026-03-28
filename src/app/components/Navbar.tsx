@@ -2,191 +2,301 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, ChevronDown, Car, CreditCard, Zap, Shield, Globe, Calculator, TrendingUp } from 'lucide-react';
+import { 
+  MenuRounded as MenuIcon, 
+  CloseRounded as XIcon, 
+  KeyboardArrowDownRounded as ChevronDownIcon, 
+  DirectionsCarRounded as CarIcon, 
+  CreditCardRounded as CreditCardIcon, 
+  BoltRounded as BoltIcon, 
+  ShieldRounded as ShieldIcon, 
+  PublicRounded as PublicIcon, 
+  CalculateRounded as CalculatorIcon, 
+  TrendingUpRounded as TrendingUpIcon, 
+  BusinessRounded as BusinessIcon,
+  SearchRounded,
+  NorthEastRounded
+} from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Box,
+  Button,
+  Collapse,
+  Container,
+  Divider,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Typography,
+  Paper,
+  Grid,
+  Stack,
+  Avatar
+} from '@mui/material';
+
+interface NavChild {
+  href: string;
+  icon: any;
+  title: string;
+  desc: string;
+  color: string;
+}
+
+interface NavItem {
+  label: string;
+  href?: string;
+  children?: NavChild[];
+}
+
+const NAV_ITEMS: NavItem[] = [
+  { label: 'Features', href: '/features' },
+  {
+    label: 'Solutions',
+    children: [
+      { href: '/loans',       icon: <CreditCardIcon />,  title: 'Credit & Loans',   desc: 'Scale with tailored financing',     color: '#2563eb' },
+      { href: '/calculator',  icon: <CalculatorIcon />,  title: 'Loan Calculator',  desc: 'Calculate your repayment profile',  color: '#7c3aed' },
+      { href: '/bnpl',        icon: <BoltIcon />,         title: 'BNPL Plans',       desc: 'Buy now pay later for retail',      color: '#f59e0b' },
+      { href: '/insurance',   icon: <ShieldIcon />,      title: 'Insurance Hub',    desc: 'Covering auto, health & life',      color: '#ec4899' },
+      { href: '/solutions',   icon: <PublicIcon />,       title: 'Payments Hub',     desc: 'Global merchant settlements',       color: '#10b981' },
+      { href: '/get-started', icon: <TrendingUpIcon />,  title: 'Merchant Hub',     desc: 'Scale your retail footprint',       color: '#06b6d4' },
+    ],
+  },
+  {
+    label: 'Resolve Group',
+    children: [
+      { href: '/resolve-vehicles', icon: <CarIcon />,       title: 'Resolve Vehicles', desc: 'Browse our vehicle marketplace', color: '#3b82f6' },
+      { href: '/about',            icon: <BusinessIcon />, title: 'About Us',         desc: 'Our story, mission & team',      color: '#8b5cf6' },
+    ],
+  },
+];
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [solutionsDropdown, setSolutionsDropdown] = useState(false);
-  const [resolveDropdown, setResolveDropdown] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const toggleMenu = () => setIsOpen(!isOpen);
-
   return (
-    <nav className={`fixed-nav ${scrolled ? 'nav-scrolled' : ''}`}>
-      <div className={`nav-container ${scrolled ? 'nav-container-scrolled' : 'glass-card'}`} style={{ borderRadius: scrolled ? '0' : '32px' }}>
-        <Link href="/" className="logo">
-          <img src="/resolve_icon.png" alt="Resolve" className="logo-img" />
-          <span className="logo-text" style={{ fontSize: '1.25rem', fontWeight: '900', letterSpacing: '-0.03em' }}>
-            Resolve<span className="gradient-text italic">Bridge</span>
-          </span>
-        </Link>
-        
-        <div className="nav-links">
-          <Link href="/features" style={{ fontWeight: '700', fontSize: '0.9rem', color: 'var(--muted)' }}>Features</Link>
-          
-          <div 
-            className="nav-dropdown-wrapper"
-            onMouseEnter={() => setSolutionsDropdown(true)}
-            onMouseLeave={() => setSolutionsDropdown(false)}
-          >
-            <button className="nav-link-dropdown" style={{ fontWeight: '700', fontSize: '0.9rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              Solutions <ChevronDown size={14} className={`chevron ${solutionsDropdown ? 'rotate' : ''}`} />
-            </button>
-            <AnimatePresence>
-              {solutionsDropdown && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 15, x: '-50%' }}
-                  animate={{ opacity: 1, y: 0, x: '-50%' }}
-                  exit={{ opacity: 0, y: 15, x: '-50%' }}
-                  className="nav-dropdown glass-card mega-dropdown shadow-2xl"
-                  style={{ borderRadius: '28px', border: '1px solid var(--glass-border)', boxShadow: 'var(--shadow-lg), var(--shadow-glow)', left: '50%' }}
-                >
-                  <div className="dropdown-grid">
-                    {[
-                      { href: "/loans", icon: <CreditCard />, title: "Credit & Loans", desc: "Scale with tailored financing", color: "blue" },
-                      { href: "/calculator", icon: <Calculator />, title: "Loan Calculator", desc: "Calculate your repayment profile", color: "purple" },
-                      { href: "/bnpl", icon: <Zap />, title: "BNPL Plans", desc: "Buy now pay later for retail", color: "orange" },
-                      { href: "/insurance", icon: <Shield />, title: "Insurance Hub", desc: "Covering auto, health & life", color: "purple" },
-                      { href: "/solutions", icon: <Globe />, title: "Payments Hub", desc: "Global merchant settlements", color: "green" },
-                      { href: "/get-started", icon: <TrendingUp />, title: "Merchant Hub", desc: "Scale your retail footprint", color: "green" }
-                    ].map((item, idx) => (
-                      <Link key={idx} href={item.href} className="dropdown-item">
-                        <div className={`dropdown-icon ${item.color}`} style={{ width: '48px', height: '48px', borderRadius: '14px', marginBottom: '0.25rem' }}>{item.icon}</div>
-                        <div>
-                          <p className="item-title">{item.title}</p>
-                          <p className="item-desc">{item.desc}</p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+    <nav className={`fixed top-0 left-0 right-0 z-[1000] transition-all duration-500 ${scrolled ? 'py-2' : 'py-4 md:py-6'}`}>
+      <Container maxWidth="lg">
+        <Box 
+          className={`flex items-center justify-between px-4 md:px-6 py-3 rounded-[32px] transition-all duration-500 ${
+            scrolled ? 'bg-white/80 backdrop-blur-2xl shadow-xl shadow-blue-900/5' : 'bg-white/40 backdrop-blur-md border border-white/20'
+          }`}
+        >
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 md:gap-3 group shrink-0">
+            <Box className="w-8 h-8 md:w-10 md:h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20 group-hover:rotate-6 transition-transform">
+              <img src="/resolve_icon.png" alt="Resolve" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
+            </Box>
+            <Typography variant="h6" className="font-black tracking-tighter text-slate-900 text-lg md:text-xl">
+              Resolve<span className="text-blue-600 italic">Bridge</span>
+            </Typography>
+          </Link>
 
-          <div 
-            className="nav-dropdown-wrapper"
-            onMouseEnter={() => setResolveDropdown(true)}
-            onMouseLeave={() => setResolveDropdown(false)}
-          >
-            <button className="nav-link-dropdown" style={{ fontWeight: '700', fontSize: '0.9rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              Resolve <ChevronDown size={14} className={`chevron ${resolveDropdown ? 'rotate' : ''}`} />
-            </button>
-            <AnimatePresence>
-              {resolveDropdown && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 15, x: '-50%' }}
-                  animate={{ opacity: 1, y: 0, x: '-50%' }}
-                  exit={{ opacity: 0, y: 15, x: '-50%' }}
-                  className="nav-dropdown glass-card shadow-2xl"
-                  style={{ borderRadius: '24px', border: '1px solid var(--glass-border)', boxShadow: 'var(--shadow-lg), var(--shadow-glow)', left: '50%' }}
-                >
-                  <Link href="/resolve-vehicles" className="dropdown-item" style={{ padding: '1.25rem', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div className="dropdown-icon car" style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(37, 99, 235, 0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Car size={18} /></div>
-                    <div>
-                      <p className="item-title" style={{ fontSize: '0.95rem', fontWeight: '800', margin: 0 }}>Resolve Vehicles</p>
-                      <p className="item-desc" style={{ fontSize: '0.7rem', opacity: 0.7, margin: 0 }}>Premium quality automotive solutions</p>
-                    </div>
+          {/* Desktop Links */}
+          <Box sx={{ display: { xs: 'none', md: 'flex' } }} className="items-center gap-1">
+            {NAV_ITEMS.map((item) => (
+              <Box key={item.label} className="relative group">
+                {item.children ? (
+                  <>
+                    <button className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-slate-600 hover:text-blue-600 rounded-xl transition-colors">
+                      {item.label}
+                      <ChevronDownIcon sx={{ fontSize: 16, transition: 'transform 0.2s' }} className="group-hover:rotate-180" />
+                    </button>
+                    {/* Megamenu */}
+                    <Box className="absolute top-full left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                      <Paper className="w-[600px] p-6 rounded-[32px] border border-slate-100 shadow-2xl backdrop-blur-xl bg-white/95">
+                        <Grid container spacing={2}>
+                          {item.children.map((child) => (
+                            <Grid size={{ xs: 6 }} key={child.href}>
+                              <Link href={child.href} className="flex items-start gap-4 p-4 rounded-2xl hover:bg-slate-50 transition-colors group/item">
+                                <Box 
+                                  className="w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover/item:scale-110"
+                                  style={{ backgroundColor: `${child.color}15`, color: child.color }}
+                                >
+                                  {child.icon}
+                                </Box>
+                                <Box>
+                                  <Typography className="font-black text-sm text-slate-900 mb-0.5">{child.title}</Typography>
+                                  <Typography className="text-[11px] font-medium text-slate-400 leading-tight">{child.desc}</Typography>
+                                </Box>
+                              </Link>
+                            </Grid>
+                          ))}
+                        </Grid>
+                      </Paper>
+                    </Box>
+                  </>
+                ) : (
+                  <Link href={item.href!} className="px-4 py-2 text-sm font-bold text-slate-600 hover:text-blue-600 rounded-xl transition-colors">
+                    {item.label}
                   </Link>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+                )}
+              </Box>
+            ))}
+          </Box>
 
-          <Link href="/about">About Us</Link>
-        </div>
+          {/* Actions */}
+          <Box className="flex items-center gap-2">
+            <Box sx={{ display: { xs: 'none', sm: 'flex' } }} className="items-center gap-3">
+              <Link href="/login" className="text-sm font-black text-slate-900 hover:text-blue-600 px-4 py-2 transition-colors">
+                Sign In
+              </Link>
+              <Button 
+                component={Link}
+                href="/get-started"
+                variant="contained" 
+                disableElevation
+                className="rounded-2xl px-6 py-2.5 bg-slate-900 hover:bg-blue-600 text-white font-black text-sm lowercase transition-all"
+                sx={{ textTransform: 'none' }}
+              >
+                Get Started
+              </Button>
+            </Box>
+            
+            <IconButton 
+              sx={{ display: { xs: 'flex', md: 'none' } }}
+              className="text-slate-900 p-2" 
+              onClick={() => setMobileOpen(true)}
+            >
+              <MenuIcon />
+            </IconButton>
+          </Box>
+        </Box>
+      </Container>
 
-        <div className="nav-actions">
-          <Link href="/login" className="btn btn-secondary nav-btn hidden-mobile">Sign In</Link>
-          <Link href="/get-started" className="btn btn-primary nav-btn get-started hidden-mobile">Get Started</Link>
-          <button className="mobile-menu-toggle" onClick={toggleMenu}>
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-      </div>
+      {/* Mobile Drawer */}
+      <Drawer
+        anchor="right"
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        PaperProps={{
+          className: "w-full max-w-[340px] rounded-l-[48px] p-8 bg-white border-l border-slate-100"
+        }}
+      >
+        <Box className="flex items-center justify-between mb-12">
+          <Link href="/" className="flex items-center gap-3 shrink-0">
+            <Box className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
+              <img src="/resolve_icon.png" alt="Resolve" className="w-6 h-6 object-contain" />
+            </Box>
+            <Typography variant="h6" className="font-black tracking-tighter text-slate-900">
+              Resolve<span className="text-blue-600 italic">Bridge</span>
+            </Typography>
+          </Link>
+          <IconButton onClick={() => setMobileOpen(false)} className="bg-slate-50 text-slate-900">
+            <XIcon />
+          </IconButton>
+        </Box>
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="mobile-menu glass-card"
-          >
-            <div className="mobile-links">
-               <Link href="/features" onClick={toggleMenu}>Features</Link>
-               
-               <div className="mobile-dropdown-section">
-                  <p className="mobile-section-label">Solutions</p>
-                  <Link href="/loans" onClick={toggleMenu} className="mobile-dropdown-item"><CreditCard size={18} className="mr-3" /> Loans & Credit</Link>
-                  <Link href="/bnpl" onClick={toggleMenu} className="mobile-dropdown-item"><Zap size={18} className="mr-3" /> BNPL Plans</Link>
-                  <Link href="/insurance" onClick={toggleMenu} className="mobile-dropdown-item"><Shield size={18} className="mr-3" /> Insurance Coverage</Link>
-                  <Link href="/solutions" onClick={toggleMenu} className="mobile-dropdown-item"><Globe size={18} className="mr-3" /> Merchant Payments</Link>
-               </div>
+        <Box className="flex-grow overflow-y-auto pb-8">
+          <List disablePadding>
+            {NAV_ITEMS.map((item) => (
+              <Box key={item.label} className="mb-2">
+                {item.children ? (
+                  <>
+                    <ListItem disablePadding>
+                      <ListItemButton 
+                        onClick={() => setOpenDropdown(openDropdown === item.label ? null : item.label)}
+                        className="rounded-2xl py-4 bg-slate-50/50"
+                      >
+                        <ListItemText 
+                          primary={item.label} 
+                          primaryTypographyProps={{ className: "font-black text-slate-900 text-lg" }} 
+                        />
+                        <ChevronDownIcon sx={{ fontSize: 20, transition: 'transform 0.3s' }} className={openDropdown === item.label ? 'rotate-180 text-blue-600' : 'text-slate-400'} />
+                      </ListItemButton>
+                    </ListItem>
+                    <AnimatePresence>
+                      {openDropdown === item.label && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <List disablePadding className="pl-2 pt-2">
+                            {item.children.map((child) => (
+                              <ListItem key={child.href} disablePadding className="mb-1">
+                                <ListItemButton 
+                                  component={Link} 
+                                  href={child.href}
+                                  onClick={() => setMobileOpen(false)}
+                                  className="rounded-2xl py-4 group"
+                                >
+                                  <ListItemIcon className="min-w-[48px]">
+                                    <Avatar 
+                                      className="w-10 h-10 rounded-xl transition-all group-hover:bg-blue-600 group-hover:text-white"
+                                      style={{ backgroundColor: `${child.color}15`, color: child.color }}
+                                    >
+                                      {child.icon}
+                                    </Avatar>
+                                  </ListItemIcon>
+                                  <ListItemText 
+                                    primary={child.title} 
+                                    secondary={child.desc}
+                                    primaryTypographyProps={{ className: "font-black text-slate-900" }}
+                                    secondaryTypographyProps={{ className: "text-[10px] uppercase tracking-widest font-bold text-slate-400 mt-0.5" }}
+                                  />
+                                </ListItemButton>
+                              </ListItem>
+                            ))}
+                          </List>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </>
+                ) : (
+                  <ListItem disablePadding>
+                    <ListItemButton 
+                      component={Link} 
+                      href={item.href!}
+                      onClick={() => setMobileOpen(false)}
+                      className="rounded-2xl py-4 bg-slate-50/50"
+                    >
+                      <ListItemText 
+                        primary={item.label} 
+                        primaryTypographyProps={{ className: "font-black text-slate-900 text-lg" }} 
+                      />
+                      <NorthEastRounded sx={{ fontSize: 16 }} className="text-slate-300" />
+                    </ListItemButton>
+                  </ListItem>
+                )}
+              </Box>
+            ))}
+          </List>
+        </Box>
 
-               <Link href="/resolve-vehicles" onClick={toggleMenu} className="mobile-dropdown-item">
-                 <Car size={20} className="mr-3 text-primary" /> Resolve Vehicles
-               </Link>
-
-               <Link href="/about" onClick={toggleMenu}>About Us</Link>
-               <hr className="mobile-divider" />
-               <Link href="/login" className="btn btn-secondary w-full" onClick={toggleMenu}>Sign In</Link>
-               <Link href="/get-started" className="btn btn-primary w-full" onClick={toggleMenu}>Get Started</Link>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <style jsx>{`
-        .mega-dropdown {
-          width: 780px !important;
-          padding: 3rem !important;
-          left: 50% !important;
-          transform: translateX(-50%) !important;
-        }
-        .dropdown-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 1.5rem;
-        }
-        .dropdown-item {
-          display: flex;
-          flex-direction: column;
-          gap: 1.25rem;
-          padding: 1.5rem;
-          border-radius: 20px;
-          transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-          border: 1px solid transparent;
-        }
-        .dropdown-item:hover {
-          background: rgba(0,0,0,0.02);
-          border-color: var(--card-border);
-          transform: translateY(-5px);
-        }
-        .nav-scrolled {
-          background: rgba(255, 255, 255, 0.8);
-          backdrop-filter: blur(20px);
-          padding: 1rem;
-        }
-        .nav-container-scrolled {
-          max-width: 1200px;
-          border-bottom: 1px solid var(--card-border);
-          border-radius: 0;
-          background: transparent;
-        }
-        .dropdown-icon.blue { background: rgba(37, 99, 235, 0.1); color: var(--primary); }
-        .dropdown-icon.orange { background: rgba(245, 158, 11, 0.1); color: var(--accent); }
-        .dropdown-icon.purple { background: rgba(124, 58, 237, 0.1); color: var(--secondary); }
-        .dropdown-icon.green { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-      `}</style>
+        <Box className="mt-auto pt-8">
+          <Divider className="mb-8" />
+          <Stack spacing={2}>
+            <Link href="/login" onClick={() => setMobileOpen(false)} className="flex items-center justify-between px-6 py-5 font-black text-slate-900 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors">
+              Sign In <NorthEastRounded sx={{ fontSize: 16 }} className="text-slate-400" />
+            </Link>
+            <Button 
+              component={Link}
+              href="/get-started"
+              onClick={() => setMobileOpen(false)}
+              variant="contained" 
+              fullWidth
+              className="py-5 rounded-2xl bg-[#020617] text-white font-black lowercase text-xl shadow-xl shadow-blue-600/10"
+              sx={{ textTransform: 'none' }}
+              endIcon={<TrendingUpIcon />}
+            >
+              Get Started
+            </Button>
+          </Stack>
+        </Box>
+      </Drawer>
     </nav>
   );
 }

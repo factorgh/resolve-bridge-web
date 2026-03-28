@@ -2,213 +2,228 @@
 
 import { motion } from 'framer-motion';
 import { 
-  Users, 
-  MapPin, 
-  Target, 
-  Award, 
-  Globe, 
-  Shield, 
-  ArrowRight,
-  TrendingUp,
-  Heart,
-  BarChart2,
-  Cpu,
-  Zap
-} from 'lucide-react';
+  Box, 
+  Container, 
+  Typography, 
+  Grid, 
+  Card, 
+  CardContent, 
+  Stack, 
+  Button, 
+  Paper,
+  Divider,
+  Avatar,
+  IconButton
+} from '@mui/material';
+import { 
+  GroupsRounded, 
+  PublicRounded, 
+  AdsClickRounded as TargetRounded, 
+  AutoGraphRounded, 
+  SecurityRounded, 
+  BoltRounded as ZapRounded, 
+  FavoriteRounded,
+  ShowChartRounded,
+  CorporateFareRounded,
+  LocationCityRounded,
+  LanguageRounded
+} from '@mui/icons-material';
 import Link from 'next/link';
 import PageTemplate from '../components/PageTemplate';
 
+const principles = [
+  {
+    icon: <TargetRounded fontSize="large" />,
+    title: "Institutional Mission",
+    desc: "To democratize financial access across the African continent by providing a single, verified, and transparent search engine for all capital products.",
+    color: "blue"
+  },
+  {
+    icon: <FavoriteRounded fontSize="large" />,
+    title: "Consumer Empowerment",
+    desc: "Every line of code we write is focused on reducing the real-world financial friction experienced by millions of Africans on a daily basis.",
+    color: "rose"
+  },
+  {
+    icon: <SecurityRounded fontSize="large" />,
+    title: "Unwavering Trust",
+    desc: "Operating with bank-grade security and absolute institutional transparency, ensuring our users' data and trust are never compromised.",
+    color: "slate"
+  }
+];
+
 export default function AboutPage() {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.15 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 30, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { duration: 0.8 }
-    }
-  };
-
-  const principles = [
-    {
-      icon: <Target />,
-      title: "Our Mission",
-      desc: "To democratize financial access across Africa by providing a single, verified, and transparent search engine for all financial products.",
-      color: "var(--primary)"
-    },
-    {
-      icon: <Heart />,
-      title: "Impact First",
-      desc: "Every line of code we write is focused on solving the real-world financial friction experienced by millions of Africans daily.",
-      color: "#f43f5e"
-    },
-    {
-      icon: <Shield />,
-      title: "Unwavering Trust",
-      desc: "We operate with bank-grade security and absolute transparency, ensuring our users' data and trust are never compromised.",
-      color: "var(--secondary)"
-    }
-  ];
-
   return (
     <PageTemplate 
       title="Our Global" 
       gradientTitle="Mission"
-      subtitle="We are Africa's premier financial search engine, bridging the gap between individuals, businesses, and the capital they need to thrive."
+      subtitle="The premier financial search engine bridging the gap between individuals, businesses, and institutional capital across the African continent."
       noCard={true}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8rem', paddingBottom: '8rem' }}>
+      <Box className="pb-32 flex flex-col gap-16 md:gap-32">
         
         {/* Story Section */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '6rem', alignItems: 'center' }}>
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={itemVariants}
-            style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}
-          >
-            <div>
-              <span className="section-label">Institutional Growth</span>
-              <h2 style={{ fontSize: '3.5rem', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.1 }}>
-                Driving Economic <span className="gradient-text italic">Expansion</span> Through Technology
-              </h2>
-            </div>
-            
-            <div style={{ color: 'var(--muted)', fontSize: '1.2rem', lineHeight: 1.8, display: 'flex', flexDirection: 'column', gap: '1.5rem', fontWeight: 500 }}>
-              <p>
-                Founded with a vision to eliminate the silos in the African financial landscape, ResolveBridge has grown into a powerful ecosystem that empowers consumers and merchants alike.
-              </p>
-              <p>
-                We noticed that while financial products existed, they were often fragmented and difficult to access. Our platform fixes this by aggregating the best offers in real-time.
-              </p>
-            </div>
+        <Grid container spacing={{ xs: 8, md: 12 }} alignItems="center">
+          <Grid size={{ xs: 12, md: 6 }}>
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1 }}
+            >
+              <Stack spacing={4} className="text-center md:text-left items-center md:items-start">
+                <Box className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/10">
+                  <CorporateFareRounded />
+                </Box>
+                <Typography variant="h2" className="font-black tracking-tighter leading-[1] md:leading-[0.95] text-3xl sm:text-4xl md:text-5xl lg:text-6xl">
+                  Driving Economic <span className="text-blue-600 italic">Expansion</span> Through Institutional Technology.
+                </Typography>
+                <Typography className="text-slate-500 font-medium text-base md:text-lg leading-relaxed max-w-xl">
+                  Founded with a vision to eliminate the silos in the African financial landscape, ResolveBridge has grown into a powerful ecosystem that empowers 400M+ consumers and thousands of merchants.
+                </Typography>
+                
+                <Grid container spacing={3} className="pt-8 w-full">
+                  <Grid size={{ xs: 6 }}>
+                    <Box className="p-6 md:p-8 rounded-[32px] bg-slate-50 border border-slate-100 h-full">
+                      <Typography variant="h3" className="font-black text-slate-900 mb-1 text-2xl md:text-3xl lg:text-4xl">50+</Typography>
+                      <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-400 text-[10px] md:text-xs">Bank Partners</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <Box className="p-6 md:p-8 rounded-[32px] bg-slate-50 border border-slate-100 h-full">
+                      <Typography variant="h3" className="font-black text-slate-900 mb-1 text-2xl md:text-3xl lg:text-4xl">4+</Typography>
+                      <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-400 text-[10px] md:text-xs">Primary Markets</Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Stack>
+            </motion.div>
+          </Grid>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', padding: '2rem', background: 'rgba(0,0,0,0.02)', borderRadius: '24px', border: '1px solid var(--card-border)' }}>
-              <div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--foreground)' }}>50+</div>
-                <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)' }}>Bank Partners</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--foreground)' }}>4+</div>
-                <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)' }}>Primary Markets</div>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }} 
-            whileInView={{ opacity: 1, scale: 1 }} 
-            viewport={{ once: true }}
-            transition={{ duration: 1 }}
-            style={{ position: 'relative' }}
-          >
-             <div className="glass-card" style={{ padding: '0.5rem', borderRadius: '40px', overflow: 'hidden', boxShadow: 'var(--shadow-lg), var(--shadow-glow)' }}>
-                <div style={{ background: 'var(--foreground)', height: '500px', borderRadius: '34px', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                   <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '300px', height: '300px', background: 'radial-gradient(circle, var(--primary-glow), transparent)', opacity: 0.4 }}></div>
-                   <Globe size={240} style={{ color: 'rgba(255,255,255,0.03)', position: 'absolute' }} />
-                   
-                   <div style={{ display: 'flex', gap: '1.5rem', position: 'relative', zIndex: 1 }}>
-                      <div className="glass-card" style={{ padding: '2rem', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', textAlign: 'center', width: '160px', transform: 'translateY(30px)' }}>
-                         <TrendingUp className="text-primary" style={{ marginBottom: '1rem' }} />
-                         <p style={{ color: 'white', fontWeight: 800 }}>Growth</p>
-                      </div>
-                      <div className="glass-card" style={{ padding: '2rem', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', textAlign: 'center', width: '160px', transform: 'translateY(-30px)' }}>
-                         <BarChart2 style={{ color: 'var(--secondary)', marginBottom: '1rem' }} />
-                         <p style={{ color: 'white', fontWeight: 800 }}>Analytics</p>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        </div>
+          <Grid size={{ xs: 12, md: 6 }} className="hidden md:block">
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.9, rotate: 5 }}
+                whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1.2 }}
+            >
+              <Paper className="p-2 rounded-[64px] bg-slate-900 overflow-hidden relative shadow-2xl shadow-blue-900/10">
+                <Box className="bg-slate-800 rounded-[56px] h-[500px] flex items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(37,99,235,0.2)_0%,_transparent_100%)] opacity-50" />
+                  <LanguageRounded className="text-white/5 text-[400px] absolute" />
+                  
+                  <Stack direction="row" spacing={3} className="relative z-10">
+                    <motion.div animate={{ y: [0, -20, 0] }} transition={{ duration: 4, repeat: Infinity }}>
+                      <Box className="p-8 rounded-[32px] bg-white/5 border border-white/10 backdrop-blur-xl text-center w-40">
+                        <AutoGraphRounded className="text-blue-500 mb-4" />
+                        <Typography className="text-white font-black text-sm">Growth</Typography>
+                      </Box>
+                    </motion.div>
+                    <motion.div animate={{ y: [0, 20, 0] }} transition={{ duration: 4, repeat: Infinity, delay: 2 }}>
+                      <Box className="p-8 rounded-[32px] bg-white/5 border border-white/10 backdrop-blur-xl text-center w-40">
+                        <ShowChartRounded className="text-emerald-500 mb-4" />
+                        <Typography className="text-white font-black text-sm">Analytics</Typography>
+                      </Box>
+                    </motion.div>
+                  </Stack>
+                </Box>
+              </Paper>
+            </motion.div>
+          </Grid>
+        </Grid>
 
         {/* Principles Section */}
-        <section style={{ paddingTop: '8rem' }}>
-          <div style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto 6rem' }}>
-             <span className="section-label">Our DNA</span>
-             <h2 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '1.5rem' }}>Fundamental Principles</h2>
-             <p style={{ color: 'var(--muted)', fontSize: '1.15rem', fontWeight: 500 }}>The underlying values that guide our architecture and every partner relationship we build.</p>
-          </div>
+        <Box>
+           <Box className="text-center mb-16 md:mb-20 px-4">
+              <Typography variant="caption" className="text-blue-600 font-black uppercase tracking-[0.3em] block mb-4 text-[10px] md:text-xs">Our Cultural DNA</Typography>
+              <Typography variant="h2" className="font-black tracking-tighter mb-4 text-3xl md:text-5xl">Fundamental <span className="text-blue-600 italic">Principles.</span></Typography>
+              <Typography className="text-slate-400 font-medium text-base md:text-lg max-w-2xl mx-auto">The underlying institutional values that guide our architecture and every partner relationship we build.</Typography>
+           </Box>
 
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={containerVariants}
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}
-          >
-            {principles.map((p, idx) => (
-              <motion.div key={idx} variants={itemVariants} className="glass-card" style={{ padding: '3.5rem', borderRadius: '32px', display: 'flex', flexDirection: 'column', gap: '2rem', boxShadow: 'var(--shadow-md)' }}>
-                <div style={{ width: '64px', height: '64px', borderRadius: '18px', background: 'rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: p.color }}>
-                  {p.icon}
-                </div>
-                <div>
-                   <h3 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: '1rem' }}>{p.title}</h3>
-                   <p style={{ color: 'var(--muted)', fontSize: '1rem', lineHeight: 1.7, fontWeight: 500 }}>{p.desc}</p>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </section>
+           <Grid container spacing={{ xs: 3, md: 4 }}>
+             {principles.map((p, idx) => (
+               <Grid size={{ xs: 12, md: 4 }} key={idx}>
+                 <Card className="rounded-[40px] md:rounded-[48px] border border-slate-100 bg-white p-8 md:p-12 h-full shadow-sm hover:shadow-2xl hover:shadow-blue-900/5 transition-all duration-500 group">
+                   <Box className={`w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center mb-10 transition-transform group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white text-slate-400`}>
+                     {p.icon}
+                   </Box>
+                   <Typography variant="h5" className="font-black text-slate-900 mb-6 text-xl md:text-2xl">{p.title}</Typography>
+                   <Typography className="text-slate-400 font-medium leading-relaxed text-sm md:text-base">{p.desc}</Typography>
+                 </Card>
+               </Grid>
+             ))}
+           </Grid>
+        </Box>
 
-        {/* Presence Section */}
-        <section style={{ paddingTop: '6rem' }}>
-          <div className="glass-card" style={{ padding: '6rem 4rem', borderRadius: '40px', background: 'linear-gradient(135deg, var(--foreground), #1e293b)', color: 'white', position: 'relative', overflow: 'hidden' }}>
-             <div className="ambient-glow" style={{ top: '-40%', right: '-20%', opacity: 0.2 }}></div>
-             <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ textAlign: 'center', marginBottom: '6rem' }}>
-                   <h2 style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '1.5rem' }}>Pan-African Digital Presence</h2>
-                   <p style={{ opacity: 0.7, maxWidth: '600px', margin: '0 auto', fontSize: '1.2rem' }}>Operating across the continent's most dynamic economies to drive inclusion.</p>
-                </div>
+        {/* Regional Hubs Section */}
+        <Paper className="p-8 md:p-24 rounded-[40px] md:rounded-[64px] bg-[#020617] text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-600/10 blur-[200px] rounded-full -translate-y-1/2 translate-x-1/2" />
+          
+          <Box className="relative z-10">
+            <Box className="text-center mb-16 md:mb-20">
+              <Typography variant="h3" className="font-black tracking-tighter mb-4 text-2xl md:text-4xl">Pan-African Digital Presence.</Typography>
+              <Typography className="text-slate-500 text-base md:text-lg font-medium max-w-xl mx-auto px-4">Operating across the continent's most dynamic economies to drive financial inclusion through institutional scale.</Typography>
+            </Box>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '3rem', textAlign: 'center' }}>
-                  {[
-                    { name: "Ghana", city: "Accra Global HQ", icon: <MapPin size={24} /> },
-                    { name: "Nigeria", city: "Lagos Growth Hub", icon: <Zap size={24} /> },
-                    { name: "Kenya", city: "Nairobi Tech Office", icon: <Cpu size={24} /> },
-                    { name: "South Africa", city: "JHB Financial Unit", icon: <Shield size={24} /> }
-                  ].map((market, idx) => (
-                    <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-                       <div style={{ color: 'var(--primary)', marginBottom: '0.5rem' }}>{market.icon}</div>
-                       <h4 style={{ fontSize: '1.5rem', fontWeight: 900 }}>{market.name}</h4>
-                       <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.6 }}>{market.city}</span>
-                    </div>
-                  ))}
-                </div>
-             </div>
-          </div>
-        </section>
+            <Grid container spacing={{ xs: 3, md: 6 }}>
+              {[
+                { name: "Ghana", city: "Accra Regional HQ", icon: <LocationCityRounded fontSize="large" color="primary" /> },
+                { name: "Nigeria", city: "Lagos Growth Hub", icon: <ZapRounded fontSize="large" color="primary" /> },
+                { name: "Kenya", city: "Nairobi Tech Unit", icon: <AutoGraphRounded fontSize="large" color="primary" /> },
+                { name: "South Africa", city: "JHB Financial Hub", icon: <SecurityRounded fontSize="large" color="primary" /> }
+              ].map((hub, i) => (
+                <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={i}>
+                  <Box className="text-center p-8 rounded-[32px] md:rounded-[40px] bg-white/5 border border-white/10 hover:bg-white/10 transition-all cursor-crosshair">
+                    <Box className="mb-6">{hub.icon}</Box>
+                    <Typography variant="h5" className="font-black text-white mb-1 text-xl">{hub.name}</Typography>
+                    <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-500 text-[10px]">{hub.city}</Typography>
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        </Paper>
 
         {/* Final CTA */}
-        <section style={{ textAlign: 'center', paddingTop: '8rem', paddingBottom: '4rem' }}>
-           <motion.div 
-             initial={{ opacity: 0, y: 30 }} 
-             whileInView={{ opacity: 1, y: 0 }} 
-             viewport={{ once: true }}
-             transition={{ duration: 1 }}
-           >
-              <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 30px var(--primary-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', margin: '0 auto 3rem' }}>
-                 <Users size={32} />
-              </div>
-              <h2 style={{ fontSize: '4.5rem', fontWeight: 900, marginBottom: '2rem', letterSpacing: '-0.04em' }}>Join the Financial <span className="gradient-text italic">Revolution</span></h2>
-              <p style={{ color: 'var(--muted)', fontSize: '1.35rem', maxWidth: '700px', margin: '0 auto 4rem', fontWeight: 500 }}>
-                 Whether you're a potential partner, a customer, or talent looking to make an impact, we'd love to have you bridge the gap with us.
-              </p>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-                 <Link href="/get-started" className="btn btn-primary" style={{ padding: '1.25rem 3.5rem', fontSize: '1.1rem' }}>Get Started Today</Link>
-                 <Link href="/contact" className="btn btn-secondary" style={{ padding: '1.25rem 3.5rem', fontSize: '1.1rem' }}>Talk to an Architect</Link>
-              </div>
-           </motion.div>
-        </section>
-      </div>
+        <Box className="text-center py-12 md:py-20 px-4">
+          <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+          >
+            <Avatar className="w-20 h-20 md:w-24 md:h-24 bg-blue-600 mx-auto mb-10 shadow-xl shadow-blue-600/30">
+               <GroupsRounded fontSize="large" />
+            </Avatar>
+            <Typography variant="h2" className="font-black tracking-tighter mb-6 leading-[1.1] md:leading-none text-3xl sm:text-5xl md:text-7xl">
+              Join the Financial <br/> <span className="text-blue-600 italic">Revolution.</span>
+            </Typography>
+            <Typography className="text-slate-500 font-medium text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed">
+              Whether you're a potential institutional partner, a growth-focused customer, or talent looking to make a continental impact, we want to hear from you.
+            </Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} justifyContent="center" alignItems="center">
+              <Button 
+                href="/get-started"
+                component={Link}
+                variant="contained" 
+                className="bg-slate-900 hover:bg-blue-600 w-full sm:w-auto px-12 py-5 rounded-2xl text-xl font-black lowercase transition-all shadow-xl shadow-blue-600/10"
+                sx={{ textTransform: 'none' }}
+              >
+                Start Journey
+              </Button>
+              <Button 
+                href="/contact"
+                component={Link}
+                variant="outlined" 
+                className="border-slate-200 text-slate-900 hover:bg-slate-50 w-full sm:w-auto px-12 py-5 rounded-2xl text-xl font-black lowercase transition-all"
+                sx={{ textTransform: 'none' }}
+              >
+                Talk to Sales
+              </Button>
+            </Stack>
+          </motion.div>
+        </Box>
+
+      </Box>
     </PageTemplate>
   );
 }

@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --primary: #2563eb;
   --primary-glow: rgba(37, 99, 235, 0.4);
@@ -69,18 +73,28 @@ button {
 h1, h2, h3, h4, h5, h6 {
   font-weight: 900;
   letter-spacing: -0.04em;
-  line-height: 1;
+  line-height: 1.1;
   margin-bottom: 1rem;
 }
+
+h1 { font-size: clamp(2.5rem, 8vw, 4.5rem); }
+h2 { font-size: clamp(2rem, 6vw, 3.5rem); }
+h3 { font-size: clamp(1.5rem, 4vw, 2.5rem); }
 
 p {
   line-height: 1.7;
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 0 4rem;
+  }
 }
 
 .gradient-text {
@@ -99,6 +113,13 @@ p {
   box-shadow: var(--shadow-md);
   border-radius: 32px;
   transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  padding: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .glass-card {
+    padding: 3rem;
+  }
 }
 
 .btn {
@@ -126,16 +147,21 @@ p {
   box-shadow: 0 15px 30px -10px var(--primary-glow);
 }
 
-.btn-secondary {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  color: var(--foreground);
-  backdrop-filter: blur(10px);
-}
-
 .btn-secondary:hover {
   background: var(--card-border);
   transform: translateY(-2px);
+}
+
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .responsive-grid {
+    gap: 2.5rem;
+  }
 }
 
 /* Base Animations */
@@ -721,6 +747,9 @@ section {
 }
 
 @media (max-width: 768px) {
+  section {
+    padding: 5rem 0;
+  }
   .nav-links {
     display: none;
   }
@@ -733,8 +762,11 @@ section {
   .nav-container {
     padding: 0.5rem 1rem;
   }
-  .hero-title { font-size: 2.5rem; }
-  .hero-subtitle { font-size: 1rem; }
+  .hero-section {
+    padding-top: 10rem;
+    padding-bottom: 6rem;
+  }
+  .hero-subtitle { font-size: 1.1rem; }
   .hero-visual {
      height: auto;
      padding-bottom: 2rem;
@@ -746,7 +778,11 @@ section {
   .mock-card.active {
      transform: scale(1);
   }
-  .hero-actions { flex-direction: column; align-items: stretch; max-width: 300px; margin-left: auto; margin-right: auto; }
+  .hero-actions { 
+    flex-direction: column; 
+    align-items: stretch; 
+    gap: 1rem;
+  }
   .stats-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
   .solutions-container { 
      display: flex;
@@ -763,8 +799,7 @@ section {
   .solution-visual { height: 350px; }
   .security-container { grid-template-columns: 1fr; padding: 2rem; }
   .security-badges { flex-wrap: wrap; }
-  .cta-card { padding: 3rem 1.5rem; }
-  .cta-card h2 { font-size: 2rem; }
+  .cta-card { padding: 4rem 1.5rem; }
   .cta-actions { flex-direction: column; }
   .footer-container {
      grid-template-columns: 1fr;
@@ -828,8 +863,14 @@ section {
 
 .vehicles-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: 3rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .vehicles-grid {
+    gap: 3rem;
+  }
 }
 
 .vehicle-card {
