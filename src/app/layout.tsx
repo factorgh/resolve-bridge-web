@@ -10,6 +10,11 @@ export const metadata: Metadata = {
   description: "Connect with the best loans, BNPL, and insurance providers in Ghana, Nigeria, Kenya and beyond. Bridging the gap for a better financial future.",
   metadataBase: new URL('https://resolvebridge.com'),
   keywords: ["Africa", "finance", "search engine", "loans", "insurance", "BNPL", "Ghana", "Nigeria", "Kenya"],
+  icons: {
+    icon: "/resolve_icon.png",
+    shortcut: "/resolve_icon.png",
+    apple: "/resolve_icon.png",
+  },
   openGraph: {
     title: 'ResolveBridge | Africa\'s Financial Search Engine',
     description: 'Empowering Africans with accessible financial services.',
