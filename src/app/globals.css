@@ -8,6 +8,8 @@
   --secondary: #7c3aed;
   --secondary-glow: rgba(124, 58, 237, 0.4);
   --accent: #f59e0b;
+  --accent-magenta: #d81b60;
+  --accent-purple: #8e24aa;
   --background: #ffffff;
   --foreground: #020617;
   --card-bg: rgba(255, 255, 255, 0.7);
@@ -20,7 +22,15 @@
   --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1);
   --shadow-glow: 0 0 40px -10px var(--primary-glow);
   
+  --gradient-echo: linear-gradient(135deg, #d81b60 0%, #8e24aa 50%, #2563eb 100%);
   --font-inter: 'Inter', system-ui, sans-serif;
+  --font-serif: 'Georgia', serif;
+  
+  /* Senior Designer Shadows */
+  --shadow-senior: 
+    0 2px 4px rgba(0,0,0,0.02),
+    0 10px 20px rgba(0,0,0,0.04),
+    0 20px 40px rgba(0,0,0,0.04);
 }
 
 [data-theme='dark'] {
@@ -105,21 +115,44 @@ p {
   display: inline-block;
 }
 
-.glass-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-md);
-  border-radius: 32px;
-  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-  padding: 1.5rem;
+.echo-hero-text {
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -0.06em;
+  line-height: 0.85;
+  text-transform: uppercase;
 }
 
-@media (min-width: 768px) {
-  .glass-card {
-    padding: 3rem;
-  }
+.echo-gradient {
+  background: var(--gradient-echo);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.senior-glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: var(--shadow-senior);
+}
+
+.senior-card {
+  border: 1px solid rgba(15, 23, 42, 0.05);
+  background: white;
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.senior-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(16, 185, 129, 0.2);
+  box-shadow: var(--shadow-senior);
+}
+
+.editorial-italic {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
 }
 
 .btn {
