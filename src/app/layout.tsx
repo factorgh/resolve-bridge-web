@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import "./globals.css";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
 import MUIRegistry from "./components/MUIRegistry";
+import ConditionalLayout from "./components/ConditionalLayout";
 
 export const metadata: Metadata = {
   title: "ResolveBridge | Africa's Financial Search Engine",
@@ -41,10 +39,9 @@ export default function RootLayout({
       </head>
       <body>
         <MUIRegistry>
-          <div className="grid-bg"></div>
-          <Navbar />
-          {children}
-          <Footer />
+          <ConditionalLayout>
+            {children}
+          </ConditionalLayout>
         </MUIRegistry>
       </body>
     </html>

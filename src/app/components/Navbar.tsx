@@ -28,47 +28,40 @@ const NAV_ITEMS = [
   {
     label: 'Loans',
     children: [
-      { label: 'Personal Loans', desc: 'Rates from 50+ lenders' },
-      { label: 'Business Loans', desc: 'Capital for African SMEs' },
-      { label: 'Auto Loans', desc: 'Fleet & personal financing' },
+      { label: 'Personal Loans', desc: 'Rates from 50+ lenders', href: '/loans/personal' },
+      { label: 'Business Loans', desc: 'Capital for African SMEs', href: '/loans/business' },
+      { label: 'Auto Loans', desc: 'Fleet & personal financing', href: '/loans/auto' },
     ],
   },
   {
     label: 'Business',
     children: [
-      { label: 'SME Credit', desc: 'Revolving credit lines' },
-      { label: 'Payroll Finance', desc: 'Staff payment solutions' },
+      { label: 'SME Credit', desc: 'Revolving credit lines', href: '/business/sme-credit' },
+      { label: 'Payroll Finance', desc: 'Staff payment solutions', href: '/business/payroll' },
     ],
   },
   {
     label: 'Mortgages',
     children: [
-      { label: 'Home Loans', desc: 'Buy or build your home' },
-      { label: 'Home Equity', desc: 'Unlock your property value' },
-    ],
-  },
-  {
-    label: 'Credit Cards',
-    children: [
-      { label: 'Retail Cards', desc: 'Everyday spending rewards' },
-      { label: 'Corporate Cards', desc: 'Business expense management' },
+      { label: 'Home Loans', desc: 'Buy or build your home', href: '/mortgages/home' },
+      { label: 'Home Equity', desc: 'Unlock your property value', href: '/mortgages/equity' },
     ],
   },
   {
     label: 'Insurance',
     children: [
-      { label: 'Health Cover', desc: 'Individual & team plans' },
-      { label: 'Life Insurance', desc: 'Protect what matters' },
-      { label: 'Auto Insurance', desc: 'Comprehensive vehicle cover' },
+      { label: 'Health Cover', desc: 'Individual & team plans', href: '/insurance/health' },
+      { label: 'Life Insurance', desc: 'Protect what matters', href: '/insurance/life' },
+      { label: 'Auto Insurance', desc: 'Comprehensive vehicle cover', href: '/insurance/auto' },
     ],
   },
   {
     label: 'Resolve Group',
     children: [
-      { label: 'Resolve Capital', desc: 'Institutional liquidity solutions' },
-      { label: 'Resolve Insurance', desc: 'Comprehensive risk management' },
-      { label: 'Resolve Vehicles', desc: 'Asset financing & logistics' },
-      { label: 'Resolve Health', desc: 'Global medical coverage' },
+      { label: 'Resolve Capital', desc: 'Institutional liquidity solutions', href: '/resolve-group/capital' },
+      { label: 'Resolve Insurance', desc: 'Comprehensive risk management', href: '/resolve-group/insurance' },
+      { label: 'Resolve Vehicles', desc: 'Asset financing & logistics', href: '/resolve-group/vehicles' },
+      { label: 'Resolve Health', desc: 'Global medical coverage', href: '/resolve-group/health' },
     ],
   },
 ];
@@ -91,7 +84,7 @@ function DropdownMenu({ item }: { item: (typeof NAV_ITEMS)[0] }) {
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1 px-3 py-2 rounded-lg text-[13.5px] font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all"
+        className="flex items-center gap-1 px-3 py-2 rounded-lg text-[13.5px] font-semibold text-white/70 hover:text-white hover:bg-white/5 transition-all"
       >
         {item.label}
         <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
@@ -108,18 +101,19 @@ function DropdownMenu({ item }: { item: (typeof NAV_ITEMS)[0] }) {
             transition={{ duration: 0.15, ease: 'easeOut' }}
             onMouseEnter={() => setOpen(true)}
             onMouseLeave={() => setOpen(false)}
-            className="absolute top-[calc(100%+8px)] left-0 z-50 bg-white border border-slate-100 rounded-2xl shadow-xl shadow-slate-200/60 p-2 min-w-[220px]"
+            className="absolute top-[calc(100%+8px)] left-0 z-50 bg-[#0b121f] border border-white/10 rounded-2xl shadow-2xl shadow-black/50 p-2 min-w-[240px] backdrop-blur-xl"
           >
             {item.children.map((child) => (
               <Link
                 key={child.label}
-                href="#"
-                className="flex flex-col gap-0.5 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-colors group"
+                href={child.href}
+                className="flex flex-col gap-0.5 px-3 py-2.5 rounded-xl hover:bg-white/5 transition-colors group"
+                onClick={() => setOpen(false)}
               >
-                <span className="text-[13.5px] font-semibold text-slate-800 group-hover:text-emerald-600 transition-colors">
+                <span className="text-[13.5px] font-semibold text-white/90 group-hover:text-emerald-400 transition-colors">
                   {child.label}
                 </span>
-                <span className="text-[11.5px] text-slate-400 font-medium">{child.desc}</span>
+                <span className="text-[11.5px] text-white/40 font-medium">{child.desc}</span>
               </Link>
             ))}
           </motion.div>
@@ -142,10 +136,10 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-[1000] h-[68px] flex items-center transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-[1000] h-[72px] flex items-center transition-all duration-300 ${
         scrolled
-          ? 'bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm shadow-slate-100'
-          : 'bg-white border-b border-slate-100'
+          ? 'bg-[#04080f]/90 backdrop-blur-lg border-b border-white/10 shadow-lg'
+          : 'bg-[#04080f] border-b border-white/5'
       }`}
     >
       <Container maxWidth="xl">
@@ -154,11 +148,16 @@ export default function Navbar() {
           {/* Left: Logo + Nav links */}
           <Stack direction="row" alignItems="center" spacing={1}>
             {/* Logo */}
-            <Link href="/" className="flex items-center mr-6">
+            {/* Logo */}
+            <Link href="/" className="flex items-center mr-8 no-underline" onClick={() => setMobileOpen(false)}>
                 <img
                   src="/images/resolve_logo.png"
                   alt="ResolveBridge"
-                  className="h-8 w-auto object-contain"
+                  className="h-9 w-auto object-contain"
+                  style={{ 
+                    filter: 'invert(1) contrast(150%) brightness(1.2)', 
+                    mixBlendMode: 'screen' 
+                  }}
                 />
             </Link>
 
@@ -180,11 +179,13 @@ export default function Navbar() {
                   textTransform: 'none',
                   fontSize: '13.5px',
                   fontWeight: 600,
-                  color: '#475569',
-                  px: 2,
+                  color: 'rgba(255,255,255,0.7)',
+                  px: 2.5,
                   py: 1,
                   borderRadius: '10px',
-                  '&:hover': { backgroundColor: '#f8fafc', color: '#0f172a' },
+                  fontFamily: "'Inter', sans-serif",
+                  transition: 'all 0.2s',
+                  '&:hover': { color: '#fff', backgroundColor: 'rgba(255,255,255,0.05)' },
                 }}
               >
                 Log in
@@ -199,14 +200,16 @@ export default function Navbar() {
                   textTransform: 'none',
                   fontSize: '13.5px',
                   fontWeight: 700,
-                  backgroundColor: '#0a1e2b',
+                  backgroundColor: '#10b981',
                   color: '#fff',
-                  px: 2.5,
-                  py: 1,
+                  px: 3,
+                  py: 1.1,
                   borderRadius: '10px',
-                  boxShadow: 'none',
-                  '&:hover': { backgroundColor: '#10b981', boxShadow: 'none' },
-                  transition: 'background-color 0.2s',
+                 
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  boxShadow: '0 4px 14px rgba(16, 185, 129, 0.25)',
+                  '&:hover': { backgroundColor: '#059669', boxShadow: 'none' },
+                  transition: 'all 0.2s',
                 }}
               >
                 Get Started
@@ -215,7 +218,7 @@ export default function Navbar() {
 
             {/* Mobile hamburger */}
             <IconButton
-              sx={{ display: { xs: 'flex', lg: 'none' }, color: '#0a1e2b' }}
+              sx={{ display: { xs: 'flex', lg: 'none' }, color: '#fff' }}
               onClick={() => setMobileOpen(true)}
             >
               <MenuIcon />
@@ -233,18 +236,27 @@ export default function Navbar() {
           sx: {
             width: '100%',
             maxWidth: 320,
-            backgroundColor: '#fff',
-            boxShadow: '-4px 0 40px rgba(0,0,0,0.08)',
+            backgroundColor: '#04080f',
+            boxShadow: '-4px 0 40px rgba(0,0,0,0.5)',
+            borderLeft: '1px solid rgba(255,255,255,0.05)'
           },
         }}
       >
         <Box className="flex flex-col h-full">
           {/* Drawer header */}
-          <Box className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-            <Link href="/" className="" onClick={() => setMobileOpen(false)}>
-              <img src="/images/resolve_logo.png" alt="ResolveBridge" className="h-7 w-auto object-contain" />
+          <Box className="flex items-center justify-between px-5 py-5 border-b border-white/5 bg-[#04080f]">
+            <Link href="/" className="no-underline" onClick={() => setMobileOpen(false)}>
+                <img 
+                  src="/images/resolve_logo_full.png" 
+                  alt="ResolveBridge" 
+                  className="h-7 w-auto object-contain" 
+                  style={{ 
+                    filter: 'invert(1) contrast(150%) brightness(1.2)', 
+                    mixBlendMode: 'screen' 
+                  }}
+                />
             </Link>
-            <IconButton onClick={() => setMobileOpen(false)} sx={{ color: '#64748b' }}>
+            <IconButton onClick={() => setMobileOpen(false)} sx={{ color: 'rgba(255,255,255,0.6)' }}>
               <XIcon />
             </IconButton>
           </Box>
@@ -263,7 +275,7 @@ export default function Navbar() {
                       mb: 0.5,
                       px: 2,
                       py: 1.25,
-                      '&:hover': { backgroundColor: '#f8fafc' },
+                      '&:hover': { backgroundColor: 'rgba(255,255,255,0.05)' },
                     }}
                   >
                     <ListItemText
@@ -271,30 +283,30 @@ export default function Navbar() {
                       primaryTypographyProps={{
                         fontSize: '14px',
                         fontWeight: 700,
-                        color: '#0f172a',
+                        color: 'rgba(255,255,255,0.9)',
                       }}
                     />
                     <motion.span
                       animate={{ rotate: openMobileItem === item.label ? 180 : 0 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <ChevronDownIcon sx={{ fontSize: 18, color: '#94a3b8' }} />
+                      <ChevronDownIcon sx={{ fontSize: 18, color: 'rgba(255,255,255,0.4)' }} />
                     </motion.span>
                   </ListItemButton>
 
                   <Collapse in={openMobileItem === item.label}>
-                    <Box className="ml-3 mb-2 pl-3 border-l-2 border-slate-100">
+                    <Box className="ml-3 mb-2 pl-3 border-l-2 border-white/10">
                       {item.children.map((child) => (
                         <Link
                           key={child.label}
-                          href="#"
+                          href={child.href}
                           onClick={() => setMobileOpen(false)}
-                          className="flex flex-col gap-0.5 px-3 py-2 rounded-xl hover:bg-slate-50 transition-colors"
+                          className="flex flex-col gap-0.5 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors"
                         >
-                          <span className="text-[13px] font-semibold text-slate-700">
+                          <span className="text-[13px] font-semibold text-white/90">
                             {child.label}
                           </span>
-                          <span className="text-[11.5px] text-slate-400">{child.desc}</span>
+                          <span className="text-[11.5px] text-white/40">{child.desc}</span>
                         </Link>
                       ))}
                     </Box>
@@ -305,7 +317,7 @@ export default function Navbar() {
           </Box>
 
           {/* Drawer footer actions */}
-          <Box className="px-4 py-5 border-t border-slate-100 flex flex-col gap-2.5">
+          <Box className="px-4 py-6 border-t border-white/5 flex flex-col gap-3 bg-[#04080f]">
             <Button
               component={Link}
               href="/login"
@@ -317,34 +329,33 @@ export default function Navbar() {
                 fontWeight: 700,
                 fontSize: '14px',
                 borderRadius: '12px',
-                borderColor: '#e2e8f0',
-                color: '#0f172a',
-                py: 1.25,
-                '&:hover': { borderColor: '#10b981', color: '#10b981', backgroundColor: 'transparent' },
+                borderColor: 'rgba(255,255,255,0.1)',
+                color: 'rgba(255,255,255,0.8)',
+                py: 1.2,
+                '&:hover': { borderColor: 'rgba(255,255,255,0.2)', backgroundColor: 'rgba(255,255,255,0.05)', color: '#fff' }
               }}
             >
               Log in
             </Button>
             <Button
               component={Link}
-              href="/get-started"
+              href="/portal"
               fullWidth
               variant="contained"
-              disableElevation
               onClick={() => setMobileOpen(false)}
               sx={{
                 textTransform: 'none',
-                fontWeight: 700,
+                fontWeight: 800,
                 fontSize: '14px',
                 borderRadius: '12px',
-                backgroundColor: '#0a1e2b',
+                backgroundColor: '#10b981',
                 color: '#fff',
-                py: 1.25,
-                boxShadow: 'none',
-                '&:hover': { backgroundColor: '#10b981', boxShadow: 'none' },
+                py: 1.5,
+                '&:hover': { backgroundColor: '#059669' },
+                boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)'
               }}
             >
-              Get Started →
+              Get Started
             </Button>
           </Box>
         </Box>
