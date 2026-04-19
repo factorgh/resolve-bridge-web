@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import PortalShell, { C, F } from '../components/PortalShell';
@@ -16,35 +16,40 @@ const LOAN_TYPES = [
 const LENDERS = ['Absa Bank Ghana', 'Fidelity Bank', 'CAL Bank', 'GCB Bank', 'Ecobank Ghana', 'Zenith Bank', 'Access Bank'];
 const PURPOSES = ['Debt Consolidation', 'Home Improvement', 'Medical Expenses', 'Education', 'Business Capital', 'Equipment Purchase', 'Land / Property', 'Vehicle Purchase', 'Travel', 'Other'];
 const EMPLOYMENT = ['Employed (Salaried)', 'Self-Employed', 'Business Owner', 'Government Employee', 'Contractor / Freelancer', 'Retired'];
-
 interface FormData {
   loanType: string; amount: string; term: string; purpose: string;
   firstName: string; lastName: string; phone: string; employment: string;
   employer: string; monthlyIncome: string; lender: string;
 }
 
+const isMobileStyle = (isMobile: boolean) => ({
+  display: 'flex',
+  flexDirection: isMobile ? 'column' : 'row',
+  gap: isMobile ? 12 : 20
+});
+
 /* ─── Step Indicator ─────────────────────────────────────────────────────── */
-function StepIndicator({ steps, current }: { steps: string[]; current: number }) {
+function StepIndicator({ steps, current, isMobile }: { steps: string[]; current: number; isMobile: boolean }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 36 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: isMobile ? 24 : 36 }}>
       {steps.map((label, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'center', flex: i < steps.length - 1 ? 1 : 'none' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
-              width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: isMobile ? 28 : 32, height: isMobile ? 28 : 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: i < current ? C.green : i === current ? C.blue : 'transparent',
               border: `2px solid ${i < current ? C.green : i === current ? C.blue : C.border}`,
               color: i <= current ? '#fff' : C.textMuted,
-              fontSize: 12, fontWeight: 800, flexShrink: 0, transition: 'all 0.3s', fontFamily: F.heading,
+              fontSize: isMobile ? 10 : 12, fontWeight: 800, flexShrink: 0, transition: 'all 0.3s', fontFamily: F.heading,
             }}>
               {i < current
                 ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 : i + 1}
             </div>
-            <span style={{ fontSize: 12.5, fontWeight: i === current ? 700 : 500, color: i === current ? C.text : C.textMuted, whiteSpace: 'nowrap', fontFamily: F.body }}>{label}</span>
+            {!isMobile && <span style={{ fontSize: 12.5, fontWeight: i === current ? 700 : 500, color: i === current ? C.text : C.textMuted, whiteSpace: 'nowrap', fontFamily: F.body }}>{label}</span>}
           </div>
           {i < steps.length - 1 && (
-            <div style={{ flex: 1, height: 2, background: i < current ? C.green : C.border, margin: '0 14px', borderRadius: 99, transition: 'background 0.3s' }} />
+            <div style={{ flex: 1, height: 2, background: i < current ? C.green : C.border, margin: isMobile ? '0 8px' : '0 14px', borderRadius: 99, transition: 'background 0.3s' }} />
           )}
         </div>
       ))}
@@ -95,13 +100,41 @@ export default function ApplyLoanPage() {
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState<FormData>({
     loanType: '', amount: '', term: '24', purpose: '',
-    firstName: 'Kwame', lastName: 'Asante', phone: '+233 24 000 0000',
+    firstName: '', lastName: '', phone: '',
     employment: '', employer: '', monthlyIncome: '', lender: '',
   });
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    // Universal Bridge: Pre-fill from Session/Onboarding
+    const stored = sessionStorage.getItem('rb_user');
+    if (stored) {
+      const u = JSON.parse(stored);
+      setForm(f => ({
+        ...f,
+        firstName: u.name?.split(' ')[0] || '',
+        lastName: u.name?.split(' ')[1] || '',
+        phone: u.phone || '+233 ',
+        monthlyIncome: u.income || ''
+      }));
+    }
+    
+    // Check if we came from Marketplace with a specific lender
+    const params = new URLSearchParams(window.location.search);
+    const preLender = params.get('lender');
+    if (preLender) setForm(f => ({ ...f, lender: decodeURIComponent(preLender) }));
+  }, []);
 
   const set = (key: keyof FormData) => (v: string) => setForm(f => ({ ...f, [key]: v }));
 
-  const steps = ['Loan Type', 'Loan Details', 'Your Info', 'Review'];
+  const steps = ['Goal Selection', 'Lender Match', 'Vault & Identity', 'Verification'];
 
   const canNext = () => {
     if (step === 0) return !!form.loanType;
@@ -118,7 +151,7 @@ export default function ApplyLoanPage() {
   if (submitted) {
     return (
       <PortalShell title="Apply for Loan" backHref="/portal" backLabel="Dashboard">
-        <div style={{ maxWidth: 520, margin: '0 auto', textAlign: 'center', paddingTop: 60 }}>
+        <div style={{ maxWidth: 520, margin: '0 auto', textAlign: 'center', padding: isMobile ? '40px 20px' : '60px 0' }}>
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 12 }}
             style={{ width: 80, height: 80, borderRadius: '50%', background: C.greenPale, border: `3px solid ${C.green}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}
           >
@@ -129,7 +162,7 @@ export default function ApplyLoanPage() {
             Your {LOAN_TYPES.find(l => l.id === form.loanType)?.label} application of <strong style={{ color: C.text }}>GH₵ {Number(form.amount).toLocaleString()}</strong> has been sent to <strong style={{ color: C.text }}>{form.lender}</strong>.
           </p>
           <p style={{ margin: '0 0 32px', fontSize: 13.5, color: C.textMuted }}>Reference: <strong style={{ color: C.blue, fontFamily: F.heading }}>APP-{Date.now().toString().slice(-8)}</strong></p>
-          <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 16, padding: '20px 24px', marginBottom: 28, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px', textAlign: 'left' }}>
+          <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 16, padding: isMobile ? '16px' : '20px 24px', marginBottom: 28, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '12px' : '12px 24px', textAlign: 'left' }}>
             {[
               { label: 'Loan Type', value: LOAN_TYPES.find(l => l.id === form.loanType)?.label ?? '' },
               { label: 'Amount', value: `GH₵ ${Number(form.amount).toLocaleString()}` },
@@ -144,7 +177,7 @@ export default function ApplyLoanPage() {
               </div>
             ))}
           </div>
-          <button onClick={() => router.push('/portal')} style={{ background: `linear-gradient(135deg, ${C.blue}, ${C.blueLight})`, border: 'none', borderRadius: 14, padding: '14px 32px', color: '#fff', fontSize: 14, fontWeight: 800, fontFamily: F.heading, cursor: 'pointer', boxShadow: `0 6px 20px ${C.blue}44` }}>
+          <button onClick={() => router.push('/portal')} style={{ background: `linear-gradient(135deg, ${C.blue}, ${C.blueLight})`, border: 'none', borderRadius: 14, padding: '14px 32px', color: '#fff', fontSize: 14, fontWeight: 800, fontFamily: F.heading, cursor: 'pointer', boxShadow: `0 6px 20px ${C.blue}44`, width: isMobile ? '100%' : 'auto' }}>
             Back to Dashboard
           </button>
         </div>
@@ -154,13 +187,13 @@ export default function ApplyLoanPage() {
 
   return (
     <PortalShell title="Apply for Loan" backHref="/portal" backLabel="Dashboard">
-      <div style={{ maxWidth: 760, margin: '0 auto' }}>
-        <div style={{ marginBottom: 28 }}>
-          <h1 style={{ margin: '0 0 6px', fontSize: 26, fontWeight: 900, color: C.text, fontFamily: F.heading, letterSpacing: '-0.04em' }}>Apply for a Loan</h1>
-          <p style={{ margin: 0, fontSize: 14, color: C.textMuted }}>Compare rates from {LENDERS.length}+ verified lenders and get funded fast.</p>
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: isMobile ? '0 0 100px' : 0 }}>
+        <div style={{ marginBottom: isMobile ? 32 : 28 }}>
+           <h1 style={{ margin: '0 0 6px', fontSize: isMobile ? 24 : 26, fontWeight: 900, color: C.text, fontFamily: F.heading, letterSpacing: '-0.04em' }}>Apply for a Loan</h1>
+           <p style={{ margin: 0, fontSize: isMobile ? 13 : 14, color: C.textMuted }}>Compare rates from {LENDERS.length}+ verified lenders and get funded fast.</p>
         </div>
 
-        <StepIndicator steps={steps} current={step} />
+        <StepIndicator steps={steps} current={step} isMobile={isMobile} />
 
         <AnimatePresence mode="wait">
           <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.22 }}>
@@ -169,10 +202,10 @@ export default function ApplyLoanPage() {
             {step === 0 && (
               <div>
                 <p style={{ margin: '0 0 20px', fontSize: 15, fontWeight: 700, color: C.text, fontFamily: F.heading }}>What type of loan are you looking for?</p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 14 }}>
                   {LOAN_TYPES.map(lt => (
                     <button key={lt.id} onClick={() => set('loanType')(lt.id)}
-                      style={{ background: form.loanType === lt.id ? lt.pale : '#fff', border: `2px solid ${form.loanType === lt.id ? lt.color : C.border}`, borderRadius: 18, padding: '22px 24px', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', boxShadow: form.loanType === lt.id ? `0 4px 20px ${lt.color}22` : 'none' }}
+                      style={{ background: form.loanType === lt.id ? lt.pale : '#fff', border: `2px solid ${form.loanType === lt.id ? lt.color : C.border}`, borderRadius: 18, padding: isMobile ? '18px' : '22px 24px', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', boxShadow: form.loanType === lt.id ? `0 4px 20px ${lt.color}22` : 'none' }}
                     >
                       <div style={{ width: 48, height: 48, borderRadius: 14, background: lt.pale, display: 'flex', alignItems: 'center', justifyContent: 'center', color: lt.color, marginBottom: 14 }}>{lt.icon}</div>
                       <p style={{ margin: '0 0 4px', fontSize: 15.5, fontWeight: 800, color: C.text, fontFamily: F.heading, letterSpacing: '-0.02em' }}>{lt.label}</p>
@@ -190,12 +223,12 @@ export default function ApplyLoanPage() {
 
             {/* Step 1 – Loan Details */}
             {step === 1 && (
-              <div style={{ background: '#fff', borderRadius: 22, padding: '32px', border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 22 }}>
+              <div style={{ background: '#fff', borderRadius: 22, padding: isMobile ? '24px' : '32px', border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 22 }}>
                 <Field label="Loan Amount (GH₵)" hint="Enter the amount you need">
                   <Input value={form.amount} onChange={set('amount')} placeholder="e.g. 15,000" type="number" prefix="GH₵" />
                 </Field>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
                   <Field label="Repayment Term">
                     <Select value={form.term} onChange={set('term')} options={['6', '12', '18', '24', '36', '48', '60', '72', '84'].map(v => v + ' months')} />
                   </Field>
@@ -211,7 +244,7 @@ export default function ApplyLoanPage() {
                 {/* Estimate */}
                 {form.amount && (
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                    style={{ background: C.bluePale, border: `1px solid ${C.blue}22`, borderRadius: 14, padding: '16px 20px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}
+                    style={{ background: C.bluePale, border: `1px solid ${C.blue}22`, borderRadius: 14, padding: isMobile ? '14px' : '16px 20px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16 }}
                   >
                     {[
                       { label: 'Est. Monthly', value: `GH₵ ${Math.round(Number(form.amount) * 0.045).toLocaleString()}` },
@@ -220,7 +253,7 @@ export default function ApplyLoanPage() {
                     ].map(({ label, value }) => (
                       <div key={label}>
                         <p style={{ margin: '0 0 3px', fontSize: 11, fontWeight: 700, color: C.blue, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</p>
-                        <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: C.text, fontFamily: F.heading, letterSpacing: '-0.03em' }}>{value}</p>
+                        <p style={{ margin: 0, fontSize: isMobile ? 16 : 18, fontWeight: 900, color: C.text, fontFamily: F.heading, letterSpacing: '-0.03em' }}>{value}</p>
                       </div>
                     ))}
                   </motion.div>
@@ -230,8 +263,8 @@ export default function ApplyLoanPage() {
 
             {/* Step 2 – Your Info */}
             {step === 2 && (
-              <div style={{ background: '#fff', borderRadius: 22, padding: '32px', border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 22 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+              <div style={{ background: '#fff', borderRadius: 22, padding: isMobile ? '24px' : '32px', border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 22 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
                   <Field label="First Name">
                     <Input value={form.firstName} onChange={set('firstName')} placeholder="Kwame" />
                   </Field>
@@ -256,9 +289,9 @@ export default function ApplyLoanPage() {
 
             {/* Step 3 – Review */}
             {step === 3 && (
-              <div style={{ background: '#fff', borderRadius: 22, padding: '32px', border: `1px solid ${C.border}` }}>
+              <div style={{ background: '#fff', borderRadius: 22, padding: isMobile ? '24px' : '32px', border: `1px solid ${C.border}` }}>
                 <p style={{ margin: '0 0 22px', fontSize: 15, fontWeight: 800, color: C.text, fontFamily: F.heading }}>Review your application</p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 32px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '8px' : '12px 32px' }}>
                   {[
                     { label: 'Loan Type', value: LOAN_TYPES.find(l => l.id === form.loanType)?.label ?? '' },
                     { label: 'Amount', value: `GH₵ ${Number(form.amount).toLocaleString()}` },
@@ -298,12 +331,12 @@ export default function ApplyLoanPage() {
 
           {step < steps.length - 1 ? (
             <button onClick={() => setStep(s => s + 1)} disabled={!canNext()}
-              style={{ padding: '13px 32px', background: canNext() ? `linear-gradient(135deg, ${C.blue}, ${C.blueLight})` : C.border, border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 800, color: '#fff', cursor: canNext() ? 'pointer' : 'not-allowed', fontFamily: F.heading, boxShadow: canNext() ? `0 6px 20px ${C.blue}44` : 'none', transition: 'all 0.2s' }}
+              style={{ flex: isMobile ? 1 : 'none', padding: '13px 32px', background: canNext() ? `linear-gradient(135deg, ${C.blue}, ${C.blueLight})` : C.border, border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 800, color: '#fff', cursor: canNext() ? 'pointer' : 'not-allowed', fontFamily: F.heading, boxShadow: canNext() ? `0 6px 20px ${C.blue}44` : 'none', transition: 'all 0.2s' }}
             >
               Continue →
             </button>
           ) : (
-            <SubmitButton onClick={handleSubmit} />
+            <SubmitButton onClick={handleSubmit} isMobile={isMobile} />
           )}
         </div>
       </div>
@@ -311,12 +344,12 @@ export default function ApplyLoanPage() {
   );
 }
 
-function SubmitButton({ onClick }: { onClick: () => void }) {
+function SubmitButton({ onClick, isMobile }: { onClick: () => void; isMobile: boolean }) {
   const [loading, setLoading] = useState(false);
   return (
     <button onClick={async () => { setLoading(true); await onClick(); }}
       disabled={loading}
-      style={{ padding: '13px 32px', background: loading ? C.textMuted : `linear-gradient(135deg, ${C.green}, #34d399)`, border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 800, color: '#fff', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: F.heading, boxShadow: loading ? 'none' : `0 6px 20px ${C.green}44`, display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s' }}
+      style={{ flex: isMobile ? 1 : 'none', padding: '13px 32px', background: loading ? C.textMuted : `linear-gradient(135deg, ${C.green}, #34d399)`, border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 800, color: '#fff', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: F.heading, boxShadow: loading ? 'none' : `0 6px 20px ${C.green}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.2s' }}
     >
       {loading && <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.75, ease: 'linear' }} style={{ width: 16, height: 16, border: '2.5px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%' }} />}
       {loading ? 'Submitting…' : 'Submit Application ✓'}

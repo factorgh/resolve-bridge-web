@@ -1,0 +1,22 @@
+{
+  "name": "ResolveBridge",
+  "short_name": "Resolve",
+  "description": "Your premium financial advisory and credit bridge.",
+  "start_url": "/portal",
+  "display": "standalone",
+  "background_color": "#0d1b3e",
+  "theme_color": "#0d1b3e",
+  "icons": [
+    {
+      "src": "/resolve_icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/resolve_icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

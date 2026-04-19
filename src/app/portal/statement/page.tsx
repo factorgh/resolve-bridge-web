@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PortalShell, { C, F } from '../components/PortalShell';
 
@@ -49,7 +49,45 @@ function getDateRange(preset: string | number) {
   return { from: '', to: '' };
 }
 
+const APPLICATIONS = [
+  { 
+    id: 'app1', type: 'Loan', provider: 'Stanbic Bank', product: 'Personal Loan', 
+    amount: 'GH₵ 12,000', status: 'Reviewing', progress: 45, date: 'Apr 16, 2026',
+    logo: '/stanbic_logo.png', 
+    steps: [
+      { label: 'Submitted', date: 'Apr 16, 2026', desc: 'Package confirmed by Stanbic' },
+      { label: 'Reviewing', date: 'In Progress', desc: 'Credit assessment handshake' },
+      { label: 'Offer', date: 'Est. Apr 20', desc: 'Institutional contract generation' },
+      { label: 'Funded', date: 'Est. Apr 22', desc: 'Final execution & disbursement' }
+    ]
+  },
+  { 
+    id: 'app2', type: 'Insurance', provider: 'Enterprise', product: 'Auto Premium', 
+    amount: 'GH₵ 85/mo', status: 'Action Required', progress: 20, date: 'Apr 15, 2026',
+    logo: '/resolve_icon.png',
+    alert: 'Missing ID',
+    steps: [
+      { label: 'Bid Received', date: 'Apr 15, 2026', desc: 'Enterprise quote matched' },
+      { label: 'Documentation', date: 'Action Needed', desc: 'Missing National Id verification' },
+      { label: 'Policy Issued', date: 'Waiting...', desc: 'Pending KYC resolution' },
+      { label: 'Active', date: 'Final Phase', desc: 'Institutional coverage activation' }
+    ]
+  },
+  { 
+    id: 'app3', type: 'BNPL', provider: 'Kredete', product: 'Electronics Plan', 
+    amount: 'GH₵ 4,200', status: 'Approved', progress: 75, date: 'Apr 12, 2026',
+    logo: '/kredete_logo.png',
+    steps: [
+      { label: 'Eligibility', date: 'Apr 12, 2026', desc: 'Credit limit authorized' },
+      { label: 'Review', date: 'Apr 13, 2026', desc: 'Product matching successful' },
+      { label: 'Approval', date: 'Apr 14, 2026', desc: 'Kredete signature confirmed' },
+      { label: 'Disbursed', date: 'Est. Apr 18', desc: 'Terminal payment handshake' }
+    ]
+  }
+];
+
 export default function StatementPage() {
+  const [view, setView] = useState<'apps' | 'reports'>('apps');
   const [stType, setStType] = useState('');
   const [format, setFormat] = useState('pdf');
   const [range, setRange] = useState<string | number>(-30);
@@ -58,6 +96,15 @@ export default function StatementPage() {
   const [generating, setGenerating] = useState(false);
   const [done, setDone] = useState(false);
   const [preview, setPreview] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [selectedApp, setSelectedApp] = useState<any>(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const dateRange = range === 'custom' ? { from: customFrom, to: customTo } : getDateRange(range as string | number);
 
@@ -71,14 +118,115 @@ export default function StatementPage() {
   const fileName = `ResolveBridge_${stType || 'Statement'}_${format.toUpperCase()}_${new Date().toISOString().slice(0, 10)}.${format === 'json' ? 'json' : format === 'csv' ? 'csv' : 'pdf'}`;
 
   return (
-    <PortalShell title="Statements" backHref="/portal" backLabel="Dashboard">
-      <div style={{ maxWidth: 820, margin: '0 auto' }}>
-        <div style={{ marginBottom: 28 }}>
-          <h1 style={{ margin: '0 0 6px', fontSize: 26, fontWeight: 900, color: C.text, fontFamily: F.heading, letterSpacing: '-0.04em' }}>Download Statement</h1>
-          <p style={{ margin: 0, fontSize: 14, color: C.textMuted }}>Configure and export your financial records in seconds.</p>
+    <PortalShell title="Portfolio" backHref="/portal" backLabel="Dashboard">
+      <div style={{ maxWidth: 880, margin: '0 auto', padding: isMobile ? '0 0 100px' : 0 }}>
+        
+        {/* Hub Header & Tabs */}
+        <div style={{ marginBottom: 32 }}>
+           <h1 style={{ margin: '0 0 20px', fontSize: isMobile ? 28 : 32, fontWeight: 900, color: C.text, fontFamily: F.heading, letterSpacing: '-0.04em' }}>
+             {view === 'apps' ? 'Active Activity' : 'Financial Reports'}
+           </h1>
+           
+           <div style={{ display: 'flex', gap: 8, background: '#f1f5f9', padding: 4, borderRadius: 14, width: 'fit-content' }}>
+              {[
+                { id: 'apps', label: 'Active Applications' },
+                { id: 'reports', label: 'Reports & History' }
+              ].map(t => (
+                <button 
+                  key={t.id}
+                  onClick={() => setView(t.id as any)}
+                  style={{ 
+                    padding: '8px 20px', borderRadius: 10, border: 'none', 
+                    background: view === t.id ? '#fff' : 'transparent', 
+                    color: view === t.id ? C.text : C.textMuted,
+                    fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: '0.2s',
+                    boxShadow: view === t.id ? '0 2px 8px rgba(0,0,0,0.05)' : 'none'
+                  }}
+                >
+                  {t.label}
+                </button>
+              ))}
+           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 24, alignItems: 'start' }}>
+        <AnimatePresence mode="wait">
+          {view === 'apps' ? (
+            <motion.div 
+              key="apps" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              style={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                gap: 12 
+              }}
+            >
+               {APPLICATIONS.map((app) => (
+                 <motion.div 
+                   key={app.id} 
+                   whileHover={{ x: 4, background: '#f8fafc' }}
+                   onClick={() => setSelectedApp(app)}
+                   style={{ 
+                     background: '#fff', border: `1px solid ${C.border}`, borderRadius: 16, 
+                     padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                     gap: 20, cursor: 'pointer', transition: 'all 0.2s'
+                   }}
+                 >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1.5 }}>
+                       <div style={{ width: 40, height: 40, borderRadius: 10, background: '#fff', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: 5, flexShrink: 0 }}>
+                          <img src={app.logo} alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                       </div>
+                       <div style={{ minWidth: 0 }}>
+                          <p style={{ margin: 0, fontSize: 13, fontWeight: 900, color: C.text, fontFamily: F.heading }}>{app.provider}</p>
+                          <p style={{ margin: 0, fontSize: 12, color: C.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{app.product}</p>
+                       </div>
+                    </div>
+
+                    <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                       <div style={{ position: 'relative', width: 48, height: 48 }}>
+                          <svg width="48" height="48" viewBox="0 0 70 70">
+                             <circle cx="35" cy="35" r="30" fill="none" stroke="#f1f5f9" strokeWidth="6" />
+                             <motion.circle 
+                               cx="35" cy="35" r="30" fill="none" 
+                               stroke={app.alert ? C.red : C.greenPale} 
+                               strokeWidth="8" strokeLinecap="round"
+                               initial={{ pathLength: 0 }}
+                               animate={{ pathLength: app.progress / 100 }}
+                               transition={{ duration: 1.5, ease: "circOut" }}
+                               style={{ rotate: -90, transformOrigin: '50% 50%' }}
+                             />
+                          </svg>
+                          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                             <span style={{ fontSize: 11, fontWeight: 900, color: C.text, fontFamily: F.heading }}>{app.progress}%</span>
+                          </div>
+                       </div>
+                    </div>
+
+                    <div style={{ textAlign: 'right', flex: 1 }}>
+                       <span style={{ 
+                         display: 'inline-block', padding: '4px 10px', borderRadius: 20, fontSize: 9.5, fontWeight: 900, 
+                         background: app.alert ? C.redPale : app.status === 'Approved' ? C.emeraldLight : C.bluePale, 
+                         color: app.alert ? C.red : app.status === 'Approved' ? C.emerald : C.blue,
+                         textTransform: 'uppercase', letterSpacing: '0.04em'
+                       }}>
+                          {app.alert || app.status}
+                       </span>
+                       <p style={{ margin: '4px 0 0', fontSize: 10, fontWeight: 800, color: C.textMuted }}>Applied {app.date}</p>
+                    </div>
+                 </motion.div>
+               ))}
+
+               {APPLICATIONS.length === 0 && (
+                 <div style={{ textAlign: 'center', padding: '100px 40px', background: '#fff', borderRadius: 24, border: `1px solid ${C.border}` }}>
+                   <p style={{ fontSize: 48, margin: '0 0 20px' }}>📁</p>
+                   <h2 style={{ margin: 0, fontSize: 20, fontFamily: F.heading }}>No active requests</h2>
+                   <p style={{ color: C.textMuted, fontSize: 14 }}>Explore the marketplace to start your institutional journey.</p>
+                 </div>
+               )}
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="reports" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1fr', gap: isMobile ? 32 : 24, alignItems: 'start' }}
+            >
 
           {/* Left: config */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -164,7 +312,7 @@ export default function StatementPage() {
           </div>
 
           {/* Right: Preview */}
-          <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 22, padding: '24px 26px', position: 'sticky', top: 90 }}>
+          <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 22, padding: '24px 26px', position: isMobile ? 'relative' : 'sticky', top: isMobile ? 0 : 90 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
               <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: C.text, fontFamily: F.heading }}>Preview</p>
               <button onClick={() => setPreview(v => !v)} style={{ fontSize: 12, fontWeight: 700, color: C.blue, background: C.bluePale, border: 'none', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontFamily: F.body }}>
@@ -219,7 +367,94 @@ export default function StatementPage() {
               </motion.div>
             )}
           </div>
-        </div>
+           </motion.div>
+         )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+           {selectedApp && (
+             <motion.div 
+               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+               style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? 0 : 40 }}
+             >
+                <div onClick={() => setSelectedApp(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(13,27,62,0.85)', backdropFilter: 'blur(8px)' }} />
+                <motion.div 
+                  initial={{ y: isMobile ? '100%' : 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: isMobile ? '100%' : 40, opacity: 0 }}
+                  style={{ 
+                    position: 'relative', width: '100%', maxWidth: 500, background: '#fff', 
+                    borderRadius: isMobile ? '24px 24px 0 0' : 24, padding: 32, maxHeight: isMobile ? '90vh' : 'auto', 
+                    overflowY: 'auto' 
+                  }}
+                >
+                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
+                      <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                         <div style={{ width: 48, height: 48, borderRadius: 12, background: '#f8fafc', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6 }}>
+                            <img src={selectedApp.logo} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                         </div>
+                         <div>
+                            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900, fontFamily: F.heading }}>{selectedApp.product}</h3>
+                            <p style={{ margin: 0, fontSize: 13, color: C.textSub }}>{selectedApp.provider}</p>
+                         </div>
+                      </div>
+                      <button onClick={() => setSelectedApp(null)} style={{ background: C.bg, border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer' }}>✕</button>
+                   </div>
+
+                   <div style={{ background: C.bg, padding: 20, borderRadius: 16, marginBottom: 32 }}>
+                      <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Current Balance / Limit</p>
+                      <p style={{ margin: 0, fontSize: 24, fontWeight: 300, color: C.text }}>{selectedApp.amount}</p>
+                   </div>
+
+                   <h4 style={{ margin: '0 0 24px', fontSize: 13, fontWeight: 900, textTransform: 'uppercase', color: C.text, letterSpacing: '0.05em' }}>Application Pulse</h4>
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                      {selectedApp.steps.map((step: any, idx: number) => {
+                        const currentIdx = Math.floor((selectedApp.progress / 100) * (selectedApp.steps.length - 1));
+                        const active = idx <= currentIdx;
+                        const last = idx === selectedApp.steps.length - 1;
+                        return (
+                          <div key={step.label} style={{ display: 'flex', gap: 20, minHeight: 70 }}>
+                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <div style={{ 
+                                  width: 26, height: 26, borderRadius: '50%', 
+                                  background: active ? C.emerald : C.text, 
+                                  border: `6px solid ${active ? C.emeraldLight : '#e2e8f0'}`, 
+                                  zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  boxShadow: active ? `0 0 15px ${C.emerald}33` : 'none'
+                                }}>
+                                   {active && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff' }} />}
+                                </div>
+                                {!last && <div style={{ width: 3, flex: 1, background: active ? C.emerald : C.text, margin: '-4px 0' }} />}
+                             </div>
+                             <div style={{ paddingBottom: 28, flex: 1 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                   <p style={{ margin: 0, fontSize: 15, fontWeight: 900, color: C.text }}>{step.label}</p>
+                                   <span style={{ 
+                                     fontSize: 10, fontWeight: 1000, 
+                                     color: C.text, 
+                                     background: '#fff', 
+                                     padding: '4px 10px', borderRadius: 8,
+                                     border: `1.5px solid ${C.text}`,
+                                     textTransform: 'uppercase'
+                                   }}>
+                                      {step.date}
+                                   </span>
+                                </div>
+                                <p style={{ margin: 0, fontSize: 12.5, fontWeight: active ? 600 : 500, color: active ? C.text : C.textMuted, lineHeight: 1.5 }}>
+                                   {step.desc}
+                                </p>
+                             </div>
+                          </div>
+                        );
+                      })}
+                   </div>
+
+                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
+                      <button style={{ padding: '14px', borderRadius: 12, border: `1.5px solid ${C.border}`, background: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>View Terms</button>
+                      <button style={{ padding: '14px', borderRadius: 12, border: 'none', background: C.blue, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>Support</button>
+                   </div>
+                </motion.div>
+             </motion.div>
+           )}
+        </AnimatePresence>
       </div>
     </PortalShell>
   );

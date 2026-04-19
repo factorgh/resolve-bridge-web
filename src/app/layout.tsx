@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "ResolveBridge | Africa's Financial Search Engine",
   description: "Connect with the best loans, BNPL, and insurance providers in Ghana, Nigeria, Kenya and beyond. Bridging the gap for a better financial future.",
   metadataBase: new URL('https://resolvebridge.com'),
+  manifest: "/manifest.json",
   keywords: ["Africa", "finance", "search engine", "loans", "insurance", "BNPL", "Ghana", "Nigeria", "Kenya"],
   icons: {
     icon: "/resolve_icon.png",
@@ -36,6 +37,10 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#0d1b3e" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body>
         <MUIRegistry>
@@ -43,6 +48,21 @@ export default function RootLayout({
             {children}
           </ConditionalLayout>
         </MUIRegistry>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                    console.log('SW registered: ', registration);
+                  }, function(err) {
+                    console.log('SW registration failed: ', err);
+                  });
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
