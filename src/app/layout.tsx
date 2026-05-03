@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import MUIRegistry from "./components/MUIRegistry";
 import ConditionalLayout from "./components/ConditionalLayout";
+import StoreProvider from "./StoreProvider";
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: "ResolveBridge | Africa's Financial Search Engine",
@@ -44,21 +46,33 @@ export default function RootLayout({
       </head>
       <body>
         <MUIRegistry>
-          <ConditionalLayout>
-            {children}
-          </ConditionalLayout>
+          <StoreProvider>
+            <ConditionalLayout>
+              {children}
+            </ConditionalLayout>
+            <Toaster position="top-right" reverseOrder={false} />
+          </StoreProvider>
         </MUIRegistry>
         <script
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(function(registration) {
-                    console.log('SW registered: ', registration);
-                  }, function(err) {
-                    console.log('SW registration failed: ', err);
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                  // Unregister service worker in development to avoid 404 errors on reload
+                  navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for(let registration of registrations) {
+                      registration.unregister();
+                    }
                   });
-                });
+                } else {
+                  window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                      console.log('SW registered: ', registration);
+                    }, function(err) {
+                      console.log('SW registration failed: ', err);
+                    });
+                  });
+                }
               }
             `,
           }}

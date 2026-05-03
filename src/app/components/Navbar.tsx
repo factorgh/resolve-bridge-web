@@ -2,11 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 import {
   MenuRounded as MenuIcon,
   CloseRounded as XIcon,
   KeyboardArrowDownRounded as ChevronDownIcon,
   ArrowForwardRounded,
+  FileDownloadRounded as DownloadIcon,
 } from '@mui/icons-material';
 import {
   Box,
@@ -127,6 +129,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMobileItem, setOpenMobileItem] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
+  const { deferredPrompt, handleInstall } = usePWAInstall();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -189,6 +192,27 @@ export default function Navbar() {
                 }}
               >
                 Log in
+              </Button>
+              <Button
+                onClick={handleInstall}
+                component={!deferredPrompt ? Link : 'button'}
+                href={!deferredPrompt ? '/download' : undefined}
+                startIcon={<DownloadIcon sx={{ fontSize: '18px !important' }} />}
+                sx={{
+                  textTransform: 'none',
+                  fontSize: '13.5px',
+                  fontWeight: 600,
+                  color: '#fff',
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  px: 2,
+                  py: 1,
+                  borderRadius: '10px',
+                  fontFamily: "'Inter', sans-serif",
+                  transition: 'all 0.2s',
+                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.15)' },
+                }}
+              >
+                Download App
               </Button>
               <Button
                 component={Link}
@@ -336,6 +360,30 @@ export default function Navbar() {
               }}
             >
               Log in
+            </Button>
+            <Button
+              onClick={() => {
+                if (deferredPrompt) handleInstall();
+                setMobileOpen(false);
+              }}
+              component={!deferredPrompt ? Link : 'button'}
+              href={!deferredPrompt ? '/download' : undefined}
+              fullWidth
+              variant="outlined"
+              startIcon={<DownloadIcon />}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 700,
+                fontSize: '14px',
+                borderRadius: '12px',
+                borderColor: 'rgba(255,255,255,0.2)',
+                color: '#fff',
+                backgroundColor: 'rgba(255,255,255,0.05)',
+                py: 1.2,
+                '&:hover': { borderColor: 'rgba(255,255,255,0.3)', backgroundColor: 'rgba(255,255,255,0.1)' }
+              }}
+            >
+              Download App
             </Button>
             <Button
               component={Link}

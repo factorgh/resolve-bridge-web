@@ -16,6 +16,7 @@ import {
   Tabs,
   Tab,
   Avatar,
+  Slider,
 } from '@mui/material';
 import {
   ArrowForwardRounded,
@@ -38,7 +39,9 @@ import {
   HelpOutlineRounded
 } from '@mui/icons-material';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { C, F } from './portal/components/PortalShell';
+import AiSearchModal from './components/AiSearchModal';
 
 const HERO_TABS = [
   {
@@ -135,276 +138,328 @@ const RATES = [
     detailsLabel: 'Term',
     loan: '$35,000',
     loanLabel: 'Loan amount',
-    href: '/loans/vehicle',
+    href: '/loans/auto',
   },
 ];
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [heroSearchText, setHeroSearchText] = useState('');
   const isMobile = useMediaQuery('(max-width:900px)');
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  const [calcAmount, setCalcAmount] = useState(10000);
+  const [calcRate, setCalcRate] = useState(18);
+  const [calcTerm, setCalcTerm] = useState(24);
+
+  const { monthly, weekly, daily } = useMemo(() => {
+    const r = calcRate / 100 / 12;
+    const n = calcTerm;
+    const p = calcAmount;
+    const m = (p * r) / (1 - Math.pow(1 + r, -n));
+    const annual = m * 12;
+    return { monthly: m, weekly: annual / 52, daily: annual / 365 };
+  }, [calcAmount, calcRate, calcTerm]);
+
   if (!mounted) return null;
+
+  const CalculatorInputs = () => (
+    <Stack spacing={4}>
+      <Box>
+        <Stack direction="row" justifyContent="space-between" mb={2}>
+          <Typography sx={{ fontSize: '11px', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Loan Amount</Typography>
+          <Typography sx={{ fontSize: '16px', fontWeight: 900, color: '#0f172a' }}>GH₵ {calcAmount.toLocaleString()}</Typography>
+        </Stack>
+        <Slider 
+          value={calcAmount} min={1000} max={250000} step={1000} 
+          onChange={(_, v) => setCalcAmount(v as number)}
+          sx={{ color: '#10b981', '& .MuiSlider-thumb': { backgroundColor: '#fff', border: '4px solid currentColor' } }}
+        />
+      </Box>
+      <Box>
+        <Stack direction="row" justifyContent="space-between" mb={2}>
+          <Typography sx={{ fontSize: '11px', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Interest Rate (% p.a)</Typography>
+          <Typography sx={{ fontSize: '16px', fontWeight: 900, color: '#0f172a' }}>{calcRate}%</Typography>
+        </Stack>
+        <Slider 
+          value={calcRate} min={10} max={36} step={0.5} 
+          onChange={(_, v) => setCalcRate(v as number)}
+          sx={{ color: '#10b981', '& .MuiSlider-thumb': { backgroundColor: '#fff', border: '4px solid currentColor' } }}
+        />
+      </Box>
+      <Box>
+        <Stack direction="row" justifyContent="space-between" mb={2}>
+          <Typography sx={{ fontSize: '11px', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Period (Months)</Typography>
+          <Typography sx={{ fontSize: '16px', fontWeight: 900, color: '#0f172a' }}>{calcTerm} Mo</Typography>
+        </Stack>
+        <Slider 
+          value={calcTerm} min={6} max={84} step={6} 
+          onChange={(_, v) => setCalcTerm(v as number)}
+          sx={{ color: '#10b981', '& .MuiSlider-thumb': { backgroundColor: '#fff', border: '4px solid currentColor' } }}
+        />
+      </Box>
+    </Stack>
+  );
+
+  const CalculatorResults = () => (
+    <Box sx={{ position: 'relative', zIndex: 1 }}>
+      <Typography sx={{ fontSize: '11px', fontWeight: 900, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.15em', mb: 1 }}>Estimated Monthly</Typography>
+      <Typography sx={{ fontSize: '42px', fontWeight: 900, color: '#fff', mb: 4, letterSpacing: '-0.04em' }}>GH₵ {Math.round(monthly).toLocaleString()}</Typography>
+      
+      <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', mb: 4 }} />
+      
+      <Stack spacing={3}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Typography sx={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>Weekly Breakdown</Typography>
+          <Typography sx={{ fontSize: '18px', fontWeight: 900, color: '#10b981' }}>GH₵ {Math.round(weekly).toLocaleString()}</Typography>
+        </Stack>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Typography sx={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>Daily Commitment</Typography>
+          <Typography sx={{ fontSize: '18px', fontWeight: 900, color: '#fff' }}>GH₵ {Math.round(daily).toLocaleString()}</Typography>
+        </Stack>
+      </Stack>
+      
+      <Button 
+        component={Link} href="/get-started"
+        fullWidth sx={{ mt: 5, py: 2, borderRadius: '14px', background: '#10b981', color: '#fff', fontWeight: 900, fontSize: '13px', textTransform: 'none', '&:hover': { background: '#059669' } }}
+      >
+        Lock in this rate
+      </Button>
+    </Box>
+  );
 
   const currentTab = HERO_TABS[activeTab];
 
   return (
 
-    <main style={{ minHeight: '100vh', background: '#04080f', overflowX: 'hidden' }}>
+    <main style={{ minHeight: '100vh', background: '#fff', overflowX: 'hidden' }}>
       {/* Global keyframes + fonts */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
         @keyframes rb-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(0.78)} }
         @keyframes rb-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
         @keyframes rb-float2 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(10px)} }
-        .rb-prod-card { transition: transform 0.25s cubic-bezier(0.22,1,0.36,1), box-shadow 0.25s, border-color 0.25s !important; }
-        .rb-prod-card:hover { transform: translateY(-6px) !important; box-shadow: 0 24px 56px rgba(0,0,0,0.13) !important; border-color: rgba(16,185,129,0.35) !important; }
-        .rb-prod-card:hover .rb-prod-arrow { opacity: 1 !important; transform: translateX(4px) !important; }
+        .rb-prod-card { transition: all 0.3s cubic-bezier(0.22,1,0.36,1) !important; }
+        .rb-prod-card:hover { transform: translateY(-8px) !important; box-shadow: 0 32px 64px rgba(0,0,0,0.12) !important; border-color: rgba(16,185,129,0.4) !important; }
+        .rb-prod-card:hover .rb-prod-arrow { opacity: 1 !important; transform: translateX(4px) !important; color: #10b981 !important; }
         .rb-search-input { caret-color: #10b981; }
         .rb-search-bar:focus-within { border-color: rgba(16,185,129,0.5) !important; box-shadow: 0 0 0 4px rgba(16,185,129,0.10) !important; }
       `}</style>
 
-      {/* Navbar spacer */}
-      {/* <Box sx={{ height: 72 }} /> */}
-
-      {/* ══ HERO ════════════════════════════════════════════════════ */}
+      {/* ══ HERO SECTION (INTEGRATED PRODUCT PATTERN) ═══════════════════════ */}
       <Box component="section" sx={{
         position: 'relative',
-        pt: { xs: 10, md: 15 },
-        pb: { xs: 12, md: 20 },
+        background: '#04080f',
+        pt: { xs: 8, md: 16},
+        pb: { xs: 8, md: 16 },
         overflow: 'hidden',
-        background: 'radial-gradient(ellipse 90% 55% at 50% -8%, rgba(16,185,129,0.15) 0%, transparent 62%), radial-gradient(ellipse 55% 45% at 85% 85%, rgba(99,102,241,0.08) 0%, transparent 55%), #04080f',
+        borderBottom: '1px solid rgba(0,0,0,0.05)'
       }}>
+        {/* Subtle Decorative Atmosphere */}
+        <Box sx={{ position: 'absolute', top: '-10%', left: '10%', width: 600, height: 600, background: 'radial-gradient(circle, rgba(16,185,129,0.04) 0%, transparent 70%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
 
-        {/* ambient glow blobs */}
-        {/* <Box sx={{ position:'absolute', top:'-5%', left:'12%', width:560, height:560, borderRadius:'50%', background:'radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)', pointerEvents:'none', filter:'blur(50px)' }} />
-        <Box sx={{ position:'absolute', bottom:'0%', right:'8%', width:420, height:420, borderRadius:'50%', background:'radial-gradient(circle, rgba(99,102,241,0.10) 0%, transparent 70%)', pointerEvents:'none', filter:'blur(50px)' }} /> */}
+        <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1 }}>
+          <Box sx={{ maxWidth: 850, mx: 'auto', textAlign: 'center', mb: { xs: 8, md: 12 } }}>
+            {/* Main Headline */}
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}>
+              <Typography variant="h1" sx={{
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontWeight: 900,
+                color: '#fff',
+                fontSize: { xs: '2.6rem', sm: '3.6rem', md: '4.8rem' },
+                lineHeight: 0.95,
+                letterSpacing: '-0.05em',
+                mb: 3
+              }}>
+                Find the best loan,<br />
+                <Box component="span" sx={{
+                  background: 'linear-gradient(130deg, #10b981 0%, #059669 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}>Not just a loan.</Box>
+              </Typography>
+            </motion.div>
 
-        {/* dot-grid texture */}
-        {/* <Box sx={{ position:'absolute', inset:0, backgroundImage:'radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px)', backgroundSize:'30px 30px', pointerEvents:'none', maskImage:'radial-gradient(ellipse 70% 65% at 50% 50%, black 0%, transparent 100%)' }} /> */}
+            {/* Subheadline */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}>
+              <Typography sx={{
+                fontFamily: "'Inter', sans-serif",
+                fontSize: { xs: '1rem', md: '1.15rem' },
+                color: '#64748b',
+                fontWeight: 500,
+                lineHeight: 1.6,
+                mb: 4,
+                maxWidth: 600,
+                mx: 'auto'
+              }}>
+                Instantly compare verified rates from Africa's top 50+ lenders. Transparent, secure, and institutional-grade credit planning.
+              </Typography>
+            </motion.div>
 
-        <Container maxWidth="xl" sx={{ position:'relative', zIndex:1 }}>
-          <Grid container spacing={{ xs: 6, lg: 10 }} alignItems="center">
-            {/* LEFT: Text & Search */}
-            <Grid size={{ xs: 12, lg: 6.5 }}>
-              <Box sx={{ textAlign: { xs: 'center', lg: 'left' } }}>
-                {/* live badge */}
-         
-
-                {/* HEADLINE */}
-                <motion.div initial={{ opacity:0, y:22 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.7, delay:0.08, ease:[0.16,1,0.3,1] }}>
-                  <Typography variant="h1" sx={{
-                    fontFamily:"'Plus Jakarta Sans', sans-serif",
-                    fontWeight:900,
-                    lineHeight:1.0,
-                    letterSpacing:'-0.045em',
-                    color:'#fff',
-                    fontSize:{ xs:'2.8rem', sm:'3.5rem', md:'4.5rem', lg:'5.5rem' },
-                    mb:2.5,
-                  }}>
-                    Find the best loan,{' '}
-                    <Box component="span" sx={{
-                      display:'block',
-                      background:'linear-gradient(130deg, #10b981 0%, #a3f07a 50%, #facc15 100%)',
-                      WebkitBackgroundClip:'text',
-                      WebkitTextFillColor:'transparent',
-                      backgroundClip:'text',
-                      paddingBottom:5
-                    }}>
-                      Not just a loan
-                    </Box>
-                  </Typography>
-                </motion.div>
-
-                {/* sub-headline */}
-                <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.65, delay:0.17 }}>
-                  <Typography sx={{
-                    fontFamily:"'Inter', sans-serif",
-                    fontSize:{ xs:'1.05rem', md:'1.15rem' },
-                    color:'rgba(255,255,255,0.50)',
-                    fontWeight:500,
-                    lineHeight:1.7,
-                    maxWidth:520,
-                    mx:{ xs: 'auto', lg: 0 },
-                    mb:5,
-                  }}>
-                    ResolveBridge instantly matches you with Africa's top-rated lenders so you always get the{' '}
-                    <Box component="em" sx={{ color:'rgba(255,255,255,0.88)', fontStyle:'normal', fontWeight:700 }}>
-                      best deal — not just any deal.
-                    </Box>
-                  </Typography>
-                </motion.div>
-
-                {/* AI SEARCH BAR */}
-                <motion.div initial={{ opacity:0, y:20, scale:0.97 }} animate={{ opacity:1, y:0, scale:1 }} transition={{ duration:0.68, delay:0.24 }}>
-                  <Box className="rb-search-bar" sx={{
-                    maxWidth:600, mx:{ xs: 'auto', lg: 0 },
-                    background:'rgba(255,255,255,0.06)', backdropFilter:'blur(20px)',
-                    border:'1.5px solid rgba(255,255,255,0.11)',
-                    borderRadius:'20px',
-                    display:'flex', alignItems:'center', p:1, gap:1, mb:2.5,
-                    transition:'border-color 0.25s, box-shadow 0.25s',
-                  }}>
-                    <Box sx={{ flex:1, display:'flex', alignItems:'center', gap:1.5, px:1.5 }}>
-                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0 }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                      <input
-                        className="rb-search-input"
-                        placeholder='e.g. "best personal loan under 18%" or "SME capital fast"'
-                        style={{ border:'none', outline:'none', background:'transparent', fontSize:'14px', color:'#fff', fontFamily:"'Inter', sans-serif", width:'100%', padding:'10px 0' }}
-                      />
-                    </Box>
-                    <Box sx={{ display:'flex', alignItems:'center', gap:1.5, background:'linear-gradient(135deg, #10b981 0%, #059669 100%)', borderRadius:'14px', px:3, py:1.75, cursor:'pointer', flexShrink:0, transition:'opacity 0.18s, transform 0.18s', '&:hover':{ opacity:0.88, transform:'scale(0.98)' } }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                      <Typography sx={{ fontSize:'13.5px', fontWeight:800, color:'#fff', fontFamily:"'Plus Jakarta Sans', sans-serif", whiteSpace:'nowrap', letterSpacing:'-0.01em' }}>
-                        Resolve AI
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  {/* Quick chips */}
-                  <Box sx={{ display:'flex', alignItems:'center', justifyContent:{ xs: 'center', lg: 'flex-start' }, gap:1, flexWrap:'wrap', mb:4 }}>
-                    <Typography sx={{ fontSize:'11.5px', color:'rgba(255,255,255,0.25)', fontWeight:600, fontFamily:"'Inter', sans-serif", mr:0.5 }}>Try:</Typography>
-                    {['Personal Loans', 'SME Capital', 'Auto Finance', 'Health Insurance', 'Credit Score'].map(tag => (
-                      <Box key={tag} component="button" sx={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:999, px:1.75, py:0.6, fontSize:'12px', fontWeight:600, color:'rgba(255,255,255,0.5)', cursor:'pointer', fontFamily:"'Inter', sans-serif", transition:'all 0.18s', '&:hover':{ background:'rgba(16,185,129,0.12)', borderColor:'rgba(16,185,129,0.3)', color:'#10b981' } }}>
-                        {tag}
-                      </Box>
-                    ))}
-                  </Box>
-                </motion.div>
+            {/* AI Search Bar (Light Mode) */}
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.2 }}>
+              <Box className="rb-search-bar" sx={{
+                maxWidth: 600, mx: 'auto',
+                background: '#fff',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+                border: '1.5px solid rgba(0,0,0,0.08)',
+                borderRadius: '24px',
+                display: 'flex', alignItems: 'center', p: 1, gap: 1,
+                transition: 'all 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+              }}>
+                <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2, px: 2 }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+                  <input
+                    className="rb-search-input"
+                    placeholder='e.g. "personal loan under 15%"'
+                    value={heroSearchText}
+                    onChange={(e) => setHeroSearchText(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && setIsAiModalOpen(true)}
+                    style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: '14.5px', color: '#050d1a', fontFamily: "'Inter', sans-serif", width: '100%' }}
+                  />
+                </Box>
+                <Box onClick={() => setIsAiModalOpen(true)} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', borderRadius: '18px', px: 3.5, py: 1.75, cursor: 'pointer', transition: 'all 0.2s', '&:hover': { transform: 'scale(0.97)', opacity: 0.9 } }}>
+                  <Typography sx={{ fontSize: '13.5px', fontWeight: 900, color: '#fff', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>Resolve AI</Typography>
+                </Box>
               </Box>
+            </motion.div>
+          </Box>
+
+          {/* Integrated Product Strip */}
+  
+          {/* trust strip (Hero Footer) */}
+  
+        </Container>
+      </Box>
+
+              <Box sx={{ 
+            position: 'relative', zIndex: 10, 
+            mx: 'auto', maxWidth: 1200, px: { xs: 2, md: 4 }, py: { xs: 4, md: 6 },
+            background: '#10b981ff',
+            border: '1.5px solid rgba(0,0,0,0.04)',
+            boxShadow: '0 40px 100px -20px rgba(0,0,0,0.08), 0 20px 40px -15px rgba(0,0,0,0.03)',
+            borderRadius: '14px',
+            mt: { xs: -2, md: -12 }
+          }}>
+            <Grid container spacing={{ xs: 2, md: 2.5 }}>
+              {[
+                { label: 'Personal Loans', desc: 'Consolidate debt or fund major life purchases — compare 20+ lenders.', href: '/loans/personal', tag: 'Popular', stat: 'From 14%', icon: <MoneyIcon sx={{ fontSize: 32, color: '#1e293b' }} /> },
+                { label: 'Business Credit', desc: 'Growth capital and revolving lines for African SMEs and enterprises.', href: '/loans/business', tag: 'Business', stat: 'Up to GH₵ 1M', icon: <BusinessIcon sx={{ fontSize: 32, color: '#1e293b' }} /> },
+                { label: 'Insurance', desc: 'Health, life, auto and property cover — instant quotes from top providers.', href: '/insurance', tag: 'Instant', stat: '6 Categories', icon: <SecurityRounded sx={{ fontSize: 32, color: '#1e293b' }} /> },
+                { label: 'Vehicle Finance', desc: 'New and used car financing from verified regional bank partners.', href: '/loans/auto', tag: '48hr Approval', stat: 'From 16%', icon: <CarIcon sx={{ fontSize: 32, color: '#1e293b' }} /> },
+                { label: 'Home Equity', desc: "Unlock your property's value for major investments or renovations.", href: '/mortgages', tag: 'High Value', stat: 'Up to GH₵ 2M', icon: <HomeIcon sx={{ fontSize: 32, color: '#1e293b' }} /> },
+                { label: 'Free Credit Score', desc: 'Institutional-grade credit check with personalized insights.', href: '/credit', tag: 'Free', stat: 'Instant', icon: <ScoreIcon sx={{ fontSize: 32, color: '#1e293b' }} /> },
+                { label: 'Savings & Investments', desc: 'High-yield savings and fixed deposit accounts across 15+ banks.', href: '/savings', tag: 'High Yield', stat: 'Up to 22%', icon: <SavingsIcon sx={{ fontSize: 32, color: '#1e293b' }} /> },
+                { label: 'Buy Now, Pay Later', desc: `Flexible installment plans from Ghana's leading BNPL providers.`, href: '/bnpl', tag: '0% Interest', stat: 'Intro offers', icon: <AccountBalanceWalletRounded sx={{ fontSize: 32, color: '#1e293b' }} /> },
+              ].map((p, i) => (
+                <Grid size={{ xs: 12, sm: 6, md: 3 }} key={p.label}>
+                  <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.05 }} style={{ height: '100%' }}>
+                    <Link href={p.href} style={{ textDecoration: 'none', display: 'block', height: '100%' }}>
+                      <Box className="rb-prod-card" sx={{ 
+                        background: '#fff', border: '1.5px solid rgba(0,0,0,0.06)', borderRadius: '24px', 
+                        p: { xs: 3, md: 4 }, height: '100%', display: 'flex', flexDirection: 'column', 
+                        alignItems: 'center', textAlign: 'center', gap: 2.5,
+                        cursor: 'pointer', position: 'relative', overflow: 'hidden', 
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.03)' 
+                      }}>
+                        {/* Top Right Arrow indicator */}
+                        <Box className="rb-prod-arrow" sx={{ position: 'absolute', top: 18, right: 18, opacity: 0.3, transition: 'all 0.3s' }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                        </Box>
+
+                        {/* Minimal Skeleton Icon */}
+                        <Box sx={{ 
+                          width: 48, height: 48, borderRadius: '50%', background: 'transparent',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                          flexShrink: 0, mb: 0.5
+                        }}>{p.icon}</Box>
+
+                        <Box>
+                          <Typography sx={{ 
+                            fontSize: '17px', fontWeight: 900, color: '#0f172a', 
+                            letterSpacing: '-0.025em', fontFamily: "'Plus Jakarta Sans', sans-serif", 
+                            mb: 1 
+                          }}>{p.label}</Typography>
+                          <Typography sx={{ 
+                            fontSize: '13px', color: '#64748b', fontWeight: 500, 
+                            fontFamily: "'Inter', sans-serif", lineHeight: 1.5 
+                          }}>{p.desc}</Typography>
+                        </Box>
+                      </Box>
+                    </Link>
+                  </motion.div>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+
+
+      {/* ── INSTANT CALCULATOR SECTION ──────────────────────────── */}
+      <Box component="section" sx={{ py: { xs: 12, md: 20 }, background: '#fcfdfe', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+        <Container maxWidth="xl">
+          <Grid container spacing={{ xs: 8, lg: 12 }} alignItems="center">
+            {/* Text Side */}
+            <Grid size={{ xs: 12, lg: 5 }}>
+              <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
+                <Typography sx={{ fontSize: '12px', fontWeight: 900, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.2em', mb: 2 }}>Instant Transparency</Typography>
+                <Typography variant="h2" sx={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 900, fontSize: { xs: '2.4rem', md: '3.6rem' }, color: '#050d1a', letterSpacing: '-0.04em', lineHeight: 1.1, mb: 3 }}>
+                  Calculate your <span style={{ color: '#10b981' }}>repayment power</span> in seconds.
+                </Typography>
+                <Typography sx={{ fontSize: '18px', color: '#64748b', fontWeight: 500, lineHeight: 1.6, mb: 6, maxWidth: 500 }}>
+                  Institutional-grade estimates for any loan size. No credit impact, no hidden fees — just pure financial intelligence.
+                </Typography>
+                
+                <Stack spacing={4}>
+                  {[
+                    { title: 'Granular Breakdowns', desc: 'See exactly what you owe monthly, weekly, and even daily.' },
+                    { title: 'Institutional Rates', desc: 'Synced with current market averages from 50+ lenders.' }
+                  ].map((f, i) => (
+                    <Box key={i} sx={{ display: 'flex', gap: 2.5 }}>
+                      <Box sx={{ width: 24, height: 24, borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, mt: 0.5 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      </Box>
+                      <Box>
+                        <Typography sx={{ fontSize: '16px', fontWeight: 800, color: '#050d1a', mb: 0.5 }}>{f.title}</Typography>
+                        <Typography sx={{ fontSize: '14px', color: '#64748b', fontWeight: 500 }}>{f.desc}</Typography>
+                      </Box>
+                    </Box>
+                  ))}
+                </Stack>
+              </motion.div>
             </Grid>
 
-            {/* RIGHT: Image */}
-            <Grid size={{ xs: 12, lg: 5.5 }} sx={{ display: { xs: 'none', lg: 'block' }, position: 'relative' }}>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, x: 20 }}
-                animate={{ opacity: 1, scale: 1, x: 0 }}
-                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-                style={{ position: 'relative' }}
-              >
-                <Box sx={{ position: 'relative', zIndex: 2 }}>
-                  <img
-                    src="/images/hero_advisor.png"
-                    alt="Financial Advisor"
-                    style={{ width: '100%', height: '100%', borderRadius: '40px', boxShadow: '0 32px 64px rgba(0,0,0,0.4)' }}
-                  />
-                  
-                  {/* Floating Elements */}
-               
+            {/* Calculator Side */}
+            <Grid size={{ xs: 12, lg: 7 }}>
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
+                <Box sx={{ 
+                  background: '#fff', borderRadius: '48px', p: { xs: 4, md: 8 }, 
+                  boxShadow: '0 40px 100px -20px rgba(0,0,0,0.08)', border: '1.5px solid rgba(0,0,0,0.04)',
+                  display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 8
+                }}>
+                  {/* Inputs */}
+                  <Box>
+                    <CalculatorInputs />
+                  </Box>
 
-               
+                  {/* Results Pane */}
+                  <Box sx={{ 
+                    background: '#020617', borderRadius: '32px', p: 5, color: '#fff',
+                    display: 'flex', flexDirection: 'column', justifyContent: 'center',
+                    position: 'relative', overflow: 'hidden', boxShadow: '0 20px 40px rgba(2,6,23,0.3)'
+                  }}>
+                    <Box sx={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, background: 'rgba(16,185,129,0.1)', borderRadius: '50%', blur: '40px' }} />
+                    <CalculatorResults />
+                  </Box>
                 </Box>
               </motion.div>
             </Grid>
           </Grid>
-
-          {/* STATS ROW (shifted down with margin) */}
-          <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.6, delay:0.45 }}>
-            <Box sx={{ display:'flex', alignItems:'stretch', justifyContent:'center', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'22px', overflow:'hidden', maxWidth:900, mx:'auto', mt: 8, background:'rgba(255,255,255,0.03)', backdropFilter:'blur(10px)' }}>
-              {[
-                { num:'50+', label:'Verified Lenders' },
-                { num:'GH₵2B+', label:'Loans Facilitated' },
-                { num:'4.9★', label:'Customer Rating' },
-                { num:'48hrs', label:'Avg Disbursement' },
-              ].map((s, i) => (
-                <Box key={s.label} sx={{ flex:1, py:3.5, px:{ xs:1, md:2 }, textAlign:'center', borderRight:i<3?'1px solid rgba(255,255,255,0.06)':'none' }}>
-                  <Typography sx={{ fontSize:{ xs:'18px', md:'22px' }, fontWeight:900, color:'#fff', fontFamily:"'Plus Jakarta Sans', sans-serif", letterSpacing:'-0.04em', lineHeight:1 }}>{s.num}</Typography>
-                  <Typography sx={{ fontSize:{ xs:'9px', md:'10.5px' }, color:'rgba(255,255,255,0.35)', fontWeight:700, mt:0.75, textTransform:'uppercase', letterSpacing:'0.08em', fontFamily:"'Inter', sans-serif" }}>{s.label}</Typography>
-                </Box>
-              ))}
-            </Box>
-          </motion.div>
-        </Container>
-      </Box>
-
-      {/* ══ PRODUCT GRID ════════════════════════════════════════════ */}
-      <Box component="section" sx={{ background:'#fff', pt:{ xs:10, md:14 }, pb:{ xs:10, md:14 } }}>
-        <Container maxWidth="xl">
-
-          {/* section header */}
-          <motion.div initial={{ opacity:0, y:20 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }} transition={{ duration:0.6 }}>
-            <Box sx={{ mb:{ xs:5, md:7 } }}>
-              <Typography sx={{ fontSize:'11px', fontWeight:800, color:'#10b981', textTransform:'uppercase', letterSpacing:'0.14em', fontFamily:"'Plus Jakarta Sans', sans-serif", mb:1.5 }}>Full product suite</Typography>
-              <Typography variant="h2" sx={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontWeight:900, fontSize:{ xs:'1.9rem', md:'2.9rem' }, color:'#050d1a', letterSpacing:'-0.045em', lineHeight:1.08, mb:1.5 }}>
-                What can we help you with?
-              </Typography>
-              <Typography sx={{ fontSize:'16px', color:'#64748b', fontWeight:500, maxWidth:480, fontFamily:"'Inter', sans-serif", lineHeight:1.65 }}>
-                From your first loan to your full financial portfolio — every product, one platform.
-              </Typography>
-            </Box>
-          </motion.div>
-
-          {/* 4-column product grid */}
-          <Grid container spacing={{ xs:2, md:2.5 }}>
-            {[
-              { label:'Personal Loans', desc:'Consolidate debt, fund education or life goals — compare 20+ lenders.', href:'/loans/personal', grad:'linear-gradient(135deg,#0ea5e9,#2563eb)', tag:'Most Popular', stat:'From 14% p.a.', icon:<MoneyIcon sx={{fontSize:26,color:'#fff'}}/> },
-              { label:'Business Credit', desc:'Growth capital and revolving lines for African SMEs and enterprises.', href:'/loans/business', grad:'linear-gradient(135deg,#8b5cf6,#6d28d9)', tag:'Fast Approval', stat:'Up to GH₵ 500K', icon:<BusinessIcon sx={{fontSize:26,color:'#fff'}}/> },
-              { label:'Insurance', desc:'Health, life, auto and property cover — instant quotes from 6 categories.', href:'/insurance', grad:'linear-gradient(135deg,#10b981,#059669)', tag:'Instant Quote', stat:'6 categories', icon:<SecurityRounded sx={{fontSize:26,color:'#fff'}}/> },
-              { label:'Vehicle Finance', desc:'New and used car financing from verified regional bank partners.', href:'/loans/vehicle', grad:'linear-gradient(135deg,#f59e0b,#d97706)', tag:'48hr Disbursal', stat:'From 16% p.a.', icon:<CarIcon sx={{fontSize:26,color:'#fff'}}/> },
-              { label:'Home Equity', desc:"Unlock your property's value to fund major investments or renovations.", href:'/loans/mortgage', grad:'linear-gradient(135deg,#ec4899,#be185d)', tag:'High Value', stat:'Up to GH₵ 800K', icon:<HomeIcon sx={{fontSize:26,color:'#fff'}}/> },
-              { label:'Free Credit Score', desc:'Institutional-grade credit check with personalised improvement insights.', href:'/credit', grad:'linear-gradient(135deg,#14b8a6,#0891b2)', tag:'Free Forever', stat:'Instant result', icon:<ScoreIcon sx={{fontSize:26,color:'#fff'}}/> },
-              { label:'Savings & Investments', desc:'Compare high-yield savings and fixed deposit accounts across 15+ banks.', href:'/savings', grad:'linear-gradient(135deg,#22c55e,#15803d)', tag:'High Yield', stat:'Up to 22% p.a.', icon:<SavingsIcon sx={{fontSize:26,color:'#fff'}}/> },
-              { label:'Buy Now, Pay Later', desc:`Flexible 0% installment plans from Ghana's leading BNPL providers.`, href:'/bnpl', grad:'linear-gradient(135deg,#f97316,#c2410c)', tag:'0% Interest', stat:'0% intro offers', icon:<AccountBalanceWalletRounded sx={{fontSize:26,color:'#fff'}}/> },
-            ].map((p, i) => (
-              <Grid size={{ xs:12, sm:6, md:3 }} key={p.label}>
-                <motion.div
-                  initial={{ opacity:0, y:24 }}
-                  whileInView={{ opacity:1, y:0 }}
-                  viewport={{ once:true }}
-                  transition={{ duration:0.5, delay:(i%4)*0.07 }}
-                  style={{ height:'100%' }}
-                >
-                  <Link href={p.href} style={{ textDecoration:'none', display:'block', height:'100%' }}>
-                    <Box className="rb-prod-card" sx={{ background:'#fff', border:'1.5px solid rgba(0,0,0,0.07)', borderRadius:'22px', p:{ xs:3, md:3.5 }, height:'100%', display:'flex', flexDirection:'column', gap:2, cursor:'pointer', position:'relative', overflow:'hidden', boxShadow:'0 1px 4px rgba(0,0,0,0.05)' }}>
-
-                      {/* tag */}
-                      <Box sx={{ position:'absolute', top:15, right:15 }}>
-                        <Box sx={{ background:'rgba(0,0,0,0.04)', borderRadius:999, px:1.5, py:0.4 }}>
-                          <Typography sx={{ fontSize:'9.5px', fontWeight:800, color:'#475569', textTransform:'uppercase', letterSpacing:'0.07em', fontFamily:"'Plus Jakarta Sans', sans-serif" }}>{p.tag}</Typography>
-                        </Box>
-                      </Box>
-
-                      {/* icon */}
-                      <Box sx={{ width:52, height:52, borderRadius:'15px', background:p.grad, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'0 6px 20px rgba(0,0,0,0.17)' }}>{p.icon}</Box>
-
-                      {/* text */}
-                      <Box sx={{ flex:1, display:'flex', flexDirection:'column', gap:0.75 }}>
-                        <Typography sx={{ fontSize:'16px', fontWeight:800, color:'#050d1a', letterSpacing:'-0.025em', fontFamily:"'Plus Jakarta Sans', sans-serif", lineHeight:1.25 }}>{p.label}</Typography>
-                        <Typography sx={{ fontSize:'13px', color:'#64748b', fontWeight:500, fontFamily:"'Inter', sans-serif", lineHeight:1.6, flex:1 }}>{p.desc}</Typography>
-                      </Box>
-
-                      {/* footer */}
-                      <Box sx={{ display:'flex', alignItems:'center', justifyContent:'space-between', borderTop:'1px solid rgba(0,0,0,0.065)', pt:1.75, mt:'auto' }}>
-                        <Typography sx={{ fontSize:'12.5px', fontWeight:800, color:'#10b981', fontFamily:"'Plus Jakarta Sans', sans-serif" }}>{p.stat}</Typography>
-                        <Box className="rb-prod-arrow" sx={{ display:'flex', alignItems:'center', gap:0.5, fontSize:'12px', fontWeight:700, color:'#94a3b8', opacity:0.5, transition:'all 0.22s', fontFamily:"'Inter', sans-serif" }}>
-                          Explore
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                        </Box>
-                      </Box>
-                    </Box>
-                  </Link>
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
-
-          {/* trust strip */}
-          <motion.div initial={{ opacity:0 }} whileInView={{ opacity:1 }} viewport={{ once:true }} transition={{ duration:0.6, delay:0.2 }}>
-            <Box sx={{ mt:6, display:'flex', alignItems:'center', justifyContent:'center', gap:3, flexWrap:'wrap' }}>
-              {['No credit score impact to compare', 'Institutional-grade data security', 'Results in under 60 seconds'].map((item, i) => (
-                <Box key={item} sx={{ display:'flex', alignItems:'center', gap:1.5 }}>
-                  {i > 0 && <Box sx={{ width:4, height:4, borderRadius:'50%', background:'#cbd5e1', display:{ xs:'none', md:'block' } }} />}
-                  <Box sx={{ width:7, height:7, borderRadius:'50%', background:'#10b981', flexShrink:0 }} />
-                  <Typography sx={{ fontSize:'12.5px', color:'#64748b', fontWeight:600, fontFamily:"'Inter', sans-serif" }}>{item}</Typography>
-                </Box>
-              ))}
-            </Box>
-          </motion.div>
-
         </Container>
       </Box>
 
@@ -658,60 +713,66 @@ export default function Home() {
                            title: 'Loan Comparisons', 
                            desc: 'Comparing to find your lowest rate could save you millions.', 
                            icon: <HomeIcon className="text-emerald-500" />, 
-                           link: 'Compare Rates' 
+                           link: 'Compare Rates',
+                           href: '/portal/marketplace'
                          },
                          { 
                            title: 'Ratings & Reviews', 
                            desc: 'Read real verified audits about the lenders on our network.', 
                            icon: <StarRounded className="text-emerald-500" />, 
-                           link: 'Read lender audits' 
+                           link: 'Read lender audits',
+                           href: '/reviews'
                          },
                          { 
                            title: 'Liquidity Calculator', 
                            desc: 'Calculate your borrowing power across African markets.', 
                            icon: <CalculateRounded className="text-emerald-500" />, 
-                           link: 'Use Calculator' 
+                           link: 'Use Calculator',
+                           href: '/portal/calculator'
                          },
                          { 
                            title: 'Credit Discovery', 
                            desc: 'Instant access to your institutional credit score and profile.', 
                            icon: <ScoreIcon className="text-emerald-500" />, 
-                           link: 'Explore credit score' 
+                           link: 'Explore credit score',
+                           href: '/credit'
                          },
                        ].map((tool, i) => (
                          <Grid size={{ xs: 12, sm: 6 }} key={i}>
-                            <Card className="rounded-3xl p-8 h-full shadow-none border-none flex flex-col gap-4 group">
-                               <Box className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mb-2">
+                            <Card className="rounded-3xl p-8 h-full shadow-none border-none flex flex-col gap-4 group relative overflow-hidden">
+                               <Box className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mb-2 z-10">
                                   {tool.icon}
                                </Box>
-                               <Typography className="text-[18px] font-black text-slate-900 tracking-tight leading-none uppercase">{tool.title}</Typography>
-                               <Typography className="text-slate-500 text-[13px] font-medium leading-relaxed leading-snug">
+                               <Typography className="text-[18px] font-black text-slate-900 tracking-tight leading-none uppercase z-10">{tool.title}</Typography>
+                               <Typography className="text-slate-500 text-[13px] font-medium leading-relaxed leading-snug z-10">
                                   {tool.desc}
                                </Typography>
-                                <Button
-                      variant="contained"
-                      disableElevation
-                      fullWidth
-                      endIcon={<ArrowForwardRounded sx={{ fontSize: '14px !important', padding:"20px" }} />}
-                      className="mt-6"
-                      sx={{
-                        textTransform: 'none',
-                        fontWeight: 700,
-                        fontSize: '13px',
-                        backgroundColor: '#0a1e2b',
-                        color: '#fff',
-                        borderRadius: '20px',
-                        py: 1.25,
-                        boxShadow: 'none',
-                        '&:hover': {
-                          
-                          boxShadow: 'none',
-                        },
-                        transition: 'background-color 0.2s',
-                      }}
-                    >
-                      {tool.link}
-                    </Button>
+                               <Link href={tool.href} style={{ textDecoration: 'none', zIndex: 10, marginTop: 'auto' }}>
+                                 <Button
+                                   variant="contained"
+                                   disableElevation
+                                   fullWidth
+                                   endIcon={<ArrowForwardRounded sx={{ fontSize: '14px !important', padding:"20px" }} />}
+                                   className="mt-6"
+                                   sx={{
+                                     textTransform: 'none',
+                                     fontWeight: 700,
+                                     fontSize: '13px',
+                                     backgroundColor: '#0a1e2b',
+                                     color: '#fff',
+                                     borderRadius: '20px',
+                                     py: 1.25,
+                                     boxShadow: 'none',
+                                     '&:hover': {
+                                       backgroundColor: '#10b981',
+                                       boxShadow: '0 8px 24px rgba(16,185,129,0.25)',
+                                     },
+                                     transition: 'all 0.2s',
+                                   }}
+                                 >
+                                   {tool.link}
+                                 </Button>
+                               </Link>
                             </Card>
                          </Grid>
                        ))}
@@ -855,11 +916,20 @@ export default function Home() {
                    <Box className="mt-14">
                       <Button
                         component={Link}
-                        href="/vault"
+                        href="/login"
                         variant="contained"
                         disableElevation
-                        className="bg-[#0a1e2b] hover:bg-emerald-500 px-12 py-4 rounded-xl text-base font-bold transition-all"
-                        sx={{ textTransform: 'none', borderRadius: '12px' }}
+                        sx={{ 
+                          textTransform: 'none', 
+                          borderRadius: '12px',
+                          backgroundColor: '#10b981',
+                          color: '#fff',
+                          px: 6,
+                          py: 2,
+                          fontSize: '16px',
+                          fontWeight: 700,
+                          '&:hover': { backgroundColor: '#059669' }
+                        }}
                       >
                         Create My Free Vault Account
                       </Button>
@@ -1247,6 +1317,12 @@ export default function Home() {
         </Container>
       </section> */}
 
+      {/* AI Assistant Modal Overlay */}
+      <AiSearchModal 
+        open={isAiModalOpen} 
+        onClose={() => setIsAiModalOpen(false)} 
+        initialSearch={heroSearchText} 
+      />
 
     </main>
   );

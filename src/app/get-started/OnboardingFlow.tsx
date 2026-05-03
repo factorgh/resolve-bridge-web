@@ -4,6 +4,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useRegisterMutation } from '@/lib/redux/api/authApi';
+import { setOnboardingStep } from '@/lib/redux/slices/uiSlice';
+import { useDispatch } from 'react-redux';
+import { toast } from 'react-hot-toast';
+import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
@@ -22,6 +28,23 @@ interface OnboardingData {
   employmentStatus: string;
   monthlyIncome: string;
   loanDuration: string;
+  // Extended Institutional Fields
+  residentialAddress: string;
+  city: string;
+  mmda: string;
+  landmark: string;
+  occupation: string;
+  ssnitNo: string;
+  // Final Institutional Sync
+  title: string;
+  maritalStatus: string;
+  gender: string;
+  nationality: string;
+  dependants: string;
+  employer: string;
+  sector: string;
+  workAddress: string;
+  yearsWithEmployer: string;
 }
 
 /* ─── Constants ─────────────────────────────────────────────────────────────── */
@@ -446,16 +469,7 @@ function PhoneStep({
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const refs = Array.from({ length: 6 }, () => useRef<HTMLInputElement>(null));
 
-  // Validation: Starts with + and has at least 10 more digits
-  const isPhoneValid = data.phone.startsWith('+') && data.phone.replace(/[^0-9]/g, '').length >= 10;
-
-  const handlePhoneChange = (val: string) => {
-    // Only allow +, and digits. Remove all other characters.
-    const filtered = val.replace(/[^0-9+]/g, '');
-    // Ensure only one + at the start
-    const cleaned = filtered.startsWith('+') ? '+' + filtered.slice(1).replace(/\+/g, '') : filtered.replace(/\+/g, '');
-    onChange('phone', cleaned);
-  };
+  const isPhoneValid = data.phone && isValidPhoneNumber(data.phone);
 
   const handleOtpChange = (i: number, val: string) => {
     if (!/^\d?$/.test(val)) return;
@@ -487,24 +501,27 @@ function PhoneStep({
           <div className="space-y-4">
             <div>
               <FieldLabel>Mobile number</FieldLabel>
-              <div className="relative">
-                <Input
-                  type="tel"
-                  placeholder="+233 24 000 0000"
+              <div className="relative phone-input-container">
+                <PhoneInput
+                  international
+                  defaultCountry="GH"
+                  placeholder="Enter phone number"
                   value={data.phone}
-                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  onChange={(val) => onChange('phone', val || '')}
+                  className={`w-full h-[42px] border rounded-lg px-3 text-sm bg-white outline-none transition-all ${
+                    isPhoneValid 
+                      ? 'border-emerald-200 focus:ring-[#0e9f6e]/8' 
+                      : 'border-slate-200 focus:border-[#1a56db] focus:ring-[#1a56db]/8'
+                  }`}
                 />
                 {isPhoneValid && (
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center animate-in zoom-in duration-300">
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center animate-in zoom-in duration-300 z-10">
                     <CheckSmall />
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-slate-400 mt-1.5 flex justify-between">
-                <span>Include country code (e.g. +233 for Ghana)</span>
-                {data.phone.length > 1 && !data.phone.startsWith('+') && (
-                  <span className="text-rose-500 font-medium">Must start with +</span>
-                )}
+              <p className="text-[11px] text-slate-400 mt-2 flex justify-between">
+                <span>We'll send a 6-digit verification code</span>
               </p>
             </div>
           </div>
@@ -582,8 +599,19 @@ function KycStep({
       />
 
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
           <div>
+            <FieldLabel>Title</FieldLabel>
+            <select 
+              value={data.title} 
+              onChange={e => onChange('title', e.target.value)}
+              className="w-full h-[42px] border border-slate-200 rounded-lg px-3 text-sm text-slate-900 bg-white outline-none focus:border-[#1a56db]"
+            >
+              <option value="">Select...</option>
+              {['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Rev.'].map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          <div className="sm:col-span-1">
             <FieldLabel>First name</FieldLabel>
             <Input
               placeholder="Kwame"
@@ -591,7 +619,7 @@ function KycStep({
               onChange={(e) => onChange('firstName', e.target.value)}
             />
           </div>
-          <div>
+          <div className="sm:col-span-1">
             <FieldLabel>Last name</FieldLabel>
             <Input
               placeholder="Asante"
@@ -601,13 +629,52 @@ function KycStep({
           </div>
         </div>
 
-        <div>
-          <FieldLabel>Date of birth</FieldLabel>
-          <Input
-            type="date"
-            value={data.dob}
-            onChange={(e) => onChange('dob', e.target.value)}
-          />
+        <div className="grid grid-cols-2 gap-3.5">
+           <div>
+              <FieldLabel>Gender</FieldLabel>
+              <select 
+                value={data.gender} 
+                onChange={e => onChange('gender', e.target.value)}
+                className="w-full h-[42px] border border-slate-200 rounded-lg px-3 text-sm text-slate-900 bg-white outline-none focus:border-[#1a56db]"
+              >
+                <option value="">Select...</option>
+                {['Male', 'Female', 'Other'].map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
+           </div>
+           <div>
+              <FieldLabel>Marital Status</FieldLabel>
+              <select 
+                value={data.maritalStatus} 
+                onChange={e => onChange('maritalStatus', e.target.value)}
+                className="w-full h-[42px] border border-slate-200 rounded-lg px-3 text-sm text-slate-900 bg-white outline-none focus:border-[#1a56db]"
+              >
+                <option value="">Select...</option>
+                {['Single', 'Married', 'Divorced', 'Widowed'].map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+           </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3.5">
+          <div>
+            <FieldLabel>Date of birth</FieldLabel>
+            <Input
+              type="date"
+              value={data.dob}
+              onChange={(e) => onChange('dob', e.target.value)}
+            />
+          </div>
+          <div>
+            <FieldLabel>Nationality</FieldLabel>
+            <select 
+                value={data.nationality} 
+                onChange={e => onChange('nationality', e.target.value)}
+                className="w-full h-[42px] border border-slate-200 rounded-lg px-3 text-sm text-slate-900 bg-white outline-none focus:border-[#1a56db]"
+              >
+                <option value="Ghanaian">Ghanaian</option>
+                <option value="Nigerian">Nigerian</option>
+                <option value="Other">Other</option>
+            </select>
+          </div>
         </div>
 
         <div>
@@ -636,6 +703,46 @@ function KycStep({
             value={data.idNumber}
             onChange={(e) => onChange('idNumber', e.target.value)}
           />
+        </div>
+
+        <div className="pt-4 border-t border-slate-100">
+           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4">Residential Address</p>
+           <div className="space-y-4">
+              <div>
+                 <FieldLabel>Street / House Number</FieldLabel>
+                 <Input 
+                   placeholder="e.g. House No. 12, Independence Ave" 
+                   value={data.residentialAddress}
+                   onChange={e => onChange('residentialAddress', e.target.value)}
+                 />
+              </div>
+              <div className="grid grid-cols-2 gap-3.5">
+                 <div>
+                    <FieldLabel>City</FieldLabel>
+                    <Input 
+                      placeholder="Accra" 
+                      value={data.city}
+                      onChange={e => onChange('city', e.target.value)}
+                    />
+                 </div>
+                 <div>
+                    <FieldLabel>District (MMDA)</FieldLabel>
+                    <Input 
+                      placeholder="e.g. Accra Metropolitan" 
+                      value={data.mmda}
+                      onChange={e => onChange('mmda', e.target.value)}
+                    />
+                 </div>
+              </div>
+              <div>
+                 <FieldLabel>Nearest Landmark</FieldLabel>
+                 <Input 
+                   placeholder="e.g. Near Jubilee House" 
+                   value={data.landmark}
+                   onChange={e => onChange('landmark', e.target.value)}
+                 />
+              </div>
+           </div>
         </div>
       </div>
 
@@ -682,6 +789,62 @@ function FinanceStep({
               </button>
             ))}
           </div>
+        </div>
+
+        <div>
+           <FieldLabel>Occupation / Job Title</FieldLabel>
+           <Input 
+             placeholder="e.g. Software Engineer" 
+             value={data.occupation}
+             onChange={e => onChange('occupation', e.target.value)}
+           />
+        </div>
+
+        <div>
+           <FieldLabel>SSNIT Number</FieldLabel>
+           <Input 
+             placeholder="E000000000000" 
+             value={data.ssnitNo}
+             onChange={e => onChange('ssnitNo', e.target.value)}
+           />
+        </div>
+
+        <div>
+           <FieldLabel>Current Employer</FieldLabel>
+           <Input 
+             placeholder="e.g. MTN Ghana" 
+             value={data.employer}
+             onChange={e => onChange('employer', e.target.value)}
+           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3.5">
+           <div>
+              <FieldLabel>Employment Sector</FieldLabel>
+              <Input 
+                placeholder="e.g. Telecom" 
+                value={data.sector}
+                onChange={e => onChange('sector', e.target.value)}
+              />
+           </div>
+           <div>
+              <FieldLabel>Years Employed</FieldLabel>
+              <Input 
+                type="number"
+                placeholder="2" 
+                value={data.yearsWithEmployer}
+                onChange={e => onChange('yearsWithEmployer', e.target.value)}
+              />
+           </div>
+        </div>
+
+        <div>
+           <FieldLabel>Work Address</FieldLabel>
+           <Input 
+             placeholder="e.g. Graphic Road, Accra" 
+             value={data.workAddress}
+             onChange={e => onChange('workAddress', e.target.value)}
+           />
         </div>
 
         <div>
@@ -941,6 +1104,8 @@ const PANEL_VARIANTS = {
 
 export default function OnboardingFlow() {
   const router = useRouter();
+  const dispatch = useDispatch();
+  const [register] = useRegisterMutation();
   const [step, setStep] = useState<StepId>('goals');
   const [data, setData] = useState<OnboardingData>({
     goals: [],
@@ -955,6 +1120,21 @@ export default function OnboardingFlow() {
     employmentStatus: '',
     monthlyIncome: '',
     loanDuration: '',
+    residentialAddress: '',
+    city: '',
+    mmda: '',
+    landmark: '',
+    occupation: '',
+    ssnitNo: '',
+    title: '',
+    maritalStatus: '',
+    gender: '',
+    nationality: 'Ghanaian',
+    dependants: '0',
+    employer: '',
+    sector: '',
+    workAddress: '',
+    yearsWithEmployer: '',
   });
 
   const set = (k: keyof OnboardingData, v: string) =>
@@ -968,15 +1148,63 @@ export default function OnboardingFlow() {
         : [...prev.goals, id],
     }));
 
-  const goTo = (s: StepId) => setStep(s);
+  const goTo = (s: StepId) => {
+    setStep(s);
+    dispatch(setOnboardingStep(s));
+  };
 
-  // Auto-advance from analysis
+  // Auto-advance from analysis & Perform API Registration
   useEffect(() => {
     if (step === 'analysis') {
-      const t = setTimeout(() => setStep('success'), 3500);
-      return () => clearTimeout(t);
+      const registerUser = async () => {
+        try {
+          const payload = {
+            email: data.email,
+            password: data.password,
+            phoneNumber: data.phone,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            market: 'Ghana', 
+            goals: data.goals,
+            dateOfBirth: data.dob ? new Date(data.dob).toISOString() : null,
+            idType: data.idType,
+            idNumber: data.idNumber,
+            employmentStatus: data.employmentStatus,
+            monthlyIncome: data.monthlyIncome,
+            loanDuration: data.loanDuration,
+            residentialAddress: data.residentialAddress,
+            city: data.city,
+            mmda: data.mmda,
+            landmark: data.landmark,
+            occupation: data.occupation,
+            ssnitNo: data.ssnitNo,
+            title: data.title,
+            maritalStatus: data.maritalStatus,
+            gender: data.gender,
+            nationality: data.nationality,
+            dependants: data.dependants,
+            employer: data.employer,
+            sector: data.sector,
+            workAddress: data.workAddress,
+            yearsWithEmployer: data.yearsWithEmployer
+          };
+
+          await register(payload).unwrap();
+          toast.success('Registration successful! Finding matches...');
+          
+          setTimeout(() => setStep('success'), 2500);
+        } catch (err: any) {
+          console.error('Registration failed:', err);
+          const msg = err.data?.message || err.message || 'An unexpected error occurred';
+          const details = err.data?.errors ? `: ${err.data.errors.join(', ')}` : '';
+          toast.error(`Registration failed: ${msg}${details}`, { duration: 5000 });
+          setStep('finance');
+        }
+      };
+
+      registerUser();
     }
-  }, [step]);
+  }, [step, data, register]);
 
   return (
     <>

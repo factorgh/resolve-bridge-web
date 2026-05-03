@@ -41,12 +41,12 @@ export default function LoanCalculatorPage() {
     setMounted(true);
   }, []);
 
-  const { monthlyPayment, totalPayment, totalInterest } = useMemo(() => {
+  const { monthlyPayment, weeklyPayment, dailyPayment, totalPayment, totalInterest } = useMemo(() => {
     const r = interestRate / 100 / 12;
     const n = loanTerm;
     const p = loanAmount;
     
-    if (n === 0) return { monthlyPayment: 0, totalPayment: 0, totalInterest: 0 };
+    if (n === 0) return { monthlyPayment: 0, weeklyPayment: 0, dailyPayment: 0, totalPayment: 0, totalInterest: 0 };
     
     let monthly = 0;
     if (r === 0) {
@@ -56,8 +56,12 @@ export default function LoanCalculatorPage() {
       monthly = (p * x * r) / (x - 1);
     }
     
+    const annual = monthly * 12;
+    
     return {
       monthlyPayment: monthly,
+      weeklyPayment: annual / 52,
+      dailyPayment: annual / 365,
       totalPayment: monthly * n,
       totalInterest: (monthly * n) - p
     };
@@ -195,6 +199,21 @@ export default function LoanCalculatorPage() {
                     <span style={{ fontSize: '0.25em', opacity: 0.3, marginLeft: '8px' }}>/mo</span>
                   </Typography>
                   
+                  <Grid container spacing={{ xs: 2, md: 4 }} sx={{ mb: { xs: 4, md: 6 } }}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <Box className="p-6 md:p-8 rounded-2xl md:rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md">
+                        <Typography variant="caption" className="text-slate-500 font-bold uppercase tracking-widest block mb-1">Weekly Payment</Typography>
+                        <Typography variant="h6" className="text-white font-black text-xl md:text-2xl">${weeklyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Typography>
+                      </Box>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <Box className="p-6 md:p-8 rounded-2xl md:rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md">
+                        <Typography variant="caption" className="text-slate-500 font-bold uppercase tracking-widest block mb-1">Daily Breakdown</Typography>
+                        <Typography variant="h6" className="text-white font-black text-xl md:text-2xl">${dailyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+
                   <Grid container spacing={{ xs: 2, md: 4 }}>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <Box className="p-6 md:p-8 rounded-2xl md:rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md">

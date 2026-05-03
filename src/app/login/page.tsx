@@ -4,14 +4,12 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useLoginMutation } from '@/lib/redux/api/authApi';
 
-const DUMMY_CREDENTIALS = {
-  email: 'demo@resolvebridge.com',
-  password: 'resolve123',
-};
 
 export default function LoginPage() {
   const router = useRouter();
+  const [login] = useLoginMutation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -24,19 +22,18 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
-    // Simulate network delay
-    await new Promise((r) => setTimeout(r, 1200));
+    try {
+      const response: any = await login({
+        identifier: email,
+        password: password,
+      }).unwrap();
 
-    if (
-      email.toLowerCase() === DUMMY_CREDENTIALS.email &&
-      password === DUMMY_CREDENTIALS.password
-    ) {
-      // Store dummy session
-      sessionStorage.setItem('rb_user', JSON.stringify({ name: 'Kwame Asante', email }));
+      // Tokens are handled by onQueryStarted in authApi.ts
+      sessionStorage.setItem('rb_user', JSON.stringify(response.data.user));
       router.push('/portal');
-    } else {
+    } catch (err: any) {
       setLoading(false);
-      setError('Invalid credentials. Use demo@resolvebridge.com / resolve123');
+      setError(err.data?.message || err.message || 'Invalid credentials. Please try again.');
       setShake(true);
       setTimeout(() => setShake(false), 600);
     }
@@ -91,16 +88,6 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Demo hint */}
-          <div style={{ background: 'linear-gradient(135deg, rgba(37,99,235,0.06), rgba(16,185,129,0.06))', border: '1px solid rgba(37,99,235,0.12)', borderRadius: '12px', padding: '0.875rem 1rem', marginBottom: '1.75rem', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-            <span style={{ fontSize: '16px', flexShrink: 0, marginTop: '1px' }}>💡</span>
-            <div>
-              <p style={{ fontSize: '11.5px', fontWeight: 700, color: '#1e40af', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Demo Credentials</p>
-              <p style={{ fontSize: '12.5px', color: '#475569', margin: 0 }}>
-                <strong>demo@resolvebridge.com</strong> / <strong>resolve123</strong>
-              </p>
-            </div>
-          </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -114,7 +101,7 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={e => { setEmail(e.target.value); setError(''); }}
-                  placeholder="demo@resolvebridge.com"
+                  placeholder="Enter your email"
                   required
                   style={{
                     width: '100%',
@@ -197,7 +184,7 @@ export default function LoginPage() {
               style={{
                 width: '100%',
                 padding: '1rem',
-                background: loading ? '#94a3b8' : 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)',
+                background: loading ? '#94a3b8' : '#10b981',
                 color: '#fff',
                 border: 'none',
                 borderRadius: '14px',
@@ -212,10 +199,10 @@ export default function LoginPage() {
                 gap: '8px',
                 letterSpacing: '-0.01em',
                 marginTop: '0.25rem',
-                boxShadow: loading ? 'none' : '0 8px 24px rgba(15,23,42,0.25)',
+                boxShadow: loading ? 'none' : '0 8px 24px rgba(16,185,129,0.25)',
               }}
-              onMouseEnter={e => { if (!loading) e.currentTarget.style.background = 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)'; }}
-              onMouseLeave={e => { if (!loading) e.currentTarget.style.background = 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)'; }}
+              onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#059669'; }}
+              onMouseLeave={e => { if (!loading) e.currentTarget.style.background = '#10b981'; }}
             >
               {loading ? (
                 <>
@@ -242,7 +229,7 @@ export default function LoginPage() {
           </div>
 
           {/* Social buttons */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          {/* <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             {[
               { icon: 'G', label: 'Google', bg: '#fff', border: '#e2e8f0', color: '#374151' },
               { icon: '𝕏', label: 'Microsoft', bg: '#fff', border: '#e2e8f0', color: '#374151' },
@@ -258,7 +245,7 @@ export default function LoginPage() {
                 {label}
               </button>
             ))}
-          </div>
+          </div> */}
 
           {/* Sign up link */}
           <p style={{ textAlign: 'center', fontSize: '13px', color: '#94a3b8', margin: '1.75rem 0 0' }}>

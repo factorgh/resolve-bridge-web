@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import Navbar from './Navbar';
 import Footer from './Footer';
 
-const STANDALONE_ROUTES = ['/portal', '/login', '/get-started'];
+const STANDALONE_ROUTES = ['/portal', '/login', '/get-started', '/download'];
 
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

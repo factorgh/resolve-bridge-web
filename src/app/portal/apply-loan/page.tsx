@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import PortalShell, { C, F } from '../components/PortalShell';
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 
 /* ─── Data ─────────────────────────────────────────────────────────────────── */
 const LOAN_TYPES = [
@@ -17,9 +19,30 @@ const LENDERS = ['Absa Bank Ghana', 'Fidelity Bank', 'CAL Bank', 'GCB Bank', 'Ec
 const PURPOSES = ['Debt Consolidation', 'Home Improvement', 'Medical Expenses', 'Education', 'Business Capital', 'Equipment Purchase', 'Land / Property', 'Vehicle Purchase', 'Travel', 'Other'];
 const EMPLOYMENT = ['Employed (Salaried)', 'Self-Employed', 'Business Owner', 'Government Employee', 'Contractor / Freelancer', 'Retired'];
 interface FormData {
-  loanType: string; amount: string; term: string; purpose: string;
-  firstName: string; lastName: string; phone: string; employment: string;
-  employer: string; monthlyIncome: string; lender: string;
+  // 1. Loan Config
+  loanType: string; amount: string; term: string; purpose: string; lender: string;
+  
+  // 2. Personal Details
+  title: string; firstName: string; lastName: string; dob: string; maritalStatus: string; 
+  gender: string; dependants: string; nationality: string;
+  residentialAddress: string; landmark: string; city: string; mmda: string;
+  phone: string; email: string;
+
+  // 3. Bank & Credit
+  hasAccountWithLender: string; branch: string; accountNumber: string; yearsWithBank: string;
+  existingLoan: string;
+  
+  // 4. Work Details
+  employment: string; employer: string; yearsWithEmployer: string; workAddress: string; 
+  occupation: string; sector: string; staffNo: string; ssnitNo: string;
+  positionType: string; monthlyIncome: string; netSalary: string;
+
+  // 5. Referees
+  ref1Name: string; ref1Relation: string; ref1Phone: string;
+  ref2Name: string; ref2Relation: string; ref2Phone: string;
+
+  // 6. Non-Ghanaian
+  arrivalDate: string; visaNo: string; visaExpiry: string; permitNo: string;
 }
 
 const isMobileStyle = (isMobile: boolean) => ({
@@ -99,9 +122,19 @@ export default function ApplyLoanPage() {
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState<FormData>({
-    loanType: '', amount: '', term: '24', purpose: '',
-    firstName: '', lastName: '', phone: '',
-    employment: '', employer: '', monthlyIncome: '', lender: '',
+    loanType: '', amount: '', term: '24', purpose: '', lender: '',
+    title: '', firstName: '', lastName: '', dob: '', maritalStatus: '',
+    gender: '', dependants: '', nationality: 'Ghanaian',
+    residentialAddress: '', landmark: '', city: '', mmda: '',
+    phone: '', email: '',
+    hasAccountWithLender: 'No', branch: '', accountNumber: '', yearsWithBank: '',
+    existingLoan: 'No',
+    employment: '', employer: '', yearsWithEmployer: '', workAddress: '',
+    occupation: '', sector: '', staffNo: '', ssnitNo: '',
+    positionType: 'Permanent', monthlyIncome: '', netSalary: '',
+    ref1Name: '', ref1Relation: '', ref1Phone: '',
+    ref2Name: '', ref2Relation: '', ref2Phone: '',
+    arrivalDate: '', visaNo: '', visaExpiry: '', permitNo: '',
   });
   const [isMobile, setIsMobile] = useState(false);
 
@@ -119,10 +152,18 @@ export default function ApplyLoanPage() {
       const u = JSON.parse(stored);
       setForm(f => ({
         ...f,
-        firstName: u.name?.split(' ')[0] || '',
-        lastName: u.name?.split(' ')[1] || '',
-        phone: u.phone || '+233 ',
-        monthlyIncome: u.income || ''
+        firstName: u.firstName || u.name?.split(' ')[0] || '',
+        lastName: u.lastName || u.name?.split(' ')[1] || '',
+        phone: u.phone || u.phoneNumber || '',
+        dob: u.dateOfBirth?.split('T')[0] || '',
+        residentialAddress: u.residentialAddress || '',
+        city: u.city || '',
+        mmda: u.mmda || '',
+        landmark: u.landmark || '',
+        occupation: u.occupation || '',
+        ssnitNo: u.ssnitNo || '',
+        employment: u.employmentStatus || '',
+        monthlyIncome: u.monthlyIncome || ''
       }));
     }
     
@@ -132,14 +173,17 @@ export default function ApplyLoanPage() {
     if (preLender) setForm(f => ({ ...f, lender: decodeURIComponent(preLender) }));
   }, []);
 
-  const set = (key: keyof FormData) => (v: string) => setForm(f => ({ ...f, [key]: v }));
+  const set = (key: keyof FormData) => (v: string | undefined) => setForm(f => ({ ...f, [key]: v || '' }));
 
-  const steps = ['Goal Selection', 'Lender Match', 'Vault & Identity', 'Verification'];
+  const steps = ['Product', 'Personal', 'Financials', 'Employment', 'Referees', 'Vault', 'Review'];
 
   const canNext = () => {
     if (step === 0) return !!form.loanType;
-    if (step === 1) return !!form.amount && !!form.purpose && !!form.lender;
-    if (step === 2) return !!form.employment && !!form.monthlyIncome;
+    if (step === 1) return !!form.firstName && !!form.lastName && !!form.phone;
+    if (step === 2) return !!form.lender && !!form.amount;
+    if (step === 3) return !!form.employment && !!form.monthlyIncome;
+    if (step === 4) return !!form.ref1Name && !!form.ref1Phone;
+    if (step === 5) return true; // Vault is usually optional or soft-gate
     return true;
   };
 
@@ -201,6 +245,25 @@ export default function ApplyLoanPage() {
             {/* Step 0 – Loan Type */}
             {step === 0 && (
               <div>
+                <div style={{ 
+                  background: `linear-gradient(135deg, ${C.bluePale}, #fff)`, 
+                  padding: '16px 24px', 
+                  borderRadius: 20, 
+                  border: `1.5px solid ${C.blue}33`,
+                  marginBottom: 32,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 16
+                }}>
+                   <div style={{ width: 44, height: 44, borderRadius: '50%', background: C.blue, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                   </div>
+                   <div>
+                      <p style={{ margin: 0, fontSize: 15, fontWeight: 900, color: C.text, fontFamily: F.heading }}>Check your rate in 2 minutes</p>
+                      <p style={{ margin: 0, fontSize: 13, color: C.textSub }}>Get personalized offers with **no impact on your credit score**.</p>
+                   </div>
+                </div>
+
                 <p style={{ margin: '0 0 20px', fontSize: 15, fontWeight: 700, color: C.text, fontFamily: F.heading }}>What type of loan are you looking for?</p>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 14 }}>
                   {LOAN_TYPES.map(lt => (
@@ -220,75 +283,227 @@ export default function ApplyLoanPage() {
                 </div>
               </div>
             )}
-
-            {/* Step 1 – Loan Details */}
             {step === 1 && (
-              <div style={{ background: '#fff', borderRadius: 22, padding: isMobile ? '24px' : '32px', border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 22 }}>
-                <Field label="Loan Amount (GH₵)" hint="Enter the amount you need">
-                  <Input value={form.amount} onChange={set('amount')} placeholder="e.g. 15,000" type="number" prefix="GH₵" />
-                </Field>
-
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
-                  <Field label="Repayment Term">
-                    <Select value={form.term} onChange={set('term')} options={['6', '12', '18', '24', '36', '48', '60', '72', '84'].map(v => v + ' months')} />
-                  </Field>
-                  <Field label="Preferred Lender">
-                    <Select value={form.lender} onChange={set('lender')} options={LENDERS} />
-                  </Field>
-                </div>
-
-                <Field label="Loan Purpose">
-                  <Select value={form.purpose} onChange={set('purpose')} options={PURPOSES} />
-                </Field>
-
-                {/* Estimate */}
-                {form.amount && (
-                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                    style={{ background: C.bluePale, border: `1px solid ${C.blue}22`, borderRadius: 14, padding: isMobile ? '14px' : '16px 20px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16 }}
-                  >
-                    {[
-                      { label: 'Est. Monthly', value: `GH₵ ${Math.round(Number(form.amount) * 0.045).toLocaleString()}` },
-                      { label: 'Total Repayable', value: `GH₵ ${Math.round(Number(form.amount) * 1.25).toLocaleString()}` },
-                      { label: 'Interest Rate', value: LOAN_TYPES.find(l => l.id === form.loanType)?.rate ?? '—' },
-                    ].map(({ label, value }) => (
-                      <div key={label}>
-                        <p style={{ margin: '0 0 3px', fontSize: 11, fontWeight: 700, color: C.blue, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</p>
-                        <p style={{ margin: 0, fontSize: isMobile ? 16 : 18, fontWeight: 900, color: C.text, fontFamily: F.heading, letterSpacing: '-0.03em' }}>{value}</p>
-                      </div>
-                    ))}
-                  </motion.div>
-                )}
-              </div>
-            )}
-
-            {/* Step 2 – Your Info */}
-            {step === 2 && (
-              <div style={{ background: '#fff', borderRadius: 22, padding: isMobile ? '24px' : '32px', border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 22 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
-                  <Field label="First Name">
-                    <Input value={form.firstName} onChange={set('firstName')} placeholder="Kwame" />
-                  </Field>
-                  <Field label="Last Name">
-                    <Input value={form.lastName} onChange={set('lastName')} placeholder="Asante" />
-                  </Field>
+              <div style={{ background: '#fff', borderRadius: 22, padding: isMobile ? '24px' : '32px', border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 28 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.5fr 1.5fr', gap: 20 }}>
+                   <Field label="Title">
+                      <Select value={form.title} onChange={set('title')} options={['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Rev.']} />
+                   </Field>
+                   <Field label="First Name">
+                      <Input value={form.firstName} onChange={set('firstName')} placeholder="John" />
+                   </Field>
+                   <Field label="Last Name">
+                      <Input value={form.lastName} onChange={set('lastName')} placeholder="Doe" />
+                   </Field>
                 </div>
                 <Field label="Phone Number">
-                  <Input value={form.phone} onChange={set('phone')} placeholder="+233 24 000 0000" />
+                  <PhoneInput international defaultCountry="GH" value={form.phone} onChange={set('phone')} className="w-full h-[46px] border border-slate-200 rounded-xl px-4 text-sm bg-white" />
                 </Field>
-                <Field label="Employment Status">
-                  <Select value={form.employment} onChange={set('employment')} options={EMPLOYMENT} />
-                </Field>
-                <Field label="Employer / Business Name">
-                  <Input value={form.employer} onChange={set('employer')} placeholder="Company or business name" />
-                </Field>
-                <Field label="Monthly Net Income (GH₵)" hint="Your take-home income after taxes">
-                  <Input value={form.monthlyIncome} onChange={set('monthlyIncome')} type="number" prefix="GH₵" placeholder="e.g. 5,200" />
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: 20 }}>
+                   <Field label="Date of Birth">
+                      <Input value={form.dob} onChange={set('dob')} type="date" />
+                   </Field>
+                   <Field label="Marital Status">
+                      <Select value={form.maritalStatus} onChange={set('maritalStatus')} options={['Single', 'Married', 'Divorced', 'Widowed']} />
+                   </Field>
+                   <Field label="Gender">
+                      <Select value={form.gender} onChange={set('gender')} options={['Male', 'Female', 'Other']} />
+                   </Field>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
+                   <Field label="Nationality">
+                      <Select value={form.nationality} onChange={set('nationality')} options={['Ghanaian', 'Nigerian', 'Kenyan', 'British', 'American', 'Other']} />
+                   </Field>
+                   <Field label="No. of Dependants">
+                      <Input value={form.dependants} onChange={set('dependants')} type="number" placeholder="0" />
+                   </Field>
+                </div>
+                {form.nationality !== 'Ghanaian' && (
+                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ border: `1.5px solid ${C.amber}33`, background: `${C.amber}08`, padding: 24, borderRadius: 20, display: 'flex', flexDirection: 'column', gap: 20 }}>
+                     <p style={{ margin: 0, fontSize: 12, fontWeight: 900, color: C.amber, textTransform: 'uppercase', letterSpacing: '0.05em' }}>International Applicant Details</p>
+                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
+                        <Field label="Arrival Date in Ghana">
+                           <Input value={form.arrivalDate} onChange={set('arrivalDate')} type="date" />
+                        </Field>
+                        <Field label="Visa / Permit Number">
+                           <Input value={form.visaNo} onChange={set('visaNo')} placeholder="GHA-0000000" />
+                        </Field>
+                     </div>
+                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
+                        <Field label="Visa Expiry Date">
+                           <Input value={form.visaExpiry} onChange={set('visaExpiry')} type="date" />
+                        </Field>
+                        <Field label="Resident Permit No.">
+                           <Input value={form.permitNo} onChange={set('permitNo')} placeholder="P-000000" />
+                        </Field>
+                     </div>
+                  </motion.div>
+                )}
+                <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 20 }}>
+                   <h3 style={{ fontSize: 13, fontWeight: 800, color: C.textSub, marginBottom: 20, textTransform: 'uppercase' }}>Residential Address</h3>
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                      <Field label="Street / House Number">
+                         <Input value={form.residentialAddress} onChange={set('residentialAddress')} placeholder="e.g. House No. 12, Independence Ave" />
+                      </Field>
+                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
+                         <Field label="City">
+                            <Input value={form.city} onChange={set('city')} placeholder="Accra" />
+                         </Field>
+                         <Field label="Nearest Landmark">
+                            <Input value={form.landmark} onChange={set('landmark')} placeholder="e.g. Near Jubilee House" />
+                         </Field>
+                      </div>
+                      <Field label="MMDA (District Assembly)">
+                         <Input value={form.mmda} onChange={set('mmda')} placeholder="e.g. Accra Metropolitan Assembly" />
+                      </Field>
+                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2 – Financial Profile */}
+            {step === 2 && (
+              <div style={{ background: '#fff', borderRadius: 22, padding: isMobile ? '24px' : '32px', border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 28 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.5fr 1fr', gap: 20 }}>
+                   <Field label="Preferred Lender">
+                      <Select value={form.lender} onChange={set('lender')} options={LENDERS} />
+                   </Field>
+                   <Field label="Account with Lender?">
+                      <Select value={form.hasAccountWithLender} onChange={set('hasAccountWithLender')} options={['Yes', 'No']} />
+                   </Field>
+                </div>
+                {form.hasAccountWithLender === 'Yes' && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
+                     <Field label="Branch Name">
+                        <Input value={form.branch} onChange={set('branch')} placeholder="e.g. Ridge Branch" />
+                     </Field>
+                     <Field label="Account Number">
+                        <Input value={form.accountNumber} onChange={set('accountNumber')} placeholder="000000000000" />
+                     </Field>
+                  </motion.div>
+                )}
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.2fr 1fr', gap: 20 }}>
+                   <Field label="Loan Amount (GH₵)">
+                      <Input value={form.amount} onChange={set('amount')} prefix="GH₵" placeholder="10,000" />
+                   </Field>
+                   <Field label="Repayment Term">
+                      <Select value={form.term} onChange={set('term')} options={['12', '24', '36', '48', '60'].map(v => v + ' months')} />
+                   </Field>
+                </div>
+                <Field label="Purpose of Loan">
+                   <Select value={form.purpose} onChange={set('purpose')} options={PURPOSES} />
                 </Field>
               </div>
             )}
 
-            {/* Step 3 – Review */}
+            {/* Step 3 – Employment Details */}
             {step === 3 && (
+              <div style={{ background: '#fff', borderRadius: 22, padding: isMobile ? '24px' : '32px', border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 28 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.2fr 1fr', gap: 20 }}>
+                   <Field label="Employment Status">
+                      <Select value={form.employment} onChange={set('employment')} options={EMPLOYMENT} />
+                   </Field>
+                   <Field label="Position Type">
+                      <Select value={form.positionType} onChange={set('positionType')} options={['Permanent', 'Contract', 'Temporary']} />
+                   </Field>
+                </div>
+                <Field label="Current Employer Name">
+                   <Input value={form.employer} onChange={set('employer')} placeholder="e.g. MTN Ghana" />
+                </Field>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
+                   <Field label="Occupation">
+                      <Input value={form.occupation} onChange={set('occupation')} placeholder="e.g. Software Engineer" />
+                   </Field>
+                   <Field label="No. of Years Employed">
+                      <Input value={form.yearsWithEmployer} onChange={set('yearsWithEmployer')} type="number" placeholder="2" />
+                   </Field>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
+                   <Field label="Monthly Net Income (GH₵)">
+                      <Input value={form.monthlyIncome} onChange={set('monthlyIncome')} prefix="GH₵" placeholder="5,000" />
+                   </Field>
+                   <Field label="SSNIT Number">
+                      <Input value={form.ssnitNo} onChange={set('ssnitNo')} placeholder="E000000000000" />
+                   </Field>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4 – Referees */}
+            {step === 4 && (
+              <div style={{ background: '#fff', borderRadius: 22, padding: isMobile ? '24px' : '32px', border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 28 }}>
+                 <div>
+                    <h3 style={{ fontSize: 13, fontWeight: 800, color: C.textSub, marginBottom: 20, textTransform: 'uppercase' }}>Referee 1 (Relative / Next of Kin)</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                       <Field label="Full Name">
+                          <Input value={form.ref1Name} onChange={set('ref1Name')} placeholder="e.g. Mary Doe" />
+                       </Field>
+                       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
+                          <Field label="Relationship">
+                             <Input value={form.ref1Relation} onChange={set('ref1Relation')} placeholder="e.g. Sister" />
+                          </Field>
+                          <Field label="Phone Number">
+                            <PhoneInput international defaultCountry="GH" value={form.ref1Phone} onChange={set('ref1Phone')} className="w-full h-[46px] border border-slate-200 rounded-xl px-4 text-sm bg-white" />
+                          </Field>
+                       </div>
+                    </div>
+                 </div>
+                 <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 24, marginTop: 8 }}>
+                    <h3 style={{ fontSize: 13, fontWeight: 800, color: C.textSub, marginBottom: 20, textTransform: 'uppercase' }}>Referee 2 (Non-Relative)</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                       <Field label="Full Name">
+                          <Input value={form.ref2Name} onChange={set('ref2Name')} placeholder="e.g. Kwame Mensah" />
+                       </Field>
+                       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
+                          <Field label="Relationship">
+                             <Input value={form.ref2Relation} onChange={set('ref2Relation')} placeholder="e.g. Colleague" />
+                          </Field>
+                          <Field label="Phone Number">
+                            <PhoneInput international defaultCountry="GH" value={form.ref2Phone} onChange={set('ref2Phone')} className="w-full h-[46px] border border-slate-200 rounded-xl px-4 text-sm bg-white" />
+                          </Field>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+            )}
+
+            {/* Step 5 – Digital Vault */}
+            {step === 5 && (
+              <div style={{ background: '#fff', borderRadius: 22, padding: isMobile ? '24px' : '32px', border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 28 }}>
+                <div>
+                   <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 900, color: C.text, fontFamily: F.heading }}>The Resolve Digital Vault</p>
+                   <p style={{ margin: '0 0 24px', fontSize: 13, color: C.textMuted }}>Upload your bank-required documents once. We handle the submission.</p>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
+                    {[
+                     { l: 'Ghana Card', i: '🪪' },
+                     { l: '3 Months Payslips', i: '📄' },
+                     { l: 'Utility Bill', i: '🏘️' },
+                     { l: 'Bank Statement', i: '🏦' },
+                     { l: 'Undertaking Letter', i: '📜', help: 'Required for salaried loans' },
+                     { l: 'Passport Picture', i: '📸' }
+                   ].map(doc => (
+                    <div key={doc.l} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <label style={{ fontSize: 10, fontWeight: 900, color: C.textSub, textTransform: 'uppercase' }}>{doc.l}</label>
+                          {doc.l === 'Undertaking Letter' && <button style={{ background: 'none', border: 'none', color: C.blue, fontSize: 9, fontWeight: 800, cursor: 'pointer' }}>Get Template ↓</button>}
+                       </div>
+                       <div style={{ border: `2px dashed ${C.border}`, borderRadius: 16, padding: 20, textAlign: 'center', background: '#f8fafc', cursor: 'pointer' }}>
+                          <span style={{ fontSize: 20 }}>{doc.i}</span>
+                       </div>
+                    </div>
+                   ))}
+                </div>
+
+                <div style={{ padding: '16px 20px', borderRadius: 16, background: C.emeraldLight, border: `1px solid ${C.emerald}22`, display: 'flex', gap: 12, alignItems: 'center' }}>
+                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.emerald} strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                   <p style={{ margin: 0, fontSize: 12, color: C.emerald, fontWeight: 700 }}>Documents are encrypted and will only be shared with {form.lender || 'your chosen lender'}.</p>
+                </div>
+              </div>
+            )}
+            {/* Step 6 – Review */}
+            {step === 6 && (
               <div style={{ background: '#fff', borderRadius: 22, padding: isMobile ? '24px' : '32px', border: `1px solid ${C.border}` }}>
                 <p style={{ margin: '0 0 22px', fontSize: 15, fontWeight: 800, color: C.text, fontFamily: F.heading }}>Review your application</p>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '8px' : '12px 32px' }}>
