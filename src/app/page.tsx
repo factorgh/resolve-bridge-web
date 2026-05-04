@@ -256,8 +256,8 @@ export default function Home() {
       <Box component="section" sx={{
         position: 'relative',
         background: '#04080f',
-        pt: { xs: 6, md: 10 },
-        pb: { xs: 12, md: 24 },
+        pt: { xs: 5, md: 10 },
+        pb: { xs: 8, md: 24 },
         overflow: 'hidden',
         borderBottom: '1px solid rgba(0,0,0,0.05)'
       }}>
@@ -275,10 +275,10 @@ export default function Home() {
                     fontFamily: "'Plus Jakarta Sans', sans-serif",
                     fontWeight: 900,
                     color: '#fff',
-                    fontSize: { xs: '2.2rem', sm: '2.8rem', md: '3.6rem' },
-                    lineHeight: 1.1,
-                    letterSpacing: '-0.03em',
-                    mb: 2.5
+                    fontSize: { xs: '1.8rem', sm: '2.6rem', md: '3.6rem' },
+                    lineHeight: 1.15,
+                    letterSpacing: '-0.02em',
+                    mb: { xs: 2, md: 2.5 }
                   }}>
                     Find the best loan,<br />
                     <Box component="span" sx={{
@@ -294,12 +294,12 @@ export default function Home() {
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}>
                   <Typography sx={{
                     fontFamily: "'Inter', sans-serif",
-                    fontSize: { xs: '0.95rem', md: '1.05rem' },
+                    fontSize: { xs: '0.85rem', md: '1.05rem' },
                     color: '#94a3b8',
                     fontWeight: 500,
-                    lineHeight: 1.6,
-                    mb: 3.5,
-                    maxWidth: { xs: 500, md: 540 },
+                    lineHeight: 1.5,
+                    mb: { xs: 3, md: 3.5 },
+                    maxWidth: { xs: '100%', md: 540 },
                     mx: { xs: 'auto', md: 0 }
                   }}>
                     Instantly compare verified rates from Africa's top 50+ lenders. Transparent, secure, and institutional-grade credit planning.
@@ -340,7 +340,12 @@ export default function Home() {
                     initial={{ opacity: 0, y: 20 }} 
                     animate={{ opacity: 1, y: 0 }} 
                     transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    style={{ display: 'flex', gap: '10px', justifyContent: isMobile ? 'center' : 'flex-start', flexWrap: 'wrap' }}
+                    style={{ 
+                      display: 'flex', 
+                      gap: '12px', 
+                      flexDirection: isMobile ? 'column' : 'row', 
+                      justifyContent: isMobile ? 'center' : 'flex-start' 
+                    }}
                   >
                     <Button
                       component={Link}
@@ -348,6 +353,7 @@ export default function Home() {
                       variant="contained"
                       disableElevation
                       sx={{
+                        width: isMobile ? '100%' : 'auto',
                         background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                         color: '#fff',
                         borderRadius: '12px',
@@ -368,6 +374,7 @@ export default function Home() {
                       href="/portal/marketplace"
                       variant="outlined"
                       sx={{
+                        width: isMobile ? '100%' : 'auto',
                         borderColor: 'rgba(255,255,255,0.15)',
                         color: '#fff',
                         borderRadius: '12px',
@@ -390,8 +397,8 @@ export default function Home() {
               </Box>
             </Grid>
 
-            {/* Right Side: Lottie Animation */}
-            <Grid size={{ xs: 12, md: 6 }}>
+            {/* Right Side: Lottie Animation (Hidden on Mobile for Performance) */}
+            <Grid size={{ xs: 12, md: 6 }} sx={{ display: { xs: 'none', md: 'block' } }}>
               <motion.div
                 initial={{ opacity: 0, x: 30, scale: 0.9 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -412,7 +419,7 @@ export default function Home() {
                     src="/Revenue.json"
                     loop
                     autoplay
-                    style={{ width: '80%', height: 'auto', maxWidth: '450px' }}
+                    style={{ width: '85%', height: 'auto', maxWidth: isMobile ? '280px' : '450px' }}
                   />
                 </Box>
               </motion.div>
@@ -428,7 +435,7 @@ export default function Home() {
             border: '1px solid rgba(255,255,255,0.1)',
             boxShadow: '0 40px 100px -20px rgba(0,0,0,0.15)',
             borderRadius: '24px',
-            mt: { xs: -10, md: -14 }
+            mt: { xs: -5, md: -14 }
           }}>
             <Grid container spacing={{ xs: 1.5, md: 1.5 }}>
               {[
@@ -441,12 +448,12 @@ export default function Home() {
                 { label: 'Investments', desc: 'High-yield fixed deposits.', href: '/savings', icon: <SavingsIcon sx={{ fontSize: 24, color: '#1e293b' }} /> },
                 { label: 'BNPL Plans', desc: `Flexible installment payments.`, href: '/bnpl', icon: <AccountBalanceWalletRounded sx={{ fontSize: 24, color: '#1e293b' }} /> },
               ].map((p, i) => (
-                <Grid size={{ xs: 12, sm: 6, md: 3 }} key={p.label}>
+                <Grid size={{ xs: 6, sm: 6, md: 3 }} key={p.label}>
                   <motion.div initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.05 }} style={{ height: '100%' }}>
                     <Link href={p.href} style={{ textDecoration: 'none', display: 'block', height: '100%' }}>
                       <Box className="rb-prod-card" sx={{ 
                         background: '#fff', border: '1.5px solid rgba(0,0,0,0.06)', borderRadius: '16px', 
-                        p: 2, height: '100%', display: 'flex', flexDirection: 'column', 
+                        p: { xs: 1.5, md: 2 }, height: '100%', display: 'flex', flexDirection: 'column', 
                         alignItems: 'center', textAlign: 'center', gap: 1,
                         cursor: 'pointer', position: 'relative', overflow: 'hidden', 
                         transition: 'all 0.3s ease',
@@ -455,21 +462,14 @@ export default function Home() {
 
                         {/* Minimal Skeleton Icon */}
                         <Box sx={{ 
-                          width: 48, height: 48, borderRadius: '50%', background: 'transparent',
+                          width: { xs: 40, md: 48 }, height: { xs: 40, md: 48 }, borderRadius: '50%', background: 'transparent',
                           display: 'flex', alignItems: 'center', justifyContent: 'center', 
                           flexShrink: 0, mb: 0.5
                         }}>{p.icon}</Box>
 
                         <Box>
-                          <Typography sx={{ 
-                            fontSize: '17px', fontWeight: 900, color: '#0f172a', 
-                            letterSpacing: '-0.025em', fontFamily: "'Plus Jakarta Sans', sans-serif", 
-                            mb: 1 
-                          }}>{p.label}</Typography>
-                          <Typography sx={{ 
-                            fontSize: '13px', color: '#64748b', fontWeight: 500, 
-                            fontFamily: "'Inter', sans-serif", lineHeight: 1.5 
-                          }}>{p.desc}</Typography>
+                          <Typography sx={{ fontSize: { xs: '12.5px', md: '14px' }, fontWeight: 900, color: '#0f172a', fontFamily: "'Plus Jakarta Sans', sans-serif", mb: 0.25 }}>{p.label}</Typography>
+                          <Typography sx={{ fontSize: { xs: '10px', md: '11.5px' }, color: '#64748b', fontWeight: 500, fontFamily: "'Inter', sans-serif", lineHeight: 1.35 }}>{p.desc}</Typography>
                         </Box>
                       </Box>
                     </Link>
@@ -481,17 +481,17 @@ export default function Home() {
 
 
       {/* ── INSTANT CALCULATOR SECTION ──────────────────────────── */}
-      <Box component="section" sx={{ py: { xs: 12, md: 20 }, background: '#fcfdfe', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+      <Box component="section" sx={{ py: { xs: 8, md: 16 }, background: '#fcfdfe', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
         <Container maxWidth="xl">
-          <Grid container spacing={{ xs: 8, lg: 12 }} alignItems="center">
+          <Grid container spacing={{ xs: 6, lg: 10 }} alignItems="center">
             {/* Text Side */}
             <Grid size={{ xs: 12, lg: 5 }}>
               <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
                 <Typography sx={{ fontSize: '12px', fontWeight: 900, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.2em', mb: 2 }}>Instant Transparency</Typography>
-                <Typography variant="h2" sx={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 900, fontSize: { xs: '2.4rem', md: '3.6rem' }, color: '#050d1a', letterSpacing: '-0.04em', lineHeight: 1.1, mb: 3 }}>
+                <Typography variant="h2" sx={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 900, fontSize: { xs: '1.8rem', md: '3.2rem' }, color: '#050d1a', letterSpacing: '-0.04em', lineHeight: 1.1, mb: 3 }}>
                   Calculate your <span style={{ color: '#10b981' }}>repayment power</span> in seconds.
                 </Typography>
-                <Typography sx={{ fontSize: '18px', color: '#64748b', fontWeight: 500, lineHeight: 1.6, mb: 6, maxWidth: 500 }}>
+                <Typography sx={{ fontSize: { xs: '1rem', md: '1.1rem' }, color: '#64748b', fontWeight: 500, lineHeight: 1.6, mb: 6, maxWidth: 500 }}>
                   Institutional-grade estimates for any loan size. No credit impact, no hidden fees — just pure financial intelligence.
                 </Typography>
                 
@@ -518,9 +518,9 @@ export default function Home() {
             <Grid size={{ xs: 12, lg: 7 }}>
               <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
                 <Box sx={{ 
-                  background: '#fff', borderRadius: '48px', p: { xs: 4, md: 8 }, 
+                  background: '#fff', borderRadius: { xs: '24px', md: '48px' }, p: { xs: 3, md: 6 }, 
                   boxShadow: '0 40px 100px -20px rgba(0,0,0,0.08)', border: '1.5px solid rgba(0,0,0,0.04)',
-                  display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 8
+                  display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: { xs: 4, md: 8 }
                 }}>
                   {/* Inputs */}
                   <Box>
@@ -529,7 +529,7 @@ export default function Home() {
 
                   {/* Results Pane */}
                   <Box sx={{ 
-                    background: '#020617', borderRadius: '32px', p: 5, color: '#fff',
+                    background: '#020617', borderRadius: '32px', p: { xs: 3, md: 5 }, color: '#fff',
                     display: 'flex', flexDirection: 'column', justifyContent: 'center',
                     position: 'relative', overflow: 'hidden', boxShadow: '0 20px 40px rgba(2,6,23,0.3)'
                   }}>
@@ -546,12 +546,20 @@ export default function Home() {
       {/* ── NEWS SLIDER ─────────────────────────────────────────── */}
       <NewsSlider />
 
-      {/* ── 4. Why Trust Section (matching screenshot) ────────────────── */}
-      <section className="py-24 md:py-36 bg-white">
+      {/* ── 4. Why Trust Section ────────────────────────────────── */}
+      <Box component="section" sx={{ py: { xs: 12, md: 24 }, background: '#fff' }}>
         <Container maxWidth="xl">
           <Typography
             variant="h2"
-            className="text-3xl md:text-5xl font-black text-slate-900 text-center mb-24 tracking-tight "
+            sx={{ 
+              fontFamily: "'Plus Jakarta Sans', sans-serif", 
+              fontWeight: 900, 
+              fontSize: { xs: '1.8rem', md: '3.2rem' }, 
+              color: '#0f172a', 
+              textAlign: 'center', 
+              mb: { xs: 8, md: 16 }, 
+              trackingTight: '-0.04em' 
+            }}
           >
             Why do millions of Africans trust ResolveBridge?
           </Typography>
@@ -561,7 +569,7 @@ export default function Home() {
             <Grid size={{ xs: 12, lg: 6 }} className="relative flex justify-center pb-20 lg:pb-0 mt-20">
               <Box className="relative w-full max-w-[500px]">
                 <motion.div
-                  initial={{ opacity: 0, x: -50, rotate: -10 }}
+                  initial={{ opacity: 0, x: -30, rotate: -10 }}
                   whileInView={{ opacity: 1, x: 0, rotate: -5 }}
                   viewport={{ once: true }}
                   className="absolute top-0 left-0 w-[65%] z-10"
@@ -569,19 +577,19 @@ export default function Home() {
                   <img
                     src="/images/mobile_apply.png"
                     alt="Mobile App"
-                    className="w-full h-auto rounded-[32px] shadow-2xl border-4 border-[#0a1e2b]"
+                    className="w-full h-auto rounded-[24px] md:rounded-[32px] shadow-2xl border-4 border-[#0a1e2b]"
                   />
                 </motion.div>
                 <motion.div
-                  initial={{ opacity: 0, x: 50, rotate: 10 }}
-                  whileInView={{ opacity: 1, x: 100, rotate: 5 }}
+                  initial={{ opacity: 0, x: 30, rotate: 10 }}
+                  whileInView={{ opacity: 1, x: isMobile ? 60 : 100, rotate: 5 }}
                   viewport={{ once: true }}
                   className="relative w-[65%] z-20 top-20"
                 >
                   <img
                     src="/images/mobile_compare.png"
                     alt="Comparison View"
-                    className="w-full h-auto rounded-[32px] shadow-2xl border-4 border-[#0a1e2b]"
+                    className="w-full h-auto rounded-[24px] md:rounded-[32px] shadow-2xl border-4 border-[#0a1e2b]"
                   />
                 </motion.div>
               </Box>
@@ -630,7 +638,7 @@ export default function Home() {
             </Grid>
           </Grid>
         </Container>
-      </section>
+      </Box>
 
       {/* ── 5. Featured Rates ────────────────────────────────────── */}
          <section className="bg-[#f8fafc] py-20 md:py-28 border-y border-slate-100">
@@ -1315,16 +1323,16 @@ export default function Home() {
                },
              ].map((article, i) => (
                <Grid size={{ xs: 12, lg: 6 }} key={i}>
-                  <Link href="#" className="flex gap-6 group no-underline">
-                     <Box className="w-[180px] md:w-[240px] h-[120px] md:h-[160px] shrink-0 rounded-2xl overflow-hidden border border-slate-100 shadow-sm transition-transform duration-500 group-hover:scale-95">
+                  <Link href="#" className="flex gap-4 md:gap-6 group no-underline">
+                     <Box className="w-[100px] sm:w-[180px] md:w-[240px] h-[80px] sm:h-[120px] md:h-[160px] shrink-0 rounded-2xl overflow-hidden border border-slate-100 shadow-sm transition-transform duration-500 group-hover:scale-95">
                         <img 
                           src={article.img} 
                           alt={article.title} 
                           className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" 
                         />
                      </Box>
-                     <Box className="flex flex-col justify-center gap-1.5 overflow-hidden">
-                        <Typography className="text-emerald-600 text-[11px] font-black uppercase tracking-[0.2em] leading-none mb-1">
+                     <Box className="flex flex-col justify-center gap-1 overflow-hidden">
+                        <Typography className="text-emerald-600 text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] leading-none mb-1">
                            {article.category}
                         </Typography>
                         <Typography 

@@ -42,7 +42,7 @@ const contactOptions = [
     icon: <PhoneRounded />,
     title: "Voice Support",
     description: "Immediate assistance during market hours.",
-    value: "+233 555 123 456"
+    value: "0249709299 / 0246219871"
   },
   {
     icon: <PlaceRounded />,
