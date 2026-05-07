@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const productApi = createApi({
   reducerPath: 'productApi',
   baseQuery: fetchBaseQuery({ 
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5251/api/v1',
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5160/api/v1',
     prepareHeaders: (headers) => {
       const token = typeof window !== 'undefined' ? localStorage.getItem('rb_token') : null;
       if (token) {
