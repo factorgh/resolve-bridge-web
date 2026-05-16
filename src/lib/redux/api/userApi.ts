@@ -33,7 +33,7 @@ export interface NewsArticle {
 export const userApi = createApi({
   reducerPath: 'userApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5160/api/v1',
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1',
     prepareHeaders: (headers) => {
       const userStr = sessionStorage.getItem('rb_user');
       if (userStr) {
