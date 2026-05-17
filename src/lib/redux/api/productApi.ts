@@ -21,11 +21,65 @@ export const productApi = createApi({
       }),
       providesTags: ['Product']
     }),
+    getAdminProducts: builder.query<{ success: boolean; data: any[] }, void>({
+      query: () => '/Products',
+      providesTags: ['Product']
+    }),
     getRecommendations: builder.query<any, void>({
       query: () => '/Products/recommendations',
       providesTags: ['Product']
     }),
+    createProduct: builder.mutation<any, any>({
+      query: (body) => ({
+        url: '/Products',
+        method: 'POST',
+        body
+      }),
+      invalidatesTags: ['Product']
+    }),
+    updateProduct: builder.mutation<any, { id: string; body: any }>({
+      query: ({ id, body }) => ({
+        url: `/Products/${id}`,
+        method: 'PATCH',
+        body
+      }),
+      invalidatesTags: ['Product']
+    }),
+    deleteProduct: builder.mutation<any, string>({
+      query: (id) => ({
+        url: `/Products/${id}`,
+        method: 'DELETE'
+      }),
+      invalidatesTags: ['Product']
+    }),
+    getInstitutions: builder.query<{ success: boolean; data: any[] }, void>({
+      query: () => '/Institutions',
+    }),
+    createInstitution: builder.mutation<any, any>({
+      query: (body) => ({
+        url: '/Institutions',
+        method: 'POST',
+        body
+      })
+    }),
+    updateInstitution: builder.mutation<any, { id: string; body: any }>({
+      query: ({ id, body }) => ({
+        url: `/Institutions/${id}`,
+        method: 'PATCH',
+        body
+      })
+    }),
   }),
 });
 
-export const { useGetProductsQuery, useGetRecommendationsQuery } = productApi;
+export const { 
+  useGetProductsQuery, 
+  useGetAdminProductsQuery,
+  useGetRecommendationsQuery, 
+  useCreateProductMutation, 
+  useUpdateProductMutation,
+  useDeleteProductMutation,
+  useGetInstitutionsQuery,
+  useCreateInstitutionMutation,
+  useUpdateInstitutionMutation
+} = productApi;

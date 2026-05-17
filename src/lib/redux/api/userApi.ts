@@ -62,7 +62,26 @@ export const userApi = createApi({
     getNewsArticles: builder.query<{ success: boolean; data: NewsArticle[] }, void>({
       query: () => '/News',
     }),
+    adminGetUsers: builder.query<any, void>({
+      query: () => '/Users',
+      providesTags: ['User']
+    }),
+    adminUpdateUser: builder.mutation<any, { id: string; role?: string; isActive?: boolean; kycStatus?: string }>({
+      query: ({ id, ...body }) => ({
+        url: `/Users/${id}`,
+        method: 'PATCH',
+        body
+      }),
+      invalidatesTags: ['User']
+    }),
   }),
 });
 
-export const { useGetMeQuery, useUpdateProfileMutation, useGetDashboardMetricsQuery, useGetNewsArticlesQuery } = userApi;
+export const { 
+  useGetMeQuery, 
+  useUpdateProfileMutation, 
+  useGetDashboardMetricsQuery, 
+  useGetNewsArticlesQuery,
+  useAdminGetUsersQuery,
+  useAdminUpdateUserMutation
+} = userApi;

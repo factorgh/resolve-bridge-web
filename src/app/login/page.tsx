@@ -30,7 +30,13 @@ export default function LoginPage() {
 
       // Tokens are handled by onQueryStarted in authApi.ts
       sessionStorage.setItem('rb_user', JSON.stringify(response.data.user));
-      router.push('/portal');
+      
+      const adminRoles = ['Admin', 'SuperAdmin', 'InstitutionAdmin', 'InsuranceAdmin', 'BNPLAdmin', 'Insurance', 'BNPL'];
+      if (adminRoles.includes(response.data.user.role)) {
+        router.push('/admin');
+      } else {
+        router.push('/portal');
+      }
     } catch (err: any) {
       setLoading(false);
       setError(err.data?.message || err.message || 'Invalid credentials. Please try again.');

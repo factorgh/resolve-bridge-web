@@ -26,7 +26,24 @@ export const documentApi = createApi({
       }),
       invalidatesTags: ['Document']
     }),
+    adminGetPendingDocuments: builder.query<any, void>({
+      query: () => '/Documents/admin',
+      providesTags: ['Document']
+    }),
+    adminVerifyDocument: builder.mutation<any, { id: string; isVerified: boolean }>({
+      query: ({ id, ...body }) => ({
+        url: `/Documents/admin/${id}/verify`,
+        method: 'PATCH',
+        body
+      }),
+      invalidatesTags: ['Document']
+    }),
   }),
 });
 
-export const { useGetDocumentsQuery, useUploadDocumentMutation } = documentApi;
+export const { 
+  useGetDocumentsQuery, 
+  useUploadDocumentMutation,
+  useAdminGetPendingDocumentsQuery,
+  useAdminVerifyDocumentMutation
+} = documentApi;

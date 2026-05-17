@@ -18,7 +18,18 @@ export const transactionApi = createApi({
       query: () => '/Transactions',
       providesTags: ['Transaction']
     }),
+    createTransaction: builder.mutation<any, any>({
+      query: (body) => ({
+        url: '/Transactions',
+        method: 'POST',
+        body
+      }),
+      invalidatesTags: ['Transaction']
+    }),
   }),
 });
 
-export const { useGetTransactionsQuery } = transactionApi;
+export const { 
+  useGetTransactionsQuery,
+  useCreateTransactionMutation
+} = transactionApi;

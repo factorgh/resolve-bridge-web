@@ -5,6 +5,8 @@ import { productApi } from './api/productApi';
 import { applicationApi } from './api/applicationApi';
 import { transactionApi } from './api/transactionApi';
 import { documentApi } from './api/documentApi';
+import { auditApi } from './api/auditApi';
+import { billingApi } from './api/billingApi';
 import uiReducer from './slices/uiSlice';
 
 export const makeStore = () => {
@@ -16,10 +18,21 @@ export const makeStore = () => {
       [applicationApi.reducerPath]: applicationApi.reducer,
       [transactionApi.reducerPath]: transactionApi.reducer,
       [documentApi.reducerPath]: documentApi.reducer,
+      [auditApi.reducerPath]: auditApi.reducer,
+      [billingApi.reducerPath]: billingApi.reducer,
       ui: uiReducer,
     },
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(authApi.middleware, userApi.middleware, productApi.middleware, applicationApi.middleware, transactionApi.middleware, documentApi.middleware),
+      getDefaultMiddleware().concat(
+        authApi.middleware, 
+        userApi.middleware, 
+        productApi.middleware, 
+        applicationApi.middleware, 
+        transactionApi.middleware, 
+        documentApi.middleware,
+        auditApi.middleware,
+        billingApi.middleware
+      ),
   });
 };
 

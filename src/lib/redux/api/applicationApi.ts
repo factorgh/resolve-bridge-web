@@ -26,7 +26,27 @@ export const applicationApi = createApi({
       }),
       invalidatesTags: ['Application']
     }),
+    adminGetApplications: builder.query<any, { status?: string } | void>({
+      query: (params) => ({
+        url: '/Applications/admin',
+        params: params || undefined
+      }),
+      providesTags: ['Application']
+    }),
+    adminReviewApplication: builder.mutation<any, { id: string; status: string; rejectionReason?: string }>({
+      query: ({ id, ...body }) => ({
+        url: `/Applications/admin/${id}/review`,
+        method: 'PATCH',
+        body
+      }),
+      invalidatesTags: ['Application']
+    }),
   }),
 });
 
-export const { useGetApplicationsQuery, useCreateApplicationMutation } = applicationApi;
+export const { 
+  useGetApplicationsQuery, 
+  useCreateApplicationMutation,
+  useAdminGetApplicationsQuery,
+  useAdminReviewApplicationMutation
+} = applicationApi;

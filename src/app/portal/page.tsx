@@ -5,6 +5,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import PortalShell from './components/PortalShell';
 import { useGetDashboardMetricsQuery, useGetNewsArticlesQuery, useGetMeQuery } from '@/lib/redux/api/userApi';
+import { useGetApplicationsQuery } from '@/lib/redux/api/applicationApi';
+import { useGetTransactionsQuery, useCreateTransactionMutation } from '@/lib/redux/api/transactionApi';
+import { toast } from 'react-hot-toast';
+import { Drawer, IconButton } from '@mui/material';
+import { 
+  CloseRounded,
+  AccountBalanceRounded,
+  CreditCardRounded,
+  SmartphoneRounded,
+  ShieldRounded,
+  HistoryRounded,
+  ReceiptLongRounded,
+  LocalAtmRounded,
+  SpeedRounded,
+  CloudDoneRounded,
+  CheckCircleRounded
+} from '@mui/icons-material';
 
 /* ─── Dashboard Sub-component ─────────────────────────────────────────── */
 
@@ -18,6 +35,18 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
   
   const metrics = metricsResponse?.data;
   const articles = newsResponse?.data || [];
+
+  // Active Facilities & Double-Entry Ledger repayments
+  const { data: appsResponse, isLoading: appsLoading, refetch: refetchApps } = useGetApplicationsQuery();
+  const { data: txResponse, isLoading: txLoading, refetch: refetchTx } = useGetTransactionsQuery();
+  const [createTransaction] = useCreateTransactionMutation();
+
+  const [selectedPayApp, setSelectedPayApp] = useState<any>(null);
+  const [momoPhone, setMomoPhone] = useState('0244123456');
+  const [momoCarrier, setMomoCarrier] = useState('MTN MoMo');
+  const [payAmount, setPayAmount] = useState<number>(0);
+  const [momoPin, setMomoPin] = useState('');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const C = {
     bg: '#f8fafc', 
@@ -126,23 +155,23 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
                {user ? `Good afternoon, ${firstName}` : 'Welcome back'}
             </h1>
             <div style={{ display: 'flex', gap: 24, marginTop: 16 }}>
-               {['Overview', 'Performance'].map((t) => {
-                 const active = activeTab === t.toLowerCase();
-                 return (
-                   <button 
-                     key={t} 
-                     onClick={() => setActiveTab(t.toLowerCase())}
-                     style={{ 
-                       background: 'none', border: 'none', padding: '0 0 8px 0', fontSize: 13, fontWeight: 700, 
-                       color: active ? C.emerald : C.textMuted, 
-                       borderBottom: active ? `2px solid ${C.emerald}` : 'none',
-                       cursor: 'pointer', transition: '0.2s'
-                     }}
-                   >
-                     {t}
-                   </button>
-                 );
-               })}
+                {['Overview', 'Performance', 'Repayments'].map((t) => {
+                  const active = activeTab === t.toLowerCase();
+                  return (
+                    <button 
+                      key={t} 
+                      onClick={() => setActiveTab(t.toLowerCase())}
+                      style={{ 
+                        background: 'none', border: 'none', padding: '0 0 8px 0', fontSize: 13, fontWeight: 700, 
+                        color: active ? C.emerald : C.textMuted, 
+                        borderBottom: active ? `2px solid ${C.emerald}` : 'none',
+                        cursor: 'pointer', transition: '0.2s'
+                      }}
+                    >
+                      {t === 'repayments' ? 'My Credit & Repayments' : t}
+                    </button>
+                  );
+                })}
             </div>
          </div>
          <button 
@@ -182,7 +211,7 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
        </div>
 
       <AnimatePresence mode="wait">
-        {activeTab === 'overview' ? (
+        {activeTab === 'overview' && (
           <motion.div 
             key="overview"
             initial={{ opacity: 0, y: 12 }}
@@ -348,7 +377,8 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
                   </div>
               </div>
           </motion.div>
-        ) : (
+        )}
+        {activeTab === 'performance' && (
           <motion.div 
             key="performance"
             initial={{ opacity: 0, scale: 0.98 }}
@@ -414,6 +444,335 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
                    <button style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 12, padding: '14px 32px', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>View Advanced Insights</button>
                 </div>
              </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'repayments' && (
+          <motion.div
+            key="repayments"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            style={{ display: 'flex', flexDirection: 'column', gap: 40 }}
+          >
+            {/* Actuarial Summary Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: 20 }}>
+              <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 24, padding: 24 }}>
+                <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Active Facilities</p>
+                <p style={{ margin: 0, fontSize: 24, fontWeight: 405, color: C.text }}>
+                  {appsLoading ? '...' : (appsResponse?.data || []).filter((a: any) => a.status === 'Disbursed').length} Active
+                </p>
+              </div>
+              <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 24, padding: 24 }}>
+                <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Total Active Debt</p>
+                <p style={{ margin: 0, fontSize: 24, fontWeight: 405, color: C.text }}>
+                  GH₵ {appsLoading ? '0' : (appsResponse?.data || [])
+                    .filter((a: any) => a.status === 'Disbursed')
+                    .reduce((sum: number, a: any) => sum + (a.amount || 0), 0).toLocaleString()}
+                </p>
+              </div>
+              <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 24, padding: 24 }}>
+                <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Total Repayments</p>
+                <p style={{ margin: 0, fontSize: 24, fontWeight: 405, color: C.emerald }}>
+                  GH₵ {txLoading ? '0' : (txResponse?.data || [])
+                    .filter((t: any) => t.category === 'Loan' || t.category === 'BNPL' || t.category === 'Insurance')
+                    .reduce((sum: number, t: any) => sum + Math.abs(t.amount || 0), 0).toLocaleString()}
+                </p>
+              </div>
+              <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 24, padding: 24 }}>
+                <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Credit Limit Cap</p>
+                <p style={{ margin: 0, fontSize: 24, fontWeight: 405, color: C.blue }}>GH₵ 15,000</p>
+              </div>
+            </div>
+
+            {/* Core Facilities List */}
+            <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 32, overflow: 'hidden' }}>
+              <div style={{ padding: 32, borderBottom: `1px solid ${C.border}` }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: C.text, fontFamily: F.heading }}>My Active Credit Contracts</h3>
+                <p style={{ margin: '4px 0 0', fontSize: 12, color: C.textSub }}>Track outstanding balance, interest cycles, and register mobile money repayments.</p>
+              </div>
+
+              {appsLoading ? (
+                <div style={{ padding: 60, textAlign: 'center', color: C.textSub }}>Loading facilities...</div>
+              ) : (appsResponse?.data || []).filter((a: any) => a.status === 'Disbursed' || a.status === 'Completed').length === 0 ? (
+                <div style={{ padding: 80, textAlign: 'center' }}>
+                  <CloudDoneRounded sx={{ fontSize: 48, color: C.textMuted, marginBottom: 2 }} />
+                  <h4 style={{ margin: 0, fontSize: 15, color: C.text, fontWeight: 700 }}>No Active Facilities</h4>
+                  <p style={{ margin: '4px 0 0', fontSize: 12, color: C.textSub }}>All clear! You currently do not have any active loans, protection policies, or BNPL facilities.</p>
+                </div>
+              ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <thead>
+                    <tr style={{ borderBottom: `1px solid ${C.border}`, background: 'rgba(0,0,0,0.01)' }}>
+                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Contract Details</th>
+                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Lender Partner</th>
+                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Outstanding Repayment</th>
+                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Settle Rate Progress</th>
+                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(appsResponse?.data || [])
+                      .filter((a: any) => a.status === 'Disbursed' || a.status === 'Completed')
+                      .map((app: any) => {
+                        const expectedPayable = app.amount * (1 + (app.productId?.interestRate || 0.1));
+                        const paidToDate = (txResponse?.data || [])
+                          .filter((t: any) => t.applicationId === app._id && t.type === 'debit')
+                          .reduce((sum: number, t: any) => sum + Math.abs(t.amount || 0), 0);
+                        const outstanding = Math.max(0, expectedPayable - paidToDate);
+                        const progress = Math.min(100, Math.round((paidToDate / expectedPayable) * 100));
+
+                        return (
+                          <tr key={app._id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                            <td style={{ padding: '20px 24px' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{app.productId?.name || 'Resolve Credit Extension'}</span>
+                                <span style={{ fontSize: 11, color: C.textMuted, marginTop: 4 }}>Size: GH₵ {app.amount?.toLocaleString()} ({app.tenureMonths} months)</span>
+                              </div>
+                            </td>
+                            <td style={{ padding: '20px 24px' }}>
+                              <span style={{ fontSize: 13, color: C.textSub }}>{app.productId?.institutionId?.name || 'ResolveBridge Partner'}</span>
+                            </td>
+                            <td style={{ padding: '20px 24px' }}>
+                              <span style={{ fontSize: 14, fontWeight: 700, color: outstanding > 0 ? C.text : C.emerald }}>
+                                {outstanding > 0 ? `GH₵ ${outstanding.toLocaleString()}` : '✓ Fully Settled'}
+                              </span>
+                              <span style={{ fontSize: 10, color: C.textMuted, marginLeft: 6 }}>/ GHS {expectedPayable.toLocaleString()} cap</span>
+                            </td>
+                            <td style={{ padding: '20px 24px', width: 200 }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                <span style={{ fontSize: 11, fontWeight: 800, color: C.textSub }}>{progress}% Paid</span>
+                                <div style={{ width: '100%', height: 6, background: C.bg, borderRadius: 3, overflow: 'hidden' }}>
+                                  <div style={{ width: `${progress}%`, height: '100%', background: C.emerald, borderRadius: 3 }} />
+                                </div>
+                              </div>
+                            </td>
+                            <td style={{ padding: '20px 24px', textAlign: 'right' }}>
+                              {app.status === 'Completed' || outstanding <= 0 ? (
+                                <span style={{
+                                  fontSize: 10.5, fontWeight: 900, color: C.emerald,
+                                  background: C.emeraldLight, padding: '6px 12px', borderRadius: 8
+                                }}>
+                                  COMPLETED
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setSelectedPayApp(app);
+                                    setPayAmount(Math.round(expectedPayable / app.tenureMonths));
+                                  }}
+                                  style={{
+                                    background: C.blue, color: '#fff', border: 'none', borderRadius: 10,
+                                    padding: '8px 16px', fontSize: 12, fontWeight: 800, cursor: 'pointer'
+                                  }}
+                                >
+                                  Pay Installment
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* Repayments History log */}
+            <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 32, overflow: 'hidden' }}>
+              <div style={{ padding: 32, borderBottom: `1px solid ${C.border}` }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: C.text, fontFamily: F.heading }}>My Repayment Statement History</h3>
+                <p style={{ margin: '4px 0 0', fontSize: 12, color: C.textSub }}>Audit trail of your posted MoMo/Bank payments settled to ResolveBridge.</p>
+              </div>
+
+              {txLoading ? (
+                <div style={{ padding: 60, textAlign: 'center', color: C.textSub }}>Fetching statements...</div>
+              ) : (txResponse?.data || []).length === 0 ? (
+                <div style={{ padding: 80, textAlign: 'center' }}>
+                  <HistoryRounded sx={{ fontSize: 48, color: C.textMuted, marginBottom: 2 }} />
+                  <h4 style={{ margin: 0, fontSize: 15, color: C.text, fontWeight: 700 }}>Statements Clean</h4>
+                  <p style={{ margin: '4px 0 0', fontSize: 12, color: C.textSub }}>No payment history exists under your wallet account.</p>
+                </div>
+              ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <thead>
+                    <tr style={{ borderBottom: `1px solid ${C.border}`, background: 'rgba(0,0,0,0.01)' }}>
+                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Reference</th>
+                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Description</th>
+                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Amount Settled</th>
+                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Ledger Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(txResponse?.data || [])
+                      .map((tx: any) => (
+                        <tr key={tx._id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                          <td style={{ padding: '16px 24px' }}>
+                            <span style={{ fontSize: 13, fontFamily: 'monospace', fontWeight: 700, color: C.blue }}>
+                              {tx.reference || tx._id?.substring(0, 8).toUpperCase()}
+                            </span>
+                          </td>
+                          <td style={{ padding: '16px 24px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <span style={{ fontSize: 13, color: C.text }}>{tx.desc || tx.description}</span>
+                              <span style={{ fontSize: 10, color: C.textMuted, marginTop: 4 }}>Date: {new Date(tx.createdAt).toLocaleDateString()}</span>
+                            </div>
+                          </td>
+                          <td style={{ padding: '16px 24px' }}>
+                            <span style={{ fontSize: 14, fontWeight: 700, color: tx.type === 'debit' ? C.emerald : C.blue }}>
+                              {tx.type === 'debit' ? '-' : '+'}GH₵ {Math.abs(tx.amount || 0).toLocaleString()}
+                            </span>
+                          </td>
+                          <td style={{ padding: '16px 24px' }}>
+                            <span style={{
+                              fontSize: 10.5, fontWeight: 800,
+                              background: tx.status === 'Completed' ? C.emeraldLight : C.purplePale,
+                              color: tx.status === 'Completed' ? C.emerald : C.blue,
+                              padding: '4px 8px', borderRadius: 4
+                            }}>
+                              {tx.status || 'Completed'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* Repayments Drawer */}
+            <Drawer
+              anchor="right"
+              open={!!selectedPayApp}
+              onClose={() => setSelectedPayApp(null)}
+              PaperProps={{
+                style: { width: '100%', maxWidth: 440, background: '#ffffff', color: C.text, padding: 32, boxSizing: 'border-box' }
+              }}
+            >
+              {selectedPayApp && (
+                <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+                      <h3 style={{ margin: 0, fontSize: 18, color: C.text, fontFamily: F.heading, fontWeight: 700 }}>Mobile Money Settlement</h3>
+                      <IconButton onClick={() => setSelectedPayApp(null)} style={{ color: C.textMuted }}><CloseRounded /></IconButton>
+                    </div>
+
+                    <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 16, padding: 20, marginBottom: 28 }}>
+                      <p style={{ margin: 0, fontSize: 10, color: C.textMuted, fontWeight: 800, textTransform: 'uppercase' }}>PRODUCT REPAYMENT</p>
+                      <h4 style={{ margin: '4px 0 0', fontSize: 14.5, color: C.text }}>{selectedPayApp.productId?.name}</h4>
+                      <p style={{ margin: '2px 0 0', fontSize: 12, color: C.textSub }}>Lender: {selectedPayApp.productId?.institutionId?.name}</p>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: 11, fontWeight: 800, color: C.textSub }}>REPAYMENT CHANNEL</label>
+                        <select
+                          value={momoCarrier}
+                          onChange={(e) => setMomoCarrier(e.target.value)}
+                          style={{ padding: '12px 14px', borderRadius: 10, border: `1px solid ${C.borderStrong}`, background: '#fff', color: C.text, outline: 'none', fontSize: 13, cursor: 'pointer' }}
+                        >
+                          <option value="MTN MoMo">MTN Mobile Money</option>
+                          <option value="Telecel Cash">Telecel Cash</option>
+                          <option value="AT Money">AT Money</option>
+                        </select>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: 11, fontWeight: 800, color: C.textSub }}>MOMO PHONE NUMBER</label>
+                        <input
+                          type="tel"
+                          value={momoPhone}
+                          onChange={(e) => setMomoPhone(e.target.value)}
+                          placeholder="e.g. 0244123456"
+                          required
+                          style={{ padding: '12px 14px', borderRadius: 10, border: `1px solid ${C.borderStrong}`, background: '#fff', color: C.text, outline: 'none', fontSize: 13 }}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: 11, fontWeight: 800, color: C.textSub }}>SETTLE PAYMENT AMOUNT (GHS)</label>
+                        <input
+                          type="number"
+                          value={payAmount}
+                          onChange={(e) => setPayAmount(Number(e.target.value))}
+                          required
+                          min={1}
+                          style={{ padding: '12px 14px', borderRadius: 10, border: `1px solid ${C.borderStrong}`, background: '#fff', color: C.text, outline: 'none', fontSize: 13 }}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: 11, fontWeight: 800, color: C.textSub }}>SECURE MOMO AUTH PIN</label>
+                        <input
+                          type="password"
+                          maxLength={4}
+                          value={momoPin}
+                          onChange={(e) => setMomoPin(e.target.value)}
+                          placeholder="••••"
+                          required
+                          style={{ padding: '12px 14px', borderRadius: 10, border: `1px solid ${C.borderStrong}`, background: '#fff', color: C.text, outline: 'none', fontSize: 13, letterSpacing: 4 }}
+                        />
+                      </div>
+
+                      <button
+                        onClick={async () => {
+                          if (payAmount <= 0) {
+                            toast.error('Please enter a valid amount.');
+                            return;
+                          }
+                          if (!momoPin || momoPin.length < 4) {
+                            toast.error('Please enter your 4-digit MoMo PIN.');
+                            return;
+                          }
+                          setIsProcessingPayment(true);
+                          try {
+                            const res = await createTransaction({
+                              userId: user?._id || 'SYSTEM',
+                              applicationId: selectedPayApp._id,
+                              institutionId: selectedPayApp.productId?.institutionId?._id || 'SYSTEM',
+                              description: `MoMo Installment Settle: ${selectedPayApp.productId?.name}`,
+                              amount: payAmount,
+                              type: 'debit', // debit on borrower's ledger resolves outstanding debt
+                              category: 'Loan',
+                              status: 'Completed'
+                            }).unwrap();
+
+                            if (res.success) {
+                              toast.success(`Installment authorized! GHS ${payAmount.toLocaleString()} successfully paid via ${momoCarrier}.`);
+                              setSelectedPayApp(null);
+                              setMomoPin('');
+                              refetchApps();
+                              refetchTx();
+                            } else {
+                              toast.error(res.message || 'Payment processing failed');
+                            }
+                          } catch (err: any) {
+                            toast.error(err.data?.message || 'Error executing settlement payment');
+                          } finally {
+                            setIsProcessingPayment(false);
+                          }
+                        }}
+                        disabled={isProcessingPayment}
+                        style={{
+                          width: '100%', padding: '14px', borderRadius: 10, background: C.emerald, color: '#fff',
+                          border: 'none', cursor: isProcessingPayment ? 'not-allowed' : 'pointer', fontSize: 13.5,
+                          fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                          marginTop: 12, transition: '0.2s'
+                        }}
+                      >
+                        <SmartphoneRounded sx={{ fontSize: 18 }} /> {isProcessingPayment ? 'Authorizing MoMo Cash...' : `Authorize & Settle GH₵ ${payAmount.toLocaleString()}`}
+                      </button>
+
+                    </div>
+                  </div>
+
+                  <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 20, fontSize: 11.5, color: C.textMuted, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <ShieldRounded sx={{ fontSize: 14, color: C.emerald }} /> Payments are secured by Bank-Grade Cryptographic MoMo SWIFT Nodes.
+                  </div>
+                </div>
+              )}
+            </Drawer>
           </motion.div>
         )}
       </AnimatePresence>
