@@ -16,13 +16,13 @@ export const productApi = createApi({
   endpoints: (builder) => ({
     getProducts: builder.query<any, { productType?: string; searchTerm?: string; providerType?: string[] }>({
       query: (params) => ({ 
-        url: '/products/search', 
+        url: '/Products/search', 
         params 
       }),
       providesTags: ['Product']
     }),
     getRecommendations: builder.query<any, void>({
-      query: () => '/products/recommendations',
+      query: () => '/Products/recommendations',
       providesTags: ['Product']
     }),
   }),

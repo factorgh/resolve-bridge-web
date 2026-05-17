@@ -32,27 +32,37 @@ export interface NewsArticle {
 
 export const userApi = createApi({
   reducerPath: 'userApi',
+  tagTypes: ['User'],
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1',
     prepareHeaders: (headers) => {
-      const userStr = sessionStorage.getItem('rb_user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        if (user.accessToken) {
-          headers.set('authorization', `Bearer ${user.accessToken}`);
-        }
+      const token = typeof window !== 'undefined' ? localStorage.getItem('rb_token') : null;
+      if (token) {
+        headers.set('authorization', `Bearer ${token}`);
       }
       return headers;
     },
   }),
   endpoints: (builder) => ({
+    getMe: builder.query<any, void>({
+      query: () => '/Users/me',
+      providesTags: ['User']
+    }),
+    updateProfile: builder.mutation<any, any>({
+      query: (body) => ({
+        url: '/Users/profile',
+        method: 'PUT',
+        body
+      }),
+      invalidatesTags: ['User']
+    }),
     getDashboardMetrics: builder.query<{ success: boolean; data: DashboardMetrics }, void>({
-      query: () => 'Users/dashboard-metrics',
+      query: () => '/Users/dashboard-metrics',
     }),
     getNewsArticles: builder.query<{ success: boolean; data: NewsArticle[] }, void>({
-      query: () => 'News',
+      query: () => '/News',
     }),
   }),
 });
 
-export const { useGetDashboardMetricsQuery, useGetNewsArticlesQuery } = userApi;
+export const { useGetMeQuery, useUpdateProfileMutation, useGetDashboardMetricsQuery, useGetNewsArticlesQuery } = userApi;

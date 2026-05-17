@@ -11,10 +11,13 @@ import {
   FolderSpecialRounded,
   InsertDriveFileRounded,
   ErrorOutlineRounded,
-  CheckCircleRounded,
   InfoOutlined,
-  CloseRounded
+  CloseRounded,
+  FolderOpenRounded
 } from '@mui/icons-material';
+import { useGetDocumentsQuery, useUploadDocumentMutation } from '@/lib/redux/api/documentApi';
+import { useGetApplicationsQuery } from '@/lib/redux/api/applicationApi';
+import EmptyState from '../components/EmptyState';
 
 /* ─── Types & Constants ────────────────────────────────────────────────────── */
 
@@ -24,24 +27,33 @@ const DOC_CATEGORIES = [
   { id: 'assets', label: 'Asset Ownership', icon: <FolderSpecialRounded />, desc: 'Vehicle Title, Property Deed, Stock Portfolio' },
 ];
 
-const INITIAL_DOCS = [
-  { id: 'd1', name: 'National ID (Ghana Card)', cat: 'identity', status: 'Verified', date: 'Jan 12, 2026', expiry: 'Jan 2031', size: '1.2 MB' },
-  { id: 'd2', name: 'Utility Bill - ECG (April)', cat: 'identity', status: 'Pending', date: 'Apr 17, 2026', expiry: 'N/A', size: '2.4 MB' },
-  { id: 'd3', name: 'Absa Bank Statement (Q1)', cat: 'finance', status: 'Verified', date: 'Apr 02, 2026', expiry: 'Oct 2026', size: '3.8 MB' },
-  { id: 'd4', name: 'Vehicle Registration - Land Rover', cat: 'assets', status: 'Expired', date: 'Feb 28, 2025', expiry: 'Feb 2026', size: '1.1 MB' },
-];
-
 /* ─── Main Component ────────────────────────────────────────────────────── */
 
 export default function DocumentsPage() {
-  const [docs, setDocs] = useState(INITIAL_DOCS);
+  const { data: apiData, isLoading } = useGetDocumentsQuery();
+  const { data: appData, isLoading: appsLoading } = useGetApplicationsQuery();
+  const [uploadDocument, { isLoading: isUploading }] = useUploadDocumentMutation();
+  
   const [activeCat, setActiveCat] = useState('all');
   const [isMobile, setIsMobile] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   
-  // Upload State
-  const [uploading, setUploading] = useState(false);
-  const [uploadData, setUploadData] = useState({ name: '', cat: 'identity' });
+  const [uploadData, setUploadData] = useState({ name: '', cat: 'identity', documentUrl: 'https://resolve-bridge-vault.s3.amazonaws.com/temp-upload.pdf' });
+
+  const docs = apiData?.success ? apiData.data : [];
+  const applications = appData?.success ? appData.data : [];
+
+  // Derive handshakes from live applications
+  const handshakes = applications.slice(0, 3).map((app: any) => ({
+    label: app.product,
+    status: app.status === 'Approved' ? 'Active Sync' : app.status === 'Pending' ? 'In Review' : 'Live Bridge',
+    color: app.status === 'Approved' ? C.emerald : app.status === 'Pending' ? C.amber : C.blue
+  }));
+
+  // Add default if none
+  if (handshakes.length === 0 && !appsLoading) {
+    handshakes.push({ label: 'Credit Registry', status: 'Ready to Sync', color: C.textSub });
+  }
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -50,26 +62,23 @@ export default function DocumentsPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const filtered = docs.filter(d => activeCat === 'all' || d.cat === activeCat);
+  const filtered = docs.filter((d: any) => activeCat === 'all' || d.type?.toLowerCase() === activeCat || d.cat === activeCat);
 
-  const handleSimulatedUpload = () => {
+  const handleActualUpload = async () => {
     if (!uploadData.name) return;
-    setUploading(true);
-    setTimeout(() => {
-      const newDoc = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: uploadData.name,
-        cat: uploadData.cat,
-        status: 'Pending',
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-        expiry: 'N/A',
-        size: '1.4 MB'
-      };
-      setDocs([newDoc, ...docs]);
-      setUploading(false);
+    try {
+      await uploadDocument({
+        type: uploadData.name,
+        documentUrl: uploadData.documentUrl,
+        expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 5)) // Mock expiry 5 years out
+      }).unwrap();
+      
       setShowUploadModal(false);
-      setUploadData({ name: '', cat: 'identity' });
-    }, 2000);
+      setUploadData({ name: '', cat: 'identity', documentUrl: 'https://resolve-bridge-vault.s3.amazonaws.com/temp-upload.pdf' });
+    } catch (err) {
+      console.error('Upload failed:', err);
+      alert('Failed to upload document. Please try again.');
+    }
   };
 
   return (
@@ -154,7 +163,7 @@ export default function DocumentsPage() {
            {/* Document List */}
            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <AnimatePresence mode="popLayout">
-                 {filtered.map((doc, idx) => (
+                 {filtered.length > 0 ? filtered.map((doc: any, idx: number) => (
                    <motion.div 
                      key={doc.id}
                      layout
@@ -174,15 +183,15 @@ export default function DocumentsPage() {
                         background: '#f8fafc', border: `1px solid ${C.border}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.textSub
                       }}>
-                         {DOC_CATEGORIES.find(c => c.id === doc.cat)?.icon || <InsertDriveFileRounded />}
+                         {DOC_CATEGORIES.find(c => c.id === (doc.cat || doc.type?.toLowerCase()))?.icon || <InsertDriveFileRounded />}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                             <p style={{ margin: 0, fontSize: 15, fontWeight: 900, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.name}</p>
-                            <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', color: C.textMuted, background: '#f1f5f9', padding: '0 4px', borderRadius: 4 }}>{doc.cat}</span>
+                            <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', color: C.textMuted, background: '#f1f5f9', padding: '0 4px', borderRadius: 4 }}>{doc.type}</span>
                          </div>
                          <div style={{ display: 'flex', gap: 16, fontSize: 11, color: C.textMuted, fontWeight: 700 }}>
-                            <span>Uploaded {doc.date}</span>
+                            <span>Uploaded {doc.uploaded}</span>
                             <span>Exp: {doc.expiry}</span>
                             <span>{doc.size}</span>
                          </div>
@@ -198,7 +207,15 @@ export default function DocumentsPage() {
                          <button style={{ background: 'none', border: 'none', color: C.border, cursor: 'pointer' }}><MoreVertRounded /></button>
                       </div>
                    </motion.div>
-                 ))}
+                 )) : !isLoading && (
+                   <EmptyState 
+                      title="Vault is Empty" 
+                      description="You haven't uploaded any documents yet. Start by uploading your ID or financial statements to increase your trust score."
+                      icon={<FolderOpenRounded sx={{ fontSize: 48, opacity: 0.2 }} />}
+                      actionLabel="Upload First Document"
+                      onAction={() => setShowUploadModal(true)}
+                   />
+                 )}
               </AnimatePresence>
            </div>
 
@@ -227,11 +244,7 @@ export default function DocumentsPage() {
                 <div style={{ background: '#fff', borderRadius: 32, border: `1px solid ${C.border}`, padding: 32 }}>
                    <h3 style={{ margin: '0 0 24px', fontSize: 16, fontWeight: 900, fontFamily: F.heading }}>Connected Handshakes</h3>
                    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                      {[
-                        { label: 'Absa Loan Application', status: 'Active Sync', color: C.emerald },
-                        { label: 'TransUnion Ghana', status: 'Live Bridge', color: C.blue },
-                        { label: 'Enterprise Insurance', status: 'Disconnected', color: C.red },
-                      ].map(bridge => (
+                      {handshakes.map((bridge: any) => (
                         <div key={bridge.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                            <div>
                               <p style={{ margin: 0, fontSize: 13, fontWeight: 900, color: C.text }}>{bridge.label}</p>
@@ -316,18 +329,18 @@ export default function DocumentsPage() {
                       </div>
 
                       <button 
-                        disabled={!uploadData.name || uploading}
-                        onClick={handleSimulatedUpload}
+                        disabled={!uploadData.name || isUploading}
+                        onClick={handleActualUpload}
                         style={{ 
                           marginTop: 8, padding: '18px', borderRadius: 18, border: 'none', 
                           background: C.text, color: '#fff', fontSize: 14, fontWeight: 900, 
-                          cursor: (uploadData.name && !uploading) ? 'pointer' : 'not-allowed', 
-                          opacity: (uploadData.name && !uploading) ? 1 : 0.5,
+                          cursor: (uploadData.name && !isUploading) ? 'pointer' : 'not-allowed', 
+                          opacity: (uploadData.name && !isUploading) ? 1 : 0.5,
                           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12
                         }}
                       >
-                         {uploading && <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} style={{ width: 18, height: 18, border: '3px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%' }} />}
-                         {uploading ? 'Encrypting & Syncing...' : 'Securely Upload Document'}
+                         {isUploading && <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} style={{ width: 18, height: 18, border: '3px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%' }} />}
+                         {isUploading ? 'Encrypting & Syncing...' : 'Securely Upload Document'}
                       </button>
                    </div>
                 </motion.div>

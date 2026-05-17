@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PortalShell, { C, F } from '../components/PortalShell';
 import { 
@@ -14,8 +14,14 @@ import {
   ShieldRounded,
   LocalActivityRounded,
   FileDownloadRounded,
-  FilterListRounded
+  FilterListRounded,
+  SearchRounded
 } from '@mui/icons-material';
+import { useGetApplicationsQuery } from '@/lib/redux/api/applicationApi';
+import { useGetTransactionsQuery } from '@/lib/redux/api/transactionApi';
+import EmptyState from '../components/EmptyState';
+import { AddRounded, AccountBalanceWalletRounded } from '@mui/icons-material';
+import { useRouter } from 'next/navigation';
 
 const STATEMENT_TYPES = [
   { id: 'all', label: 'All Transactions', desc: 'Complete financial history', icon: <ReceiptLongRounded /> },
@@ -30,57 +36,11 @@ const FORMATS = [
   { id: 'json', label: 'JSON', icon: '⚙️' },
 ];
 
-const APPLICATIONS = [
-  { 
-    id: 'app1', type: 'Loan', provider: 'Stanbic Bank', product: 'Personal Loan', 
-    amount: 'GH₵ 12,000', status: 'Reviewing', progress: 45, date: 'Apr 16, 2026',
-    logo: '/stanbic_logo.png', 
-    color: '#0033aa',
-    steps: [
-      { label: 'Submitted', date: 'Apr 16, 2026', desc: 'Package confirmed by Stanbic' },
-      { label: 'Reviewing', date: 'In Progress', desc: 'Credit assessment handshake' },
-      { label: 'Offer', date: 'Est. Apr 20', desc: 'Institutional contract generation' },
-      { label: 'Funded', date: 'Est. Apr 22', desc: 'Final execution & disbursement' }
-    ]
-  },
-  { 
-    id: 'app2', type: 'Insurance', provider: 'Enterprise', product: 'Auto Premium', 
-    amount: 'GH₵ 85/mo', status: 'Action Required', progress: 20, date: 'Apr 15, 2026',
-    logo: '/resolve_icon.png',
-    alert: 'Missing ID',
-    color: '#e11d48',
-    steps: [
-      { label: 'Bid Received', date: 'Apr 15, 2026', desc: 'Enterprise quote matched' },
-      { label: 'Documentation', date: 'Action Needed', desc: 'Missing National Id verification' },
-      { label: 'Policy Issued', date: 'Waiting...', desc: 'Pending KYC resolution' },
-      { label: 'Active', date: 'Final Phase', desc: 'Institutional coverage activation' }
-    ]
-  },
-  { 
-    id: 'app3', type: 'BNPL', provider: 'Kredete', product: 'Electronics Plan', 
-    amount: 'GH₵ 4,200', status: 'Approved', progress: 75, date: 'Apr 12, 2026',
-    logo: '/kredete_logo.png',
-    color: '#10b981',
-    steps: [
-      { label: 'Eligibility', date: 'Apr 12, 2026', desc: 'Credit limit authorized' },
-      { label: 'Review', date: 'Apr 13, 2026', desc: 'Product matching successful' },
-      { label: 'Approval', date: 'Apr 14, 2026', desc: 'Kredete signature confirmed' },
-      { label: 'Disbursed', date: 'Est. Apr 18', desc: 'Terminal payment handshake' }
-    ]
-  }
-];
-
-const MOCK_TRANSACTIONS = [
-  { id: 'tx1', date: 'Apr 14, 2026', desc: 'Stanbic Loan Repayment', amount: '−GH₵ 850.00', status: 'Completed', type: 'debit', cat: 'Loan' },
-  { id: 'tx2', date: 'Apr 10, 2026', desc: 'Enterprise Auto Premium', amount: '−GH₵ 320.00', status: 'Completed', type: 'debit', cat: 'Insurance' },
-  { id: 'tx3', date: 'Apr 1, 2026', desc: 'Salary Credit - GOG', amount: '+GH₵ 5,200.00', status: 'Completed', type: 'credit', cat: 'Income' },
-  { id: 'tx4', date: 'Mar 28, 2026', desc: 'Kredete BNPL Installment', amount: '−GH₵ 450.00', status: 'Pending', type: 'debit', cat: 'BNPL' },
-  { id: 'tx5', date: 'Mar 25, 2026', desc: 'Interest Rebate - Savings', amount: '+GH₵ 85.20', status: 'Completed', type: 'credit', cat: 'Adjustment' },
-  { id: 'tx6', date: 'Mar 1, 2026', desc: 'Salary Credit - GOG', amount: '+GH₵ 5,200.00', status: 'Completed', type: 'credit', cat: 'Income' },
-  { id: 'tx7', date: 'Feb 14, 2026', desc: 'Stanbic Loan Repayment', amount: '−GH₵ 850.00', status: 'Failed', type: 'debit', cat: 'Loan' },
-];
+/* ─── Mock Data ─────────────────────────────────────────────────────────── */
+// Mock data removed. Using live API integration for both Applications and Transactions.
 
 export default function StatementPage() {
+  const router = useRouter();
   const [view, setView] = useState<'apps' | 'reports' | 'txs'>('apps');
   const [selectedApp, setSelectedApp] = useState<any>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -95,6 +55,18 @@ export default function StatementPage() {
     type: 'all'
   });
   const [tempFilters, setTempFilters] = useState(filters);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const { data: apiData, isLoading } = useGetApplicationsQuery();
+  const { data: txData, isLoading: txLoading } = useGetTransactionsQuery();
+
+  const applications = useMemo(() => {
+    return apiData?.success ? apiData.data : [];
+  }, [apiData]);
+
+  const transactions = useMemo(() => {
+    return txData?.success ? txData.data : [];
+  }, [txData]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -103,20 +75,68 @@ export default function StatementPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const filteredApps = APPLICATIONS.filter(app => {
-    const statusMatch = filters.status === 'all' || 
-                       (filters.status === 'Alert' ? !!app.alert : app.status === filters.status);
-    const typeMatch = filters.type === 'all' || app.type === filters.type;
-    return statusMatch && typeMatch;
-  });
+  const handleExport = (type: string, format: string) => {
+    let dataToExport: any[] = [];
+    let filename = `ResolveBridge_${type}_${new Date().toISOString().split('T')[0]}`;
 
-  const filteredTxs = MOCK_TRANSACTIONS.filter(tx => {
-    // Basic date filtering logic (mocking actual date objects)
-    const typeMatch = filters.type === 'all' || tx.cat === filters.type || (filters.type === 'Loan' && tx.cat === 'Loan') || (filters.type === 'Insurance' && tx.cat === 'Insurance');
-    // Note: In a real app, we'd use dayjs or date-fns here. 
-    // For mock data, we'll just simulate the 'all' filter as we don't have real timestamps.
-    return typeMatch;
-  });
+    if (type === 'all') {
+      dataToExport = transactions;
+    } else if (type === 'loans') {
+      dataToExport = transactions.filter((t: any) => t.cat === 'Loan');
+    } else if (type === 'insurance') {
+      dataToExport = transactions.filter((t: any) => t.cat === 'Insurance');
+    } else {
+      dataToExport = applications;
+    }
+
+    if (dataToExport.length === 0) {
+      alert('No data available to export.');
+      return;
+    }
+
+    if (format === 'json') {
+      const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else if (format === 'csv') {
+      const headers = Object.keys(dataToExport[0] || {}).join(',');
+      const rows = dataToExport.map(item => 
+        Object.values(item).map(v => typeof v === 'string' ? `"${v.replace(/"/g, '""')}"` : v).join(',')
+      );
+      const csvContent = [headers, ...rows].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else if (format === 'pdf') {
+      window.print();
+    }
+  };
+
+  const filteredApps = useMemo(() => {
+    return applications.filter((app: any) => {
+      const statusMatch = filters.status === 'all' || 
+                         (filters.status === 'Alert' ? !!app.alert : app.status === filters.status);
+      const typeMatch = filters.type === 'all' || app.type === filters.type;
+      const searchMatch = !searchTerm || app.provider.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         app.product.toLowerCase().includes(searchTerm.toLowerCase());
+      return statusMatch && typeMatch && searchMatch;
+    });
+  }, [applications, filters, searchTerm]);
+
+  const filteredTxs = useMemo(() => {
+    return transactions.filter((tx: any) => {
+      const typeMatch = filters.type === 'all' || tx.cat === filters.type || (filters.type === 'Loan' && tx.cat === 'Loan') || (filters.type === 'Insurance' && tx.cat === 'Insurance');
+      return typeMatch;
+    });
+  }, [transactions, filters]);
 
   return (
     <PortalShell title="Portfolio Hub" subtitle="Monitor your active institutional applications and financial history.">
@@ -282,155 +302,155 @@ export default function StatementPage() {
           {view === 'apps' ? (
             <motion.div 
               key="apps" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-              style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 20 }}
+              style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
             >
-               {filteredApps.map((app, idx) => (
+               {/* Search Bar for Scalability */}
+               <div style={{ position: 'relative', marginBottom: 12 }}>
+                  <input 
+                    type="text" placeholder="Search applications..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+                    style={{ 
+                      width: '100%', padding: '14px 16px 14px 44px', borderRadius: 16, border: `1.5px solid ${C.border}`, 
+                      outline: 'none', fontSize: 14, background: '#fff' 
+                    }}
+                  />
+                  <SearchRounded sx={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.textMuted, fontSize: 20 }} />
+               </div>
+
+               {filteredApps.map((app: any, idx: number) => (
                  <motion.div 
                    key={app.id} 
-                   initial={{ opacity: 0, x: -20 }}
-                   animate={{ opacity: 1, x: 0 }}
-                   transition={{ delay: idx * 0.1 }}
-                   whileHover={{ y: -4, boxShadow: '0 20px 40px rgba(0,0,0,0.06)' }}
+                   initial={{ opacity: 0, y: 10 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   transition={{ delay: idx * 0.05 }}
                    onClick={() => setSelectedApp(app)}
                    style={{ 
                      background: '#fff', 
                      border: `1px solid ${C.border}`, 
-                     borderRadius: 28, 
-                     padding: '24px 32px', 
+                     borderRadius: 20, 
+                     padding: '16px 24px', 
                      display: 'flex', 
                      alignItems: 'center', 
-                     gap: 32, 
+                     gap: 24, 
                      cursor: 'pointer', 
-                     transition: 'all 0.3s ease',
+                     transition: '0.2s',
                      position: 'relative',
                      overflow: 'hidden'
                    }}
+                   whileHover={{ borderColor: C.blue, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}
                  >
-                    {/* Status Glow Decoration */}
+                    {/* Compact Logo */}
                     <div style={{ 
-                      position: 'absolute', 
-                      top: 0, 
-                      left: 0, 
-                      width: 6, 
-                      height: '100%', 
-                      background: app.alert ? C.red : app.status === 'Approved' ? C.emerald : C.blue 
-                    }} />
-
-                    {/* Logo & Info */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 20, flex: 1.5 }}>
-                       <div style={{ 
-                         width: 64, height: 64, borderRadius: 20, 
-                         background: '#fff', border: `1px solid ${C.border}`, 
-                         display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                         padding: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.02)' 
-                       }}>
-                          <img src={app.logo} alt="Provider" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-                       </div>
-                       <div style={{ minWidth: 0 }}>
-                          <p style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 900, color: C.text, fontFamily: F.heading }}>{app.provider}</p>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                             <span style={{ fontSize: 10, fontWeight: 900, color: C.textMuted, background: '#f1f5f9', padding: '2px 8px', borderRadius: 6, textTransform: 'uppercase' }}>{app.type}</span>
-                             <p style={{ margin: 0, fontSize: 13, color: C.textSub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{app.product}</p>
-                          </div>
-                       </div>
+                      width: 48, height: 48, borderRadius: 14, 
+                      background: '#f8fafc', border: `1px solid ${C.border}`, 
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                      padding: 6, flexShrink: 0
+                    }}>
+                       <img src={app.logo} alt="" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                     </div>
 
-                    {/* Progress Visual */}
+                    {/* Basic Info */}
+                    <div style={{ flex: 2, minWidth: 0 }}>
+                       <h4 style={{ margin: 0, fontSize: 15, fontWeight: 900, color: C.text, fontFamily: F.heading, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{app.provider}</h4>
+                       <p style={{ margin: 0, fontSize: 12, color: C.textSub }}>{app.product} • <span style={{ fontWeight: 800, color: C.text }}>{app.amount}</span></p>
+                    </div>
+
+                    {/* Progress - Compact */}
                     {!isMobile && (
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, padding: '0 20px' }}>
-                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase' }}>Progress</span>
-                            <span style={{ fontSize: 13, fontWeight: 900, color: C.text }}>{app.progress}%</span>
+                      <div style={{ flex: 1.5, display: 'flex', alignItems: 'center', gap: 12 }}>
+                         <div style={{ flex: 1, height: 6, background: '#f1f5f9', borderRadius: 3, overflow: 'hidden' }}>
+                            <div style={{ width: `${app.progress}%`, height: '100%', background: app.color, borderRadius: 3 }} />
                          </div>
-                         <div style={{ width: '100%', height: 8, background: '#f1f5f9', borderRadius: 4, overflow: 'hidden' }}>
-                            <motion.div 
-                              initial={{ width: 0 }}
-                              animate={{ width: `${app.progress}%` }}
-                              transition={{ duration: 1, delay: 0.5 }}
-                              style={{ 
-                                height: '100%', 
-                                background: `linear-gradient(90deg, ${app.color} 0%, ${app.color}cc 100%)`,
-                                borderRadius: 4
-                              }}
-                            />
-                         </div>
+                         <span style={{ fontSize: 11, fontWeight: 900, color: C.textSub, width: 30 }}>{app.progress}%</span>
                       </div>
                     )}
 
-                    {/* Status & Action */}
-                    <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: 24 }}>
-                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                          <div style={{ 
-                            display: 'flex', alignItems: 'center', gap: 6, 
-                            padding: '6px 14px', borderRadius: 12,
-                            background: app.alert ? `${C.red}10` : app.status === 'Approved' ? `${C.emerald}10` : `${C.blue}10`,
-                            color: app.alert ? C.red : app.status === 'Approved' ? C.emerald : C.blue,
-                            marginBottom: 4
-                          }}>
-                             {app.alert ? <ErrorRounded sx={{ fontSize: 14 }} /> : app.status === 'Approved' ? <CheckCircleRounded sx={{ fontSize: 14 }} /> : <PendingRounded sx={{ fontSize: 14 }} />}
-                             <span style={{ fontSize: 12, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.02em' }}>{app.alert || app.status}</span>
-                          </div>
-                          <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: C.textMuted }}>Applied {app.date}</p>
-                       </div>
-                       <ArrowForwardIosRounded sx={{ color: C.border, fontSize: 16 }} />
+                    {/* Status Badge */}
+                    <div style={{ 
+                      padding: '6px 12px', borderRadius: 10, 
+                      background: app.status === 'Approved' ? `${C.emerald}10` : app.status === 'Pending' ? `${C.blue}10` : `${C.red}10`,
+                      color: app.status === 'Approved' ? C.emerald : app.status === 'Pending' ? C.blue : C.red,
+                      fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em',
+                      minWidth: 80, textAlign: 'center'
+                    }}>
+                       {app.status}
                     </div>
+
+                    <ArrowForwardIosRounded sx={{ color: C.border, fontSize: 14 }} />
                  </motion.div>
                ))}
+
+               {filteredApps.length === 0 && !isLoading && (
+                 <EmptyState 
+                   title="No Active Activity" 
+                   description="You haven't applied for any institutional products yet. Explore the marketplace to find the best matches for your profile."
+                   icon={<AddRounded sx={{ fontSize: 48, opacity: 0.2 }} />}
+                   actionLabel="Go to Marketplace"
+                   onAction={() => router.push('/portal/marketplace')}
+                 />
+               )}
             </motion.div>
           ) : view === 'txs' ? (
             <motion.div 
               key="txs" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
             >
-               <div style={{ 
-                 background: '#fff', border: `1px solid ${C.border}`, borderRadius: 32, overflow: 'hidden',
-                 boxShadow: '0 4px 24px rgba(0,0,0,0.02)'
-               }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                     <thead>
-                        <tr style={{ borderBottom: `1px solid ${C.border}`, background: '#f8fafc' }}>
-                           <th style={{ padding: '20px 24px', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Date</th>
-                           <th style={{ padding: '20px 24px', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Description</th>
-                           <th style={{ padding: '20px 24px', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Category</th>
-                           <th style={{ padding: '20px 24px', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Status</th>
-                           <th style={{ padding: '20px 24px', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em', textAlign: 'right' }}>Amount</th>
-                        </tr>
-                     </thead>
-                     <tbody>
-                        {filteredTxs.map((tx, idx) => (
-                          <motion.tr 
-                            key={tx.id}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: idx * 0.05 }}
-                            style={{ borderBottom: idx === filteredTxs.length - 1 ? 'none' : `1px solid ${C.border}`, transition: '0.2s' }}
-                          >
-                             <td style={{ padding: '20px 24px', fontSize: 13, color: C.textMuted }}>{tx.date}</td>
-                             <td style={{ padding: '20px 24px' }}>
-                                <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: C.text }}>{tx.desc}</p>
-                                <p style={{ margin: 0, fontSize: 11, color: C.textMuted }}>REF: {tx.id.toUpperCase()}</p>
-                             </td>
-                             <td style={{ padding: '20px 24px' }}>
-                                <span style={{ padding: '4px 10px', borderRadius: 8, background: '#f1f5f9', color: C.textSub, fontSize: 11, fontWeight: 800 }}>{tx.cat}</span>
-                             </td>
-                             <td style={{ padding: '20px 24px' }}>
-                                <div style={{ 
-                                  display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 20,
-                                  background: tx.status === 'Completed' ? `${C.emerald}15` : tx.status === 'Failed' ? `${C.red}15` : `${C.blue}15`,
-                                  color: tx.status === 'Completed' ? C.emerald : tx.status === 'Failed' ? C.red : C.blue,
-                                  fontSize: 11, fontWeight: 900
-                                }}>
-                                   <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor' }} />
-                                   {tx.status}
-                                </div>
-                             </td>
-                             <td style={{ padding: '20px 24px', textAlign: 'right', fontSize: 15, fontWeight: 900, color: tx.type === 'credit' ? C.emerald : C.text, fontFamily: F.heading }}>
-                                {tx.amount}
-                             </td>
-                          </motion.tr>
-                        ))}
-                     </tbody>
-                  </table>
-               </div>
+               {filteredTxs.length > 0 ? (
+                 <div style={{ 
+                   background: '#fff', border: `1px solid ${C.border}`, borderRadius: 32, overflow: 'hidden',
+                   boxShadow: '0 4px 24px rgba(0,0,0,0.02)'
+                 }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                       <thead>
+                          <tr style={{ borderBottom: `1px solid ${C.border}`, background: '#f8fafc' }}>
+                             <th style={{ padding: '20px 24px', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Date</th>
+                             <th style={{ padding: '20px 24px', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Description</th>
+                             <th style={{ padding: '20px 24px', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Category</th>
+                             <th style={{ padding: '20px 24px', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Status</th>
+                             <th style={{ padding: '20px 24px', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em', textAlign: 'right' }}>Amount</th>
+                          </tr>
+                       </thead>
+                       <tbody>
+                          {filteredTxs.map((tx: any, idx: number) => (
+                            <motion.tr 
+                              key={tx.id}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ delay: idx * 0.05 }}
+                              style={{ borderBottom: idx === filteredTxs.length - 1 ? 'none' : `1px solid ${C.border}`, transition: '0.2s' }}
+                            >
+                               <td style={{ padding: '20px 24px', fontSize: 13, color: C.textMuted }}>{tx.date}</td>
+                               <td style={{ padding: '20px 24px' }}>
+                                  <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: C.text }}>{tx.desc}</p>
+                                  <p style={{ margin: 0, fontSize: 11, color: C.textMuted }}>REF: {tx.reference}</p>
+                               </td>
+                               <td style={{ padding: '20px 24px' }}>
+                                  <span style={{ padding: '4px 10px', borderRadius: 8, background: '#f1f5f9', color: C.textSub, fontSize: 11, fontWeight: 800 }}>{tx.cat}</span>
+                               </td>
+                               <td style={{ padding: '20px 24px' }}>
+                                  <div style={{ 
+                                    display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 20,
+                                    background: tx.status === 'Completed' ? `${C.emerald}15` : tx.status === 'Failed' ? `${C.red}15` : `${C.blue}15`,
+                                    color: tx.status === 'Completed' ? C.emerald : tx.status === 'Failed' ? C.red : C.blue,
+                                    fontSize: 11, fontWeight: 900
+                                  }}>
+                                     <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor' }} />
+                                     {tx.status}
+                                  </div>
+                               </td>
+                               <td style={{ padding: '20px 24px', textAlign: 'right', fontSize: 15, fontWeight: 900, color: tx.type === 'credit' ? C.emerald : C.text, fontFamily: F.heading }}>
+                                  {tx.amount}
+                               </td>
+                            </motion.tr>
+                          ))}
+                       </tbody>
+                    </table>
+                 </div>
+               ) : (
+                 <EmptyState 
+                   title="No Transactions" 
+                   description="Your financial history is empty. Once you start using institutional services, your history will appear here."
+                   icon={<AccountBalanceWalletRounded sx={{ fontSize: 48, opacity: 0.2 }} />}
+                 />
+               )}
             </motion.div>
           ) : (
             <motion.div 
@@ -457,6 +477,7 @@ export default function StatementPage() {
                        {FORMATS.map(f => (
                          <button 
                            key={f.id}
+                           onClick={() => handleExport(type.id, f.id)}
                            style={{ 
                              flex: 1, padding: '12px', borderRadius: 14, border: `1.5px solid ${C.border}`, 
                              background: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer',

@@ -4,13 +4,15 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import PortalShell from './components/PortalShell';
-import { useGetDashboardMetricsQuery, useGetNewsArticlesQuery } from '@/lib/redux/api/userApi';
+import { useGetDashboardMetricsQuery, useGetNewsArticlesQuery, useGetMeQuery } from '@/lib/redux/api/userApi';
 
 /* ─── Dashboard Sub-component ─────────────────────────────────────────── */
 
-function Dashboard({ user, onCardClick, isMobile, activeTab, setActiveTab }: any) {
+function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
   const router = useRouter();
-  const firstName = user?.firstName || user?.name?.split(' ')[0] || 'User';
+  const { data: userData } = useGetMeQuery();
+  const user = userData?.data;
+  const firstName = user?.firstName || 'User';
   const { data: metricsResponse, isLoading: metricsLoading } = useGetDashboardMetricsQuery();
   const { data: newsResponse, isLoading: newsLoading } = useGetNewsArticlesQuery();
   
@@ -46,24 +48,6 @@ function Dashboard({ user, onCardClick, isMobile, activeTab, setActiveTab }: any
     { id: 3, tag: 'LIMITED', title: 'Stanbic High-Yield', desc: 'Unlock 14% p.a on your savings when you link your account today.', btn: 'Link Account', color: `linear-gradient(135deg, ${C.purple}, ${C.red})`, shadow: C.purple },
   ];
 
-  const BLOG_POSTS = [
-    { 
-      id: 1, title: 'The state of lending in Ghana 2026', tag: 'Market Report', time: '5m read', icon: '📈', 
-      content: 'As of 2026, Ghana has seen a 40% increase in digital lending adoption. Institutional lenders are now prioritizing alternative credit scoring models that factor in mobile money velocity and utility payment history.',
-      url: 'https://resolvebridge.com/news/state-of-lending-2026'
-    },
-    { 
-      id: 2, title: 'How to boost your score by 50 points', tag: 'Expert Tips', time: '3m read', icon: '⚡', 
-      content: 'The fastest way to improve your Resolve Health Index is to maintain a utilization rate below 30% on your Kredete BNPL lines and ensure all mobile money repayments are made 2 days before the due date.',
-      url: 'https://resolvebridge.com/edu/boost-your-score'
-    },
-    { 
-      id: 3, title: 'Understanding mobile money repayments', tag: 'Guide', time: '4m read', icon: '📱', 
-      content: 'ResolveBridge now supports automated direct debits from MTN MoMo and Vodafone Cash. This integration ensures you never miss a payment, even when you are offline.',
-      url: 'https://resolvebridge.com/guides/momo-repayments'
-    }
-  ];
-
   const [promoIdx, setPromoIdx] = useState(0);
   const [selectedBlog, setSelectedBlog] = useState<any>(null);
 
@@ -94,17 +78,6 @@ function Dashboard({ user, onCardClick, isMobile, activeTab, setActiveTab }: any
     );
   }
 
-  if (metricsResponse?.success === false) {
-    return (
-      <div style={{ maxWidth: 1100, margin: '0 auto', textAlign: 'center', padding: '100px 20px' }}>
-         <div style={{ fontSize: 48, marginBottom: 24 }}>🛡️</div>
-         <h2 style={{ fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 12 }}>Unable to load intelligence</h2>
-         <p style={{ color: C.textSub, marginBottom: 32 }}>We're having trouble connecting to your Resolve ID. Please try refreshing.</p>
-         <button onClick={() => window.location.reload()} style={{ background: C.blue, color: '#fff', border: 'none', padding: '12px 24px', borderRadius: 12, fontWeight: 700, cursor: 'pointer' }}>Refresh Dashboard</button>
-      </div>
-    );
-  }
-
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto' }}>
       
@@ -127,7 +100,7 @@ function Dashboard({ user, onCardClick, isMobile, activeTab, setActiveTab }: any
                    </div>
                    <h2 style={{ margin: '0 0 16px', fontSize: 24, fontWeight: 900, color: C.text, fontFamily: F.heading, lineHeight: 1.2 }}>{selectedBlog.title}</h2>
                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32, color: C.textMuted, fontSize: 13, fontWeight: 600 }}>
-                      <span>{selectedBlog.icon} Resolve Intelligence</span>
+                      <span>{selectedBlog.icon || '🗞️'} Resolve Intelligence</span>
                       <span>•</span>
                       <span>{selectedBlog.readingTimeMinutes}m read</span>
                    </div>
@@ -350,7 +323,7 @@ function Dashboard({ user, onCardClick, isMobile, activeTab, setActiveTab }: any
                             }}
                           >
                              <div style={{ width: 44, height: 44, borderRadius: 12, background: '#fff', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
-                                {blog.icon}
+                                {blog.icon || '🗞️'}
                              </div>
                              <div style={{ flex: 1 }}>
                                 <span style={{ fontSize: 9, fontWeight: 800, color: C.blue, textTransform: 'uppercase', letterSpacing: '0.02em' }}>{blog.tag}</span>
@@ -359,10 +332,9 @@ function Dashboard({ user, onCardClick, isMobile, activeTab, setActiveTab }: any
                           </motion.div>
                          ))
                        ) : (
-                         <div style={{ textAlign: 'start', padding: '20px 0' }}>
-                            <img src="/customer/empty-news.png" alt="No news" style={{ width: '100%', maxWidth: 300, marginBottom: 16, opacity: 0.8 }} />
-                            <p style={{ fontSize: 13, color: C.textSub, fontWeight: 600 }}>Stay tuned for market intelligence.</p>
-                         </div>
+                          <div style={{ textAlign: 'start', padding: '20px 0' }}>
+                             <p style={{ fontSize: 13, color: C.textSub, fontWeight: 600 }}>Stay tuned for market intelligence.</p>
+                          </div>
                        )}
                     </div>
                   </div>
@@ -391,7 +363,7 @@ function Dashboard({ user, onCardClick, isMobile, activeTab, setActiveTab }: any
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
                          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: C.text, fontFamily: F.heading }}>Credit Velocity</h3>
                          <div style={{ display: 'flex', background: C.bg, borderRadius: 8, padding: 4 }}>
-                            {['6m', '1y'].map(t => <button key={t} style={{ border: 'none', background: t === '6m' ? '#fff' : 'transparent', padding: '4px 12px', fontSize: 10, fontWeight: 800, color: t === '6m' ? C.blue : C.textMuted, borderRadius: 6, boxShadow: t === '6m' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none' }}>{t}</button>)}
+                            {['6m', '1y'].map(t => <button key={t} onClick={() => {}} style={{ border: 'none', background: t === '6m' ? '#fff' : 'transparent', padding: '4px 12px', fontSize: 10, fontWeight: 800, color: t === '6m' ? C.blue : C.textMuted, borderRadius: 6, boxShadow: t === '6m' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none' }}>{t}</button>)}
                          </div>
                       </div>
                       <div style={{ height: 200, display: 'flex', alignItems: 'flex-end', gap: isMobile ? 8 : 16, paddingBottom: 24 }}>
@@ -423,7 +395,7 @@ function Dashboard({ user, onCardClick, isMobile, activeTab, setActiveTab }: any
                                <div key={f.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                   <span style={{ fontSize: 13, fontWeight: 700, color: C.textSub }}>{f.name}</span>
                                   <span style={{ fontSize: 12, fontWeight: 800, color: f.color }}>{f.status}</span>
-                               </div>
+                                </div>
                             ))
                          ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, paddingTop: 20, paddingBottom: 20 }}>
@@ -453,7 +425,6 @@ function Dashboard({ user, onCardClick, isMobile, activeTab, setActiveTab }: any
 
 export default function PortalPage() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
@@ -465,10 +436,8 @@ export default function PortalPage() {
     handleResize();
     window.addEventListener('resize', handleResize);
 
-    const stored = sessionStorage.getItem('rb_user');
-    if (stored) {
-      setUser(JSON.parse(stored));
-    } else {
+    const token = localStorage.getItem('rb_token');
+    if (!token) {
       router.replace('/login');
     }
 
@@ -481,7 +450,6 @@ export default function PortalPage() {
     <PortalShell title="Command Center" subtitle="Institutional Financial Intelligence">
        <div style={{ position: 'relative' }}>
           <Dashboard 
-            user={user} 
             onCardClick={() => setCashFlowOpen(true)} 
             isMobile={isMobile} 
             activeTab={activeTab}

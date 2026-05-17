@@ -393,7 +393,7 @@ export default function PortalShell({
                 >
                    {!isMobile && (
                      <div style={{ textAlign: 'right' }}>
-                        <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: C.text }}>{user?.name || 'User'}</p>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: C.text }}>{user?.firstName || 'User'}</p>
                         <p style={{ margin: 0, fontSize: 10, color: C.textMuted, fontWeight: 700 }}>Personal Account</p>
                      </div>
                    )}
@@ -403,7 +403,7 @@ export default function PortalShell({
                      display: 'flex', alignItems: 'center', justifyContent: 'center', 
                      color: '#fff', fontWeight: 900, fontSize: 12, position: 'relative' 
                    }}>
-                      {user?.name?.charAt(0) || 'U'}
+                      {user?.firstName?.charAt(0) || 'U'}
                       <div style={{ position: 'absolute', bottom: -2, right: -2, width: 10, height: 10, background: C.emerald, border: '2px solid #fff', borderRadius: '50%' }} />
                    </div>
                 </button>
@@ -428,7 +428,7 @@ export default function PortalShell({
                          }}
                        >
                           <div style={{ padding: '12px 16px', borderBottom: `1px solid ${C.border}`, marginBottom: 4 }}>
-                             <p style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.text }}>{user?.name}</p>
+                             <p style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.text }}>{user?.firstName} {user?.lastName}</p>
                              <p style={{ margin: 0, fontSize: 12, color: C.textMuted, overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</p>
                           </div>
                           

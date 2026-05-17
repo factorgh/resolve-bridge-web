@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import PortalShell, { C, F } from '../components/PortalShell';
+import { useGetProductsQuery } from '@/lib/redux/api/productApi';
 import { 
   LocalOfferRounded, 
   VerifiedUserRounded, 
@@ -19,20 +20,11 @@ import {
   ViewStreamRounded,
   CloseRounded,
   VerifiedRounded,
-  HistoryRounded
+  HistoryRounded,
+  ErrorOutlineRounded
 } from '@mui/icons-material';
 import { Drawer, Box, Typography, IconButton } from '@mui/material';
-
-/* ─── Mock Data for Real-World Feel ───────────────────────────────────────── */
-
-const FALLBACK_PRODUCTS = [
-  { id: 'p1', name: 'Elite Personal Loan', provider: 'Stanbic Bank', cat: 'loan', rate: 12.5, trust: 98, match: 96, logo: '/stanbic_logo.png', tag: 'Best Match', desc: 'Pre-approved for your salary tier' },
-  { id: 'p2', name: 'Comprehensive Auto+', provider: 'Enterprise', cat: 'insurance', rate: 85, rateSuffix: '/mo', trust: 94, match: 92, logo: '/resolve_icon.png', tag: 'Fast Issue', desc: 'Instant policy generation' },
-  { id: 'p3', name: 'Tech BNPL Plan', provider: 'Kredete', cat: 'bnpl', rate: 0, trust: 92, match: 89, logo: '/kredete_logo.png', tag: 'Zero Interest', desc: 'Buy now, pay over 6 months' },
-  { id: 'p4', name: 'Business Growth Fund', provider: 'Fidelity Bank', cat: 'loan', rate: 14.2, trust: 96, match: 85, logo: '/resolve_icon.png', tag: 'SME Choice', desc: 'Flexible capital for expansion' },
-  { id: 'p5', name: 'Health Secure Gold', provider: 'Star Assurance', cat: 'insurance', rate: 120, rateSuffix: '/mo', trust: 95, match: 88, logo: '/resolve_icon.png', tag: 'Premium', desc: 'Top-tier family coverage' },
-  { id: 'p6', name: 'Home Reno Credit', provider: 'Absa Bank', cat: 'loan', rate: 11.8, trust: 97, match: 84, logo: '/resolve_icon.png', tag: 'Low Rate', desc: 'Transform your living space' },
-];
+import EmptyState from '../components/EmptyState';
 
 /* ─── Components ─────────────────────────────────────────────────────────── */
 
@@ -110,7 +102,7 @@ const ProductCard = ({ prod, viewMode }: { prod: any, viewMode: 'grid' | 'list' 
 
       {/* Actions */}
       <div style={{ display: 'flex', gap: 12, marginTop: isList ? 0 : 'auto' }}>
-        <Link href={`/portal/apply-${prod.cat}`} style={{ 
+        <Link href={`/portal/apply-${prod.cat}?productId=${prod.id}&lender=${encodeURIComponent(prod.provider)}`} style={{ 
           textDecoration: 'none', background: C.text, color: '#fff', 
           padding: '16px', borderRadius: 16, fontSize: 14, fontWeight: 800,
           flex: 2, textAlign: 'center', transition: '0.2s'
@@ -135,18 +127,31 @@ const ProductCard = ({ prod, viewMode }: { prod: any, viewMode: 'grid' | 'list' 
 export default function MarketplacePage() {
   const [activeCat, setActiveCat] = useState('loan');
   const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState('trust');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isMobile, setIsMobile] = useState(false);
-  const [showFilters, setShowFilters] = useState(true);
+  const [sortBy, setSortBy] = useState('trust');
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [filters, setFilters] = useState({
+    providers: [] as string[],
+    precision: 75
+  });
+
+  const { data: apiData, isLoading, isError } = useGetProductsQuery({ 
+    productType: activeCat, 
+    searchTerm: search,
+    providerType: filters.providers
+  });
+
+  const products = useMemo(() => {
+    if (apiData?.success && apiData?.data) {
+      return apiData.data;
+    }
+    return []; 
+  }, [apiData]);
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
-      if (window.innerWidth < 1024) setShowFilters(false);
-      else setShowFilters(true);
-    };
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
     handleResize();
     window.addEventListener('resize', handleResize);
     
@@ -157,32 +162,19 @@ export default function MarketplacePage() {
   }, []);
 
   const filteredProducts = useMemo(() => {
-    return FALLBACK_PRODUCTS.filter(p => {
-      const catMatch = activeCat === 'all' || p.cat === activeCat;
-      const searchMatch = p.name.toLowerCase().includes(search.toLowerCase()) || 
-                          p.provider.toLowerCase().includes(search.toLowerCase());
-      return catMatch && searchMatch;
-    }).sort((a, b) => {
+    const base = [...products];
+    return base.sort((a: any, b: any) => {
       if (sortBy === 'rate') return a.rate - b.rate;
       return b.trust - a.trust;
     });
-  }, [activeCat, search, sortBy]);
+  }, [products, sortBy]);
 
   return (
     <PortalShell title="Marketplace" backHref="/portal">
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px 100px' : '0 24px 100px' }}>
         
         {/* Transparent Banner */}
-        <div style={{ 
-          background: `${C.emerald}08`, padding: '12px 24px', borderRadius: 16, border: `1px solid ${C.emerald}22`,
-          marginBottom: 40, display: 'flex', alignItems: 'center', gap: 12, color: C.emerald
-        }}>
-           <VerifiedUserRounded sx={{ fontSize: 18 }} />
-           <p style={{ margin: 0, fontSize: 12, fontWeight: 700 }}>
-             <strong style={{ textTransform: 'uppercase', marginRight: 8 }}>Transparency Protocol:</strong> 
-             Zero borrower fees. We are compensated by institutional partners to ensure your lowest rate.
-           </p>
-        </div>
+
 
         {/* Discovery Hub Header */}
         <div style={{ marginBottom: 48 }}>
@@ -246,51 +238,8 @@ export default function MarketplacePage() {
         </div>
 
         {/* Main Workspace */}
-        <div style={{ display: 'flex', gap: 40, alignItems: 'flex-start' }}>
-           {/* Refined Sidebar */}
-           <AnimatePresence>
-             {showFilters && (
-               <motion.aside 
-                 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                 style={{ 
-                   width: isMobile ? '100%' : 280, 
-                   position: isMobile ? 'fixed' : 'sticky', top: 180, left: 0, zIndex: 1000,
-                   background: isMobile ? '#fff' : 'transparent', padding: isMobile ? 32 : 0, 
-                   height: isMobile ? '100vh' : 'auto', overflowY: 'auto'
-                 }}
-               >
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
-                     <div>
-                        <h3 style={{ margin: '0 0 20px', fontSize: 13, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: C.textSub }}>Provider Type</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                           {['Tier 1 Banks', 'Digital Lenders', 'Private Insurers', 'BNPL Providers'].map(t => (
-                             <label key={t} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 14, fontWeight: 700, color: C.text, cursor: 'pointer' }}>
-                                <input type="checkbox" defaultChecked style={{ width: 18, height: 18, accentColor: C.blue }} /> {t}
-                             </label>
-                           ))}
-                        </div>
-                     </div>
-
-                     <div>
-                        <h3 style={{ margin: '0 0 20px', fontSize: 13, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: C.textSub }}>Match Precision</h3>
-                        <input type="range" min="0" max="100" defaultValue="75" style={{ width: '100%', accentColor: C.blue }} />
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, fontSize: 11, fontWeight: 800, color: C.textMuted }}>
-                           <span>Any Match</span>
-                           <span>High Match</span>
-                        </div>
-                     </div>
-
-                     <div style={{ background: `linear-gradient(135deg, ${C.blue}, ${C.purple})`, borderRadius: 24, padding: 24, color: '#fff' }}>
-                        <TrendingUpRounded sx={{ fontSize: 24, marginBottom: 12 }} />
-                        <p style={{ margin: 0, fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Elite Access</p>
-                        <p style={{ margin: 0, fontSize: 12, opacity: 0.8, lineHeight: 1.5 }}>Your credit score is in the top 10%. You qualify for **Elite Tier** interest rates.</p>
-                     </div>
-                  </div>
-               </motion.aside>
-             )}
-           </AnimatePresence>
-
-           {/* Results Grid */}
+        <div style={{ display: 'flex', gap: 0, alignItems: 'flex-start' }}>
+           {/* Results Grid - Now Full Width */}
            <div style={{ flex: 1 }}>
               <div style={{ 
                 display: 'grid', 
@@ -302,12 +251,12 @@ export default function MarketplacePage() {
                  ))}
               </div>
 
-              {filteredProducts.length === 0 && (
-                <div style={{ padding: 80, textAlign: 'center', background: '#fff', borderRadius: 32, border: `1px solid ${C.border}` }}>
-                   <InfoOutlined sx={{ fontSize: 48, color: C.textMuted, marginBottom: 16 }} />
-                   <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 900 }}>No exact matches</h3>
-                   <p style={{ margin: 0, color: C.textMuted }}>Try adjusting your search or category filters.</p>
-                </div>
+              {filteredProducts.length === 0 && !isLoading && (
+                <EmptyState 
+                  title="No Products Found" 
+                  description="We couldn't find any financial products matching your current filters. Try adjusting your search term or exploring another category."
+                  icon={<ErrorOutlineRounded sx={{ fontSize: 48, opacity: 0.2 }} />}
+                />
               )}
            </div>
         </div>
@@ -409,6 +358,93 @@ export default function MarketplacePage() {
                 </Box>
              </Box>
            )}
+        </Drawer>
+ 
+        {/* Filter Settings Drawer */}
+        <Drawer 
+          anchor="right" 
+          open={showFilters} 
+          onClose={() => setShowFilters(false)}
+          PaperProps={{
+            sx: { 
+              width: isMobile ? '100%' : 400, 
+              background: '#fff',
+              borderLeft: `1px solid ${C.border}`,
+              boxShadow: '-20px 0 60px rgba(13,27,62,0.1)'
+            }
+          }}
+        >
+          <Box sx={{ p: 4, height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 5 }}>
+              <Box>
+                <Typography variant="h5" sx={{ fontWeight: 900, fontFamily: F.heading }}>Refine Results</Typography>
+                <Typography variant="caption" sx={{ fontWeight: 800, color: C.textMuted, letterSpacing: '0.05em' }}>MARKETPLACE FILTERS</Typography>
+              </Box>
+              <IconButton onClick={() => setShowFilters(false)} sx={{ background: '#f1f5f9' }}><CloseRounded /></IconButton>
+            </Box>
+
+            <Box sx={{ flex: 1, overflowY: 'auto' }}>
+              <Box sx={{ mb: 6 }}>
+                <Typography sx={{ fontSize: 13, fontWeight: 900, color: C.textSub, mb: 3, letterSpacing: '0.1em' }}>PROVIDER TYPE</Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                  {['Tier 1 Banks', 'Digital Lenders', 'Private Insurers', 'BNPL Providers'].map(t => (
+                    <label key={t} style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 15, fontWeight: 700, color: C.text, cursor: 'pointer' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={filters.providers.includes(t)}
+                        onChange={(e) => {
+                          const next = e.target.checked 
+                            ? [...filters.providers, t] 
+                            : filters.providers.filter(p => p !== t);
+                          setFilters({ ...filters, providers: next });
+                        }}
+                        style={{ width: 20, height: 20, accentColor: C.blue }} 
+                      /> {t}
+                    </label>
+                  ))}
+                </Box>
+              </Box>
+
+              <Box sx={{ mb: 6 }}>
+                <Typography sx={{ fontSize: 13, fontWeight: 900, color: C.textSub, mb: 3, letterSpacing: '0.1em' }}>MATCH PRECISION</Typography>
+                <input 
+                  type="range" min="0" max="100" 
+                  value={filters.precision} 
+                  onChange={(e) => setFilters({ ...filters, precision: parseInt(e.target.value) })}
+                  style={{ width: '100%', accentColor: C.blue, cursor: 'pointer' }} 
+                />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1.5 }}>
+                   <Typography sx={{ fontSize: 11, fontWeight: 800, color: C.textMuted }}>Generic</Typography>
+                   <Typography sx={{ fontSize: 11, fontWeight: 800, color: C.blue }}>{filters.precision}% Precise</Typography>
+                </Box>
+              </Box>
+
+              <Box sx={{ p: 3, borderRadius: 24, background: `linear-gradient(135deg, ${C.blue}08, ${C.purple}08)`, border: `1px solid ${C.blue}15` }}>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 1.5 }}>
+                  <TrendingUpRounded sx={{ color: C.blue }} />
+                  <Typography sx={{ fontWeight: 900, fontSize: 14, color: C.text }}>Smart Suggestion</Typography>
+                </Box>
+                <Typography sx={{ fontSize: 13, color: C.textSub, lineHeight: 1.6 }}>
+                  Higher precision filters products based on your specific vault history and credit profile.
+                </Typography>
+              </Box>
+            </Box>
+
+            <Box sx={{ pt: 4, borderTop: `1px solid ${C.border}`, display: 'flex', gap: 2 }}>
+              <button 
+                onClick={() => setFilters({ providers: [], precision: 75 })}
+                style={{ flex: 1, padding: '16px', borderRadius: 16, border: `2px solid ${C.border}`, background: '#fff', color: C.text, fontWeight: 800, fontSize: 14, cursor: 'pointer' }}
+              >
+                Reset
+              </button>
+              <button 
+                onClick={() => setShowFilters(false)}
+                style={{ flex: 1.5, padding: '16px', borderRadius: 16, border: 'none', background: C.text, color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}
+              >
+                Apply Filters
+              </button>
+            </Box>
+          </Box>
         </Drawer>
 
         {isMobile && <div style={{ height: 100 }} />}

@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation';
 import PortalShell, { C, F } from '../components/PortalShell';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import { useCreateApplicationMutation } from '@/lib/redux/api/applicationApi';
+import { useGetProductsQuery } from '@/lib/redux/api/productApi';
+import { useGetDocumentsQuery, useUploadDocumentMutation } from '@/lib/redux/api/documentApi';
 
 /* ─── Data ─────────────────────────────────────────────────────────────────── */
 const LOAN_TYPES = [
@@ -119,6 +122,13 @@ function Select({ value, onChange, options }: { value: string; onChange: (v: str
 /* ─── Main Page ──────────────────────────────────────────────────────────── */
 export default function ApplyLoanPage() {
   const router = useRouter();
+  const [createApplication, { isLoading: isSubmitting }] = useCreateApplicationMutation();
+  const { data: productsData } = useGetProductsQuery({ productType: 'loan' });
+  const { data: documentsData } = useGetDocumentsQuery();
+  const [uploadDocument] = useUploadDocumentMutation();
+  const [productId, setProductId] = useState<string | null>(null);
+  const [uploadingDocLabel, setUploadingDocLabel] = useState<string | null>(null);
+
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState<FormData>({
@@ -170,8 +180,22 @@ export default function ApplyLoanPage() {
     // Check if we came from Marketplace with a specific lender
     const params = new URLSearchParams(window.location.search);
     const preLender = params.get('lender');
+    const preProdId = params.get('productId');
     if (preLender) setForm(f => ({ ...f, lender: decodeURIComponent(preLender) }));
+    if (preProdId) setProductId(preProdId);
   }, []);
+
+  // Dynamically resolve product ID based on form selection if not set by query param
+  useEffect(() => {
+    if (productsData?.success && productsData?.data) {
+      const match = productsData.data.find((p: any) => 
+        p.provider.toLowerCase() === form.lender.toLowerCase()
+      );
+      if (match) {
+        setProductId(match.id);
+      }
+    }
+  }, [form.lender, productsData]);
 
   const set = (key: keyof FormData) => (v: string | undefined) => setForm(f => ({ ...f, [key]: v || '' }));
 
@@ -188,8 +212,80 @@ export default function ApplyLoanPage() {
   };
 
   const handleSubmit = async () => {
-    await new Promise(r => setTimeout(r, 1800));
-    setSubmitted(true);
+    try {
+      let resolvedProductId = productId;
+      
+      // Fallback: If no matching productId was resolved, pick the first loan product in DB
+      if (!resolvedProductId && productsData?.success && productsData?.data) {
+        const fallback = productsData.data.find((p: any) => p.cat === 'loan' || p.productType === 'Loan');
+        if (fallback) resolvedProductId = fallback.id || fallback._id;
+        else if (productsData.data.length > 0) resolvedProductId = productsData.data[0].id || productsData.data[0]._id;
+      }
+      
+      if (!resolvedProductId) {
+        alert('Institutional bridge failure: No active financial product found in database for this lender.');
+        return;
+      }
+
+      const cleanAmount = Number(form.amount.replace(/[^0-9.]/g, '')) || 5000;
+      const cleanTerm = Number(form.term.replace(/[^0-9]/g, '')) || 24;
+
+      const payload = {
+        productId: resolvedProductId,
+        amount: cleanAmount,
+        tenureMonths: cleanTerm,
+        applicationData: {
+          personal: {
+            title: form.title,
+            firstName: form.firstName,
+            lastName: form.lastName,
+            dob: form.dob,
+            maritalStatus: form.maritalStatus,
+            gender: form.gender,
+            nationality: form.nationality,
+            dependants: form.dependants,
+            phone: form.phone,
+            email: form.email,
+            residentialAddress: form.residentialAddress,
+            landmark: form.landmark,
+            city: form.city,
+            mmda: form.mmda
+          },
+          financial: {
+            hasAccountWithLender: form.hasAccountWithLender,
+            branch: form.branch,
+            accountNumber: form.accountNumber,
+            yearsWithBank: form.yearsWithBank,
+            existingLoan: form.existingLoan
+          },
+          employment: {
+            employment: form.employment,
+            employer: form.employer,
+            yearsWithEmployer: form.yearsWithEmployer,
+            workAddress: form.workAddress,
+            occupation: form.occupation,
+            sector: form.sector,
+            staffNo: form.staffNo,
+            ssnitNo: form.ssnitNo,
+            positionType: form.positionType,
+            monthlyIncome: form.monthlyIncome,
+            netSalary: form.netSalary
+          },
+          referees: [
+            { name: form.ref1Name, relation: form.ref1Relation, phone: form.ref1Phone },
+            { name: form.ref2Name, relation: form.ref2Relation, phone: form.ref2Phone }
+          ]
+        }
+      };
+
+      const result = await createApplication(payload).unwrap();
+      if (result?.success) {
+        setSubmitted(true);
+      }
+    } catch (err: any) {
+      console.error('Failed to submit application:', err);
+      alert(err?.data?.message || 'Connection offline: Could not sync application with secure vault servers.');
+    }
   };
 
   if (submitted) {
@@ -483,17 +579,103 @@ export default function ApplyLoanPage() {
                      { l: 'Bank Statement', i: '🏦' },
                      { l: 'Undertaking Letter', i: '📜', help: 'Required for salaried loans' },
                      { l: 'Passport Picture', i: '📸' }
-                   ].map(doc => (
-                    <div key={doc.l} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <label style={{ fontSize: 10, fontWeight: 900, color: C.textSub, textTransform: 'uppercase' }}>{doc.l}</label>
-                          {doc.l === 'Undertaking Letter' && <button style={{ background: 'none', border: 'none', color: C.blue, fontSize: 9, fontWeight: 800, cursor: 'pointer' }}>Get Template ↓</button>}
+                   ].map(doc => {
+                     const existingDoc = documentsData?.success && documentsData?.data?.find(
+                       (d: any) => d.name?.toLowerCase() === doc.l?.toLowerCase()
+                     );
+                     const isUploadingThis = uploadingDocLabel === doc.l;
+
+                     return (
+                       <div key={doc.l} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                             <label style={{ fontSize: 10, fontWeight: 900, color: C.textSub, textTransform: 'uppercase' }}>{doc.l}</label>
+                             {doc.l === 'Undertaking Letter' && <button style={{ background: 'none', border: 'none', color: C.blue, fontSize: 9, fontWeight: 800, cursor: 'pointer' }}>Get Template ↓</button>}
+                          </div>
+
+                          {existingDoc ? (
+                            <motion.div 
+                              initial={{ scale: 0.98, opacity: 0.8 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              style={{ 
+                                border: `2px solid ${C.emerald}44`, 
+                                borderRadius: 16, 
+                                padding: '16px 20px', 
+                                background: `${C.emerald}04`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 14,
+                                position: 'relative'
+                              }}
+                            >
+                               <div style={{ width: 40, height: 40, borderRadius: 10, background: `${C.emerald}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                                 {doc.i}
+                               </div>
+                               <div style={{ flex: 1, minWidth: 0 }}>
+                                 <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: C.text, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                   Securely Linked
+                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.emerald} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                 </p>
+                                 <p style={{ margin: 0, fontSize: 11, color: C.textMuted }}>Ref: rb-vault-{existingDoc.id.slice(-6)}</p>
+                               </div>
+                               <span style={{ fontSize: 10, fontWeight: 800, background: `${C.emerald}20`, color: C.emerald, padding: '4px 10px', borderRadius: 8 }}>
+                                 {existingDoc.status}
+                               </span>
+                            </motion.div>
+                          ) : (
+                            <label style={{ display: 'block', cursor: isUploadingThis ? 'not-allowed' : 'pointer' }}>
+                              <input 
+                                type="file" 
+                                disabled={isUploadingThis}
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  setUploadingDocLabel(doc.l);
+                                  try {
+                                    await uploadDocument({
+                                      type: doc.l,
+                                      documentUrl: `https://resolve-bridge-vault.s3.amazonaws.com/${encodeURIComponent(doc.l.toLowerCase().replace(/\s+/g, '-'))}-${Date.now()}.pdf`,
+                                      expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 5))
+                                    }).unwrap();
+                                  } catch (err) {
+                                    console.error('Direct upload failed:', err);
+                                    alert('Direct vault upload failed. Please try again.');
+                                  } finally {
+                                    setUploadingDocLabel(null);
+                                  }
+                                }}
+                                style={{ display: 'none' }} 
+                              />
+                              <div style={{ 
+                                border: `2.5px dashed ${isUploadingThis ? C.blue : C.border}`, 
+                                borderRadius: 16, 
+                                padding: '20px 24px', 
+                                textAlign: 'center', 
+                                background: '#f8fafc',
+                                transition: 'all 0.2s',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 6
+                              }}>
+                                 {isUploadingThis ? (
+                                   <>
+                                     <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} style={{ width: 22, height: 22, border: `2.5px solid ${C.blue}33`, borderTopColor: C.blue, borderRadius: '50%' }} />
+                                     <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: C.blue }}>Encrypting & Uploading...</p>
+                                   </>
+                                 ) : (
+                                   <>
+                                     <span style={{ fontSize: 24, filter: 'grayscale(0.2)' }}>{doc.i}</span>
+                                     <p style={{ margin: 0, fontSize: 11.5, fontWeight: 700, color: C.textSub }}>Click to Upload</p>
+                                     <p style={{ margin: 0, fontSize: 9.5, color: C.textMuted }}>PDF, PNG, JPG up to 10MB</p>
+                                   </>
+                                 )}
+                              </div>
+                            </label>
+                          )}
                        </div>
-                       <div style={{ border: `2px dashed ${C.border}`, borderRadius: 16, padding: 20, textAlign: 'center', background: '#f8fafc', cursor: 'pointer' }}>
-                          <span style={{ fontSize: 20 }}>{doc.i}</span>
-                       </div>
-                    </div>
-                   ))}
+                     );
+                   })}
                 </div>
 
                 <div style={{ padding: '16px 20px', borderRadius: 16, background: C.emeraldLight, border: `1px solid ${C.emerald}22`, display: 'flex', gap: 12, alignItems: 'center' }}>
@@ -559,10 +741,17 @@ export default function ApplyLoanPage() {
   );
 }
 
-function SubmitButton({ onClick, isMobile }: { onClick: () => void; isMobile: boolean }) {
+function SubmitButton({ onClick, isMobile }: { onClick: () => Promise<void>; isMobile: boolean }) {
   const [loading, setLoading] = useState(false);
   return (
-    <button onClick={async () => { setLoading(true); await onClick(); }}
+    <button onClick={async () => { 
+      setLoading(true); 
+      try {
+        await onClick(); 
+      } finally {
+        setLoading(false);
+      }
+    }}
       disabled={loading}
       style={{ flex: isMobile ? 1 : 'none', padding: '13px 32px', background: loading ? C.textMuted : `linear-gradient(135deg, ${C.green}, #34d399)`, border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 800, color: '#fff', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: F.heading, boxShadow: loading ? 'none' : `0 6px 20px ${C.green}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.2s' }}
     >

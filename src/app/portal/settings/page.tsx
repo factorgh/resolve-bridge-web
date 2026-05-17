@@ -5,12 +5,44 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import PortalShell, { C, F } from '../components/PortalShell';
 
+import { useGetMeQuery, useUpdateProfileMutation } from '@/lib/redux/api/userApi';
+
 export default function SettingsPage() {
   const router = useRouter();
-  const [user, setUser] = useState<{name: string, email: string} | null>(null);
+  const { data: apiData, isLoading: isUserLoading } = useGetMeQuery();
+  const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
+  
+  const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '' });
   const [activeTab, setActiveTab] = useState('profile');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Initial population from session if available
+    const stored = sessionStorage.getItem('rb_user');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setFormData(prev => ({
+          ...prev,
+          firstName: parsed.firstName || parsed.name?.split(' ')[0] || '',
+          lastName: parsed.lastName || parsed.name?.split(' ').slice(1).join(' ') || '',
+          email: parsed.email || ''
+        }));
+      } catch (e) {}
+    }
+  }, []);
+
+  useEffect(() => {
+    if (apiData?.success && apiData.data) {
+      setFormData({
+        firstName: apiData.data.firstName || '',
+        lastName: apiData.data.lastName || '',
+        email: apiData.data.email || ''
+      });
+    }
+  }, [apiData]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -19,14 +51,28 @@ export default function SettingsPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    const stored = sessionStorage.getItem('rb_user');
-    if (stored) setUser(JSON.parse(stored));
-  }, []);
+  const handleUpdateProfile = async () => {
+    try {
+      const result = await updateProfile(formData).unwrap();
+      if (result.success && result.data) {
+        // Sync back to session storage for the sidebar/topbar
+        const stored = sessionStorage.getItem('rb_user');
+        if (stored) {
+          const user = JSON.parse(stored);
+          sessionStorage.setItem('rb_user', JSON.stringify({ ...user, ...result.data }));
+        }
+      }
+      setSuccessMsg('Profile updated successfully!');
+      setTimeout(() => setSuccessMsg(''), 3000);
+    } catch (err: any) {
+      alert(err.data?.message || 'Failed to update profile');
+    }
+  };
 
   const handleDeleteAccount = () => {
     if (confirm('Are you absolutely sure? This will permanently delete your financial roadmap, vault documents, and application history. This action cannot be undone.')) {
       sessionStorage.clear();
+      localStorage.clear();
       router.push('/login');
     }
   };
@@ -81,19 +127,72 @@ export default function SettingsPage() {
            <div style={{ background: '#fff', borderRadius: 28, border: `1px solid ${C.border}`, padding: isMobile ? 24 : 40, boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
               
               <AnimatePresence mode="wait">
-                {activeTab === 'profile' && (
+                 {activeTab === 'profile' && (
                   <motion.div key="prof" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
                      <h2 style={{ fontSize: 20, fontWeight: 900, color: C.text, marginBottom: 32, fontFamily: F.heading }}>Profile Management</h2>
+                     
+                     {successMsg && (
+                       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ padding: '12px 16px', borderRadius: 12, background: `${C.emerald}10`, color: C.emerald, fontSize: 13, fontWeight: 800, marginBottom: 24, border: `1px solid ${C.emerald}20` }}>
+                         {successMsg}
+                       </motion.div>
+                     )}
+
                      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                           <label style={{ fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Full Name</label>
-                           <input type="text" defaultValue={user?.name} style={{ padding: '14px 16px', borderRadius: 14, border: `1.5px solid ${C.border}`, fontSize: 15, width: '100%', boxSizing: 'border-box' }} />
+                        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
+                           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                              <label style={{ fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>First Name</label>
+                              <div style={{ position: 'relative' }}>
+                                 <input 
+                                   type="text" 
+                                   value={formData.firstName} 
+                                   onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                                   disabled={isUserLoading}
+                                   style={{ padding: '14px 16px', borderRadius: 14, border: `1.5px solid ${C.border}`, fontSize: 15, width: '100%', boxSizing: 'border-box', background: isUserLoading ? '#f8fafc' : '#fff', opacity: isUserLoading ? 0.6 : 1 }} 
+                                 />
+                                 {isUserLoading && !formData.firstName && <div style={{ position: 'absolute', inset: 0, background: '#f1f5f9', borderRadius: 14, animation: 'pulse 1.5s infinite' }} />}
+                              </div>
+                           </div>
+                           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                              <label style={{ fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Last Name</label>
+                              <div style={{ position: 'relative' }}>
+                                 <input 
+                                   type="text" 
+                                   value={formData.lastName} 
+                                   onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                                   disabled={isUserLoading}
+                                   style={{ padding: '14px 16px', borderRadius: 14, border: `1.5px solid ${C.border}`, fontSize: 15, width: '100%', boxSizing: 'border-box', background: isUserLoading ? '#f8fafc' : '#fff', opacity: isUserLoading ? 0.6 : 1 }} 
+                                 />
+                                 {isUserLoading && !formData.lastName && <div style={{ position: 'absolute', inset: 0, background: '#f1f5f9', borderRadius: 14, animation: 'pulse 1.5s infinite' }} />}
+                              </div>
+                           </div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                            <label style={{ fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email Address</label>
-                           <input type="email" defaultValue={user?.email} style={{ padding: '14px 16px', borderRadius: 14, border: `1.5px solid ${C.border}`, fontSize: 15, width: '100%', boxSizing: 'border-box' }} />
+                           <div style={{ position: 'relative' }}>
+                              <input 
+                               type="email" 
+                               value={formData.email} 
+                               onChange={(e) => setFormData({...formData, email: e.target.value})}
+                               disabled={isUserLoading}
+                               style={{ padding: '14px 16px', borderRadius: 14, border: `1.5px solid ${C.border}`, fontSize: 15, width: '100%', boxSizing: 'border-box', background: isUserLoading ? '#f8fafc' : '#fff', opacity: isUserLoading ? 0.6 : 1 }} 
+                              />
+                              {isUserLoading && !formData.email && <div style={{ position: 'absolute', inset: 0, background: '#f1f5f9', borderRadius: 14, animation: 'pulse 1.5s infinite' }} />}
+                           </div>
                         </div>
-                        <button style={{ background: C.sidebar, color: '#fff', border: 'none', borderRadius: 14, padding: '16px', fontWeight: 800, marginTop: 12, cursor: 'pointer', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>Update Profile ✓</button>
+                        <style>{`@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; } }`}</style>
+                        <button 
+                          onClick={handleUpdateProfile}
+                          disabled={isUpdating || isUserLoading}
+                          style={{ 
+                            background: C.sidebar, color: '#fff', border: 'none', borderRadius: 14, 
+                            padding: '16px', fontWeight: 800, marginTop: 12, cursor: (isUpdating || isUserLoading) ? 'not-allowed' : 'pointer', 
+                            boxShadow: '0 10px 20px rgba(0,0,0,0.1)', opacity: isUpdating ? 0.7 : 1,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10
+                          }}
+                        >
+                          {isUpdating && <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} style={{ width: 18, height: 18, border: '3px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%' }} />}
+                          {isUpdating ? 'Updating...' : 'Update Profile ✓'}
+                        </button>
                      </div>
                   </motion.div>
                 )}
