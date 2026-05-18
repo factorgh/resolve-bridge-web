@@ -76,6 +76,10 @@ export const NAV = [
     icon: <SupervisorAccountRounded sx={{ fontSize: 20 }} />,
   },
   {
+    id: 'partners', label: 'B2B Partners', href: '/admin/partners',
+    icon: <AccountBalanceRounded sx={{ fontSize: 20 }} />,
+  },
+  {
     id: 'products', label: 'Products', href: '/admin/products',
     icon: <StorefrontRounded sx={{ fontSize: 20 }} />,
   },
@@ -205,15 +209,15 @@ export default function AdminShell({
     // Role-specific views
     if (user.role === 'InstitutionAdmin') {
       // Banks only see their activities
-      return n.id !== 'audit' && n.id !== 'users' && n.id !== 'insurance-integration' && n.id !== 'merchant-console';
+      return n.id !== 'audit' && n.id !== 'users' && n.id !== 'partners' && n.id !== 'insurance-integration' && n.id !== 'merchant-console';
     }
     if (user.role === 'InsuranceAdmin') {
       // Insurance partners only see insurance desk
-      return n.id !== 'audit' && n.id !== 'users' && n.id !== 'bank-integration' && n.id !== 'merchant-console';
+      return n.id !== 'audit' && n.id !== 'users' && n.id !== 'partners' && n.id !== 'bank-integration' && n.id !== 'merchant-console';
     }
     if (user.role === 'BNPLAdmin') {
       // BNPL merchants only see merchant console
-      return n.id !== 'audit' && n.id !== 'users' && n.id !== 'bank-integration' && n.id !== 'insurance-integration';
+      return n.id !== 'audit' && n.id !== 'users' && n.id !== 'partners' && n.id !== 'bank-integration' && n.id !== 'insurance-integration';
     }
     
     // Default fallback

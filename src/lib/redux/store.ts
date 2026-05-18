@@ -7,6 +7,7 @@ import { transactionApi } from './api/transactionApi';
 import { documentApi } from './api/documentApi';
 import { auditApi } from './api/auditApi';
 import { billingApi } from './api/billingApi';
+import { institutionApi } from './api/institutionApi';
 import uiReducer from './slices/uiSlice';
 
 export const makeStore = () => {
@@ -20,6 +21,7 @@ export const makeStore = () => {
       [documentApi.reducerPath]: documentApi.reducer,
       [auditApi.reducerPath]: auditApi.reducer,
       [billingApi.reducerPath]: billingApi.reducer,
+      [institutionApi.reducerPath]: institutionApi.reducer,
       ui: uiReducer,
     },
     middleware: (getDefaultMiddleware) =>
@@ -31,7 +33,8 @@ export const makeStore = () => {
         transactionApi.middleware, 
         documentApi.middleware,
         auditApi.middleware,
-        billingApi.middleware
+        billingApi.middleware,
+        institutionApi.middleware
       ),
   });
 };
