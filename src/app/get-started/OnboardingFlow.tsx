@@ -13,7 +13,7 @@ import 'react-phone-number-input/style.css';
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
-type StepId = 'goals' | 'account' | 'phone' | 'kyc' | 'finance' | 'analysis' | 'success';
+type StepId = 'selector' | 'goals' | 'account' | 'phone' | 'partner_profile' | 'kyc' | 'finance' | 'analysis' | 'success';
 
 interface OnboardingData {
   goals: string[];
@@ -45,11 +45,17 @@ interface OnboardingData {
   sector: string;
   workAddress: string;
   yearsWithEmployer: string;
+  // B2B Partner fields
+  legalName: string;
+  registrationNumber: string;
+  taxId: string;
+  website: string;
+  streetAddress: string;
 }
 
 /* ─── Constants ─────────────────────────────────────────────────────────────── */
 
-const NAV_STEPS: { id: StepId; label: string }[] = [
+const CUSTOMER_NAV_STEPS: { id: StepId; label: string }[] = [
   { id: 'goals',   label: 'Your goals'     },
   { id: 'account', label: 'Create account' },
   { id: 'phone',   label: 'Verify phone'   },
@@ -58,20 +64,31 @@ const NAV_STEPS: { id: StepId; label: string }[] = [
   { id: 'analysis',label: 'Matching'       },
 ];
 
+const PARTNER_NAV_STEPS: { id: StepId; label: string }[] = [
+  { id: 'account',         label: 'Admin Account'     },
+  { id: 'phone',           label: 'Verify Phone'      },
+  { id: 'partner_profile', label: 'Corporate Profile' },
+  { id: 'analysis',        label: 'Activation Desks'  },
+];
+
 const STEP_PROGRESS: Record<StepId, number> = {
+  selector: 5,
   goals:    15,
   account:  30,
   phone:    45,
-  kyc:      60,
-  finance:  75,
+  partner_profile: 60,
+  kyc:      70,
+  finance:  80,
   analysis: 90,
   success:  100,
 };
 
 const STEP_LABEL: Record<StepId, string> = {
+  selector: 'Step 0 of 6',
   goals:    'Step 1 of 6',
   account:  'Step 2 of 6',
   phone:    'Step 3 of 6',
+  partner_profile: 'Step 4 of 5',
   kyc:      'Step 4 of 6',
   finance:  'Step 5 of 6',
   analysis: 'Step 6 of 6',
@@ -331,10 +348,12 @@ function PanelHead({
 function GoalsStep({
   goals,
   onToggle,
+  onBack,
   onNext,
 }: {
   goals: string[];
   onToggle: (id: string) => void;
+  onBack?: () => void;
   onNext: () => void;
 }) {
   return (
@@ -378,7 +397,14 @@ function GoalsStep({
         })}
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between">
+        {onBack ? (
+          <BtnGhost onClick={onBack}>
+            <ArrowLeft /> Back
+          </BtnGhost>
+        ) : (
+          <span />
+        )}
         <BtnPrimary onClick={onNext} disabled={goals.length === 0}>
           Continue <ArrowRight />
         </BtnPrimary>
@@ -1007,12 +1033,215 @@ function SuccessStep({ onEnter }: { onEnter: () => void }) {
   );
 }
 
+function SelectorStep({
+  onSelect,
+}: {
+  onSelect: (type: 'customer' | 'lender' | 'merchant' | 'insurer') => void;
+}) {
+  return (
+    <>
+      <PanelHead
+        eyebrow="GETTING STARTED"
+        title="Choose your onboarding"
+        italic="Resolve journey"
+        sub="Select the route that matches your operational goals today."
+      />
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
+        {[
+          {
+            id: 'customer' as const,
+            title: '👤 I want a Loan (Personal or SME)',
+            desc: 'Apply for credits, view repayment cycles, build your digital identity and match with premium networks.',
+            badge: 'Consumer'
+          },
+          {
+            id: 'lender' as const,
+            title: '🏦 I am a Loan Institution',
+            desc: 'Publish loans, configure base interest indices, monitor borrower risk telemetry, and manage disbursements.',
+            badge: 'Bank Partner'
+          },
+          {
+            id: 'merchant' as const,
+            title: '🛒 I am a BNPL Institution',
+            desc: 'Configure retail lists, manage split-payment catalogues, settle checkouts, and build consumer inventory portals.',
+            badge: 'Merchant Partner'
+          },
+          {
+            id: 'insurer' as const,
+            title: '🛡️ I am an Insurance Institution',
+            desc: 'List premium offerings, assess coverage brackets, manage policy lists, and process client claims.',
+            badge: 'Insurance Partner'
+          }
+        ].map((opt) => (
+          <button
+            key={opt.id}
+            onClick={() => onSelect(opt.id)}
+            style={{
+              textAlign: 'left', padding: '20px 24px', borderRadius: 16, border: '1.5px solid #e2e8f0',
+              background: '#ffffff', cursor: 'pointer', transition: '0.2s', display: 'flex', flexDirection: 'column',
+              gap: 4, position: 'relative', overflow: 'hidden'
+            }}
+            className="hover-card"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#1a56db';
+              e.currentTarget.style.background = '#f8fafc';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '#e2e8f0';
+              e.currentTarget.style.background = '#ffffff';
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 12 }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{opt.title}</span>
+              <span style={{
+                marginLeft: 'auto', fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 20,
+                background: opt.id === 'customer' ? '#e0f2fe' : '#f1f5f9',
+                color: opt.id === 'customer' ? '#0369a1' : '#475569',
+                textTransform: 'uppercase'
+              }}>{opt.badge}</span>
+            </div>
+            <p style={{ margin: 0, fontSize: 12.5, color: '#64748b', lineHeight: '1.5' }}>{opt.desc}</p>
+          </button>
+        ))}
+      </div>
+      
+      <SecurityBadge center />
+    </>
+  );
+}
+
+function PartnerProfileStep({
+  data,
+  onChange,
+  onBack,
+  onNext,
+  userType,
+}: {
+  data: OnboardingData;
+  onChange: (k: keyof OnboardingData, v: string) => void;
+  onBack: () => void;
+  onNext: () => void;
+  userType: string;
+}) {
+  const getCorporateLabels = () => {
+    switch (userType) {
+      case 'lender':
+        return { title: 'Loan Institution', label: 'Lending Profile' };
+      case 'merchant':
+        return { title: 'BNPL Merchant', label: 'Merchant Profile' };
+      case 'insurer':
+        return { title: 'Insurance Partner', label: 'Insurance Profile' };
+      default:
+        return { title: 'Financial Institution', label: 'Corporate Profile' };
+    }
+  };
+
+  const labels = getCorporateLabels();
+
+  return (
+    <>
+      <PanelHead
+        eyebrow="CORPORATE PROFILE"
+        title="Setup your institutional"
+        italic={labels.title}
+        sub="Configure registration keys and underwriting credentials for your partner portal."
+      />
+
+      <div className="space-y-4">
+        <div>
+          <FieldLabel>Legal Business Name</FieldLabel>
+          <Input 
+            placeholder="e.g. Electroland Ghana Limited" 
+            value={data.legalName}
+            onChange={e => onChange('legalName', e.target.value)}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3.5">
+          <div>
+            <FieldLabel>Business Registration Number</FieldLabel>
+            <Input 
+              placeholder="e.g. EGL-2005-GH" 
+              value={data.registrationNumber}
+              onChange={e => onChange('registrationNumber', e.target.value)}
+            />
+          </div>
+          <div>
+            <FieldLabel>Corporate Tax ID (TIN)</FieldLabel>
+            <Input 
+              placeholder="e.g. G00020058821" 
+              value={data.taxId}
+              onChange={e => onChange('taxId', e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div>
+          <FieldLabel>Official Website URL</FieldLabel>
+          <Input 
+            type="url"
+            placeholder="https://electrolandgh.com" 
+            value={data.website}
+            onChange={e => onChange('website', e.target.value)}
+          />
+        </div>
+
+        <div className="pt-4 border-t border-slate-100">
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Headquarters Address</p>
+          <div className="space-y-4">
+            <div>
+              <FieldLabel>Street Address</FieldLabel>
+              <Input 
+                placeholder="Ring Road Central, Accra" 
+                value={data.streetAddress}
+                onChange={e => onChange('streetAddress', e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3.5">
+              <div>
+                <FieldLabel>City</FieldLabel>
+                <Input 
+                  placeholder="Accra" 
+                  value={data.city}
+                  onChange={e => onChange('city', e.target.value)}
+                />
+              </div>
+              <div>
+                <FieldLabel>MMDA District</FieldLabel>
+                <Input 
+                  placeholder="Accra Metropolitan" 
+                  value={data.mmda}
+                  onChange={e => onChange('mmda', e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <BtnRow 
+        onBack={onBack} 
+        onNext={onNext} 
+        nextLabel="Activate Account" 
+        nextDisabled={!data.legalName || !data.registrationNumber || !data.taxId || !data.streetAddress || !data.city}
+      />
+    </>
+  );
+}
+
 /* ─── Rail ───────────────────────────────────────────────────────────────────── */
 
-function Rail({ current }: { current: StepId }) {
-  const currentIdx = NAV_STEPS.findIndex((s) => s.id === current);
-  const progress = STEP_PROGRESS[current];
-  const progressLabel = STEP_LABEL[current];
+function Rail({ current, userType }: { current: StepId; userType: 'customer' | 'lender' | 'merchant' | 'insurer' | null }) {
+  const steps = userType === 'customer' 
+    ? CUSTOMER_NAV_STEPS 
+    : userType 
+    ? PARTNER_NAV_STEPS 
+    : [{ id: 'selector' as StepId, label: 'Access Path' }];
+
+  const currentIdx = steps.findIndex((s) => s.id === current);
+  const progress = current === 'selector' ? 10 : STEP_PROGRESS[current] || 90;
+  const progressLabel = current === 'selector' ? 'Step 0 of 6' : STEP_LABEL[current] || 'Step 6 of 6';
 
   return (
     <>
@@ -1034,7 +1263,7 @@ function Rail({ current }: { current: StepId }) {
 
         {/* Steps */}
         <nav className="flex flex-col gap-1 flex-1 z-10">
-          {NAV_STEPS.map((s, i) => {
+          {steps.map((s, i) => {
             const state: 'done' | 'current' | 'pending' =
               i < currentIdx ? 'done' : i === currentIdx ? 'current' : 'pending';
             const isActive = s.id === current;
@@ -1080,7 +1309,7 @@ function Rail({ current }: { current: StepId }) {
         </Link>
         <div className="flex flex-col items-end gap-1.5">
           <div className="flex gap-1">
-            {NAV_STEPS.map((s, i) => (
+            {steps.map((s, i) => (
                <div 
                  key={s.id} 
                  className={`w-1.5 h-1.5 rounded-full ${i <= currentIdx ? 'bg-[#1a56db]' : 'bg-white/20'}`} 
@@ -1106,7 +1335,8 @@ export default function OnboardingFlow() {
   const router = useRouter();
   const dispatch = useDispatch();
   const [register] = useRegisterMutation();
-  const [step, setStep] = useState<StepId>('goals');
+  const [step, setStep] = useState<StepId>('selector');
+  const [userType, setUserType] = useState<'customer' | 'lender' | 'merchant' | 'insurer' | null>(null);
   const [data, setData] = useState<OnboardingData>({
     goals: [],
     email: '',
@@ -1135,6 +1365,12 @@ export default function OnboardingFlow() {
     sector: '',
     workAddress: '',
     yearsWithEmployer: '',
+    // B2B defaults
+    legalName: '',
+    registrationNumber: '',
+    taxId: '',
+    website: '',
+    streetAddress: '',
   });
 
   const set = (k: keyof OnboardingData, v: string) =>
@@ -1158,39 +1394,51 @@ export default function OnboardingFlow() {
     if (step === 'analysis') {
       const registerUser = async () => {
         try {
-          const payload = {
+          const payload: any = {
             email: data.email,
             password: data.password,
             phoneNumber: data.phone,
-            firstName: data.firstName,
-            lastName: data.lastName,
+            firstName: data.firstName || 'Representative',
+            lastName: data.lastName || 'Partner',
             market: 'Ghana', 
-            goals: data.goals,
-            dateOfBirth: data.dob ? new Date(data.dob).toISOString() : null,
-            idType: data.idType,
-            idNumber: data.idNumber,
-            employmentStatus: data.employmentStatus,
-            monthlyIncome: data.monthlyIncome,
-            loanDuration: data.loanDuration,
-            residentialAddress: data.residentialAddress,
-            city: data.city,
-            mmda: data.mmda,
-            landmark: data.landmark,
-            occupation: data.occupation,
-            ssnitNo: data.ssnitNo,
-            title: data.title,
-            maritalStatus: data.maritalStatus,
-            gender: data.gender,
-            nationality: data.nationality,
-            dependants: data.dependants,
-            employer: data.employer,
-            sector: data.sector,
-            workAddress: data.workAddress,
-            yearsWithEmployer: data.yearsWithEmployer
           };
 
+          if (userType === 'customer') {
+            payload.role = 'Customer';
+            payload.goals = data.goals;
+            payload.dateOfBirth = data.dob ? new Date(data.dob).toISOString() : null;
+            payload.idType = data.idType;
+            payload.idNumber = data.idNumber;
+            payload.employmentStatus = data.employmentStatus;
+            payload.monthlyIncome = data.monthlyIncome;
+            payload.loanDuration = data.loanDuration;
+            payload.residentialAddress = data.residentialAddress;
+            payload.city = data.city;
+            payload.mmda = data.mmda;
+            payload.landmark = data.landmark;
+            payload.occupation = data.occupation;
+            payload.ssnitNo = data.ssnitNo;
+            payload.title = data.title;
+            payload.maritalStatus = data.maritalStatus;
+            payload.gender = data.gender;
+            payload.nationality = data.nationality;
+            payload.dependants = data.dependants;
+            payload.employer = data.employer;
+            payload.sector = data.sector;
+            payload.workAddress = data.workAddress;
+            payload.yearsWithEmployer = data.yearsWithEmployer;
+          } else {
+            payload.role = userType === 'lender' ? 'BankAdmin' : userType === 'merchant' ? 'BNPLAdmin' : 'InsuranceAdmin';
+            payload.legalName = data.legalName;
+            payload.registrationNumber = data.registrationNumber;
+            payload.taxId = data.taxId;
+            payload.website = data.website;
+            payload.streetAddress = data.streetAddress;
+            payload.city = data.city;
+          }
+
           await register(payload).unwrap();
-          toast.success('Registration successful! Finding matches...');
+          toast.success('Registration successful! Launching console...');
           
           setTimeout(() => setStep('success'), 2500);
         } catch (err: any) {
@@ -1198,13 +1446,13 @@ export default function OnboardingFlow() {
           const msg = err.data?.message || err.message || 'An unexpected error occurred';
           const details = err.data?.errors ? `: ${err.data.errors.join(', ')}` : '';
           toast.error(`Registration failed: ${msg}${details}`, { duration: 5000 });
-          setStep('finance');
+          setStep(userType === 'customer' ? 'finance' : 'partner_profile');
         }
       };
 
       registerUser();
     }
-  }, [step, data, register]);
+  }, [step, data, register, userType]);
 
   return (
     <>
@@ -1217,7 +1465,7 @@ export default function OnboardingFlow() {
       >
         <div className="flex flex-col md:flex-row w-full max-w-[1200px] min-h-screen md:min-h-[720px] bg-white md:rounded-2xl overflow-hidden border-0 md:border border-slate-200 shadow-none md:shadow-xl md:shadow-slate-200/60 transition-all">
 
-          <Rail current={step} />
+          <Rail current={step} userType={userType} />
 
           {/* Panel */}
           <main className="flex-1 overflow-y-auto p-6 md:p-10 relative">
@@ -1231,10 +1479,23 @@ export default function OnboardingFlow() {
                 transition={{ duration: 0.22, ease: 'easeOut' }}
                 className="h-full"
               >
+                {step === 'selector' && (
+                  <SelectorStep
+                    onSelect={(type) => {
+                      setUserType(type);
+                      if (type === 'customer') {
+                        goTo('goals');
+                      } else {
+                        goTo('account');
+                      }
+                    }}
+                  />
+                )}
                 {step === 'goals' && (
                   <GoalsStep
                     goals={data.goals}
                     onToggle={toggleGoal}
+                    onBack={() => goTo('selector')}
                     onNext={() => goTo('account')}
                   />
                 )}
@@ -1242,7 +1503,13 @@ export default function OnboardingFlow() {
                   <AccountStep
                     data={data}
                     onChange={set}
-                    onBack={() => goTo('goals')}
+                    onBack={() => {
+                      if (userType === 'customer') {
+                        goTo('goals');
+                      } else {
+                        goTo('selector');
+                      }
+                    }}
                     onNext={() => goTo('phone')}
                   />
                 )}
@@ -1251,7 +1518,22 @@ export default function OnboardingFlow() {
                     data={data}
                     onChange={set}
                     onBack={() => goTo('account')}
-                    onNext={() => goTo('kyc')}
+                    onNext={() => {
+                      if (userType === 'customer') {
+                        goTo('kyc');
+                      } else {
+                        goTo('partner_profile');
+                      }
+                    }}
+                  />
+                )}
+                {step === 'partner_profile' && (
+                  <PartnerProfileStep
+                    data={data}
+                    onChange={set}
+                    onBack={() => goTo('phone')}
+                    onNext={() => goTo('analysis')}
+                    userType={userType || ''}
                   />
                 )}
                 {step === 'kyc' && (
@@ -1271,7 +1553,17 @@ export default function OnboardingFlow() {
                    />
                 )}
                 {step === 'analysis' && <AnalysisStep />}
-                {step === 'success' && <SuccessStep onEnter={() => router.push('/portal')} />}
+                {step === 'success' && (
+                  <SuccessStep 
+                    onEnter={() => {
+                      if (userType === 'customer') {
+                        router.push('/portal');
+                      } else {
+                        router.push('/admin');
+                      }
+                    }} 
+                  />
+                )}
               </motion.div>
             </AnimatePresence>
           </main>
