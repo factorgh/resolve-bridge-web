@@ -27,11 +27,18 @@ const C = {
   emerald: '#10b981'
 };
 
+const EMPTY_ARRAY: any[] = [];
+
 export default function FloatingChat() {
+  const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [msgText, setMsgText] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   // Real-time REST Query with 3-second cache auto-polling!
   const { data: historyResponse, refetch } = useGetChatHistoryQuery(undefined, {
@@ -41,7 +48,7 @@ export default function FloatingChat() {
   
   const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
 
-  const messages = historyResponse?.data || [];
+  const messages = historyResponse?.data || EMPTY_ARRAY;
 
   // Manage unread badges and scroll mechanics
   useEffect(() => {
@@ -62,6 +69,8 @@ export default function FloatingChat() {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
   };
+
+  if (!mounted) return null;
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
