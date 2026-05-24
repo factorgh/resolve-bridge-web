@@ -256,7 +256,7 @@ export default function Home() {
       <Box component="section" sx={{
         position: 'relative',
         background: '#04080f',
-        pt: { xs: 5, md: 10 },
+        pt: { xs: '110px', sm: '130px', md: '160px', lg: '180px' },
         pb: { xs: 8, md: 24 },
         overflow: 'hidden',
         borderBottom: '1px solid rgba(0,0,0,0.05)'

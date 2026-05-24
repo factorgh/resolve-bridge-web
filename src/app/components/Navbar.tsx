@@ -26,7 +26,17 @@ import {
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const NAV_ITEMS = [
+interface NavItem {
+  label: string;
+  href?: string;
+  children?: {
+    label: string;
+    desc: string;
+    href: string;
+  }[];
+}
+
+const NAV_ITEMS: NavItem[] = [
   {
     label: 'Loans',
     children: [
@@ -66,9 +76,13 @@ const NAV_ITEMS = [
       { label: 'Resolve Health', desc: 'Global medical coverage', href: '/resolve-group/health' },
     ],
   },
+  {
+    label: 'Contact Support',
+    href: '/contact-support',
+  },
 ];
 
-function DropdownMenu({ item }: { item: (typeof NAV_ITEMS)[0] }) {
+function DropdownMenu({ item }: { item: NavItem }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -105,7 +119,7 @@ function DropdownMenu({ item }: { item: (typeof NAV_ITEMS)[0] }) {
             onMouseLeave={() => setOpen(false)}
             className="absolute top-[calc(100%+8px)] left-0 z-50 bg-[#0b121f] border border-white/10 rounded-2xl shadow-2xl shadow-black/50 p-2 min-w-[240px] backdrop-blur-xl"
           >
-            {item.children.map((child) => (
+            {item.children?.map((child) => (
               <Link
                 key={child.label}
                 href={child.href}
@@ -167,7 +181,17 @@ export default function Navbar() {
             {/* Desktop Nav */}
             <Box sx={{ display: { xs: 'none', lg: 'flex' } }} className="items-center gap-0.5">
               {NAV_ITEMS.map((item) => (
-                <DropdownMenu key={item.label} item={item} />
+                'href' in item && item.href ? (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className="px-3 py-2 rounded-lg text-[13.5px] font-semibold text-white/70 hover:text-white hover:bg-white/5 transition-all"
+                  >
+                    {item.label}
+                  </Link>
+                ) : (
+                  <DropdownMenu key={item.label} item={item as any} />
+                )
               ))}
             </Box>
           </Stack>
@@ -289,11 +313,12 @@ export default function Navbar() {
           <Box className="flex-1 overflow-y-auto px-3 py-4">
             <List disablePadding>
               {NAV_ITEMS.map((item) => (
-                <Box key={item.label}>
+                'href' in item && item.href ? (
                   <ListItemButton
-                    onClick={() =>
-                      setOpenMobileItem(openMobileItem === item.label ? null : item.label)
-                    }
+                    key={item.label}
+                    component={Link}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
                     sx={{
                       borderRadius: '12px',
                       mb: 0.5,
@@ -310,32 +335,56 @@ export default function Navbar() {
                         color: 'rgba(255,255,255,0.9)',
                       }}
                     />
-                    <motion.span
-                      animate={{ rotate: openMobileItem === item.label ? 180 : 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <ChevronDownIcon sx={{ fontSize: 18, color: 'rgba(255,255,255,0.4)' }} />
-                    </motion.span>
                   </ListItemButton>
-
-                  <Collapse in={openMobileItem === item.label}>
-                    <Box className="ml-3 mb-2 pl-3 border-l-2 border-white/10">
-                      {item.children.map((child) => (
-                        <Link
-                          key={child.label}
-                          href={child.href}
-                          onClick={() => setMobileOpen(false)}
-                          className="flex flex-col gap-0.5 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors"
-                        >
-                          <span className="text-[13px] font-semibold text-white/90">
-                            {child.label}
-                          </span>
-                          <span className="text-[11.5px] text-white/40">{child.desc}</span>
-                        </Link>
-                      ))}
-                    </Box>
-                  </Collapse>
-                </Box>
+                ) : (
+                  <Box key={item.label}>
+                    <ListItemButton
+                      onClick={() =>
+                        setOpenMobileItem(openMobileItem === item.label ? null : item.label)
+                      }
+                      sx={{
+                        borderRadius: '12px',
+                        mb: 0.5,
+                        px: 2,
+                        py: 1.25,
+                        '&:hover': { backgroundColor: 'rgba(255,255,255,0.05)' },
+                      }}
+                    >
+                      <ListItemText
+                        primary={item.label}
+                        primaryTypographyProps={{
+                          fontSize: '14px',
+                          fontWeight: 700,
+                          color: 'rgba(255,255,255,0.9)',
+                        }}
+                      />
+                      <motion.span
+                        animate={{ rotate: openMobileItem === item.label ? 180 : 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <ChevronDownIcon sx={{ fontSize: 18, color: 'rgba(255,255,255,0.4)' }} />
+                      </motion.span>
+                    </ListItemButton>
+ 
+                    <Collapse in={openMobileItem === item.label}>
+                      <Box className="ml-3 mb-2 pl-3 border-l-2 border-white/10">
+                        {'children' in item && item.children?.map((child) => (
+                          <Link
+                            key={child.label}
+                            href={child.href}
+                            onClick={() => setMobileOpen(false)}
+                            className="flex flex-col gap-0.5 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors"
+                          >
+                            <span className="text-[13px] font-semibold text-white/90">
+                              {child.label}
+                            </span>
+                            <span className="text-[11.5px] text-white/40">{child.desc}</span>
+                          </Link>
+                        ))}
+                      </Box>
+                    </Collapse>
+                  </Box>
+                )
               ))}
             </List>
           </Box>

@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
-import { Drawer, IconButton, Select, MenuItem } from '@mui/material';
+import { Drawer, IconButton } from '@mui/material';
 import AdminShell, { C, F } from '../components/AdminShell';
 import { 
   useAdminGetUsersQuery, 
   useAdminUpdateUserMutation 
 } from '@/lib/redux/api/userApi';
+import { useGetRegionsQuery } from '@/lib/redux/api/regionApi';
 import { 
   CloseRounded, 
   SearchRounded, 
@@ -28,6 +29,8 @@ export default function AdminUsersPage() {
   // Redux hooks for retrieving and updating users
   const { data: usersResponse, isLoading, refetch } = useAdminGetUsersQuery();
   const [updateUser, { isLoading: isUpdating }] = useAdminUpdateUserMutation();
+  const { data: regionsResponse } = useGetRegionsQuery();
+  const regions = regionsResponse?.data || [];
 
   useEffect(() => {
     setMounted(true);
@@ -53,7 +56,7 @@ export default function AdminUsersPage() {
     return matchesSearch && u.role === 'Customer';
   });
 
-  const handleUpdate = async (fields: { role?: string; isActive?: boolean; kycStatus?: string }) => {
+  const handleUpdate = async (fields: { role?: string; isActive?: boolean; kycStatus?: string; regionId?: string | null }) => {
     if (!selectedUser) return;
     try {
       const res = await updateUser({ id: selectedUser._id, ...fields }).unwrap();
@@ -326,6 +329,26 @@ export default function AdminUsersPage() {
                     <option value="BNPLAdmin">BNPL Desk Merchant Manager</option>
                   </select>
                 </div>
+
+                {['Admin', 'SuperAdmin', 'InstitutionAdmin', 'InsuranceAdmin', 'BNPLAdmin'].includes(selectedUser.role) && (
+                  <div>
+                    <span style={{ fontSize: 12, color: C.textSub, display: 'block', marginBottom: 8 }}>Regional Jurisdiction Assignment</span>
+                    <select
+                      value={selectedUser.regionId || ''}
+                      onChange={(e) => handleUpdate({ regionId: e.target.value || null })}
+                      disabled={isUpdating}
+                      style={{ 
+                        width: '100%', padding: '12px', borderRadius: 10, border: `1px solid ${C.borderStrong}`,
+                        background: C.bg, color: C.text, fontSize: 13, outline: 'none'
+                      }}
+                    >
+                      <option value="">Global Jurisdiction (All Regions)</option>
+                      {regions.map((reg: any) => (
+                        <option key={reg._id} value={reg._id}>{reg.name} ({reg.code})</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
 
               {/* Toggle Account Suspension */}

@@ -1,52 +1,64 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const applicationApi = createApi({
-  reducerPath: 'applicationApi',
-  baseQuery: fetchBaseQuery({ 
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1',
+  reducerPath: "applicationApi",
+  baseQuery: fetchBaseQuery({
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api/v1",
     prepareHeaders: (headers) => {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('rb_token') : null;
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("rb_token") : null;
       if (token) {
-        headers.set('authorization', `Bearer ${token}`);
+        headers.set("authorization", `Bearer ${token}`);
       }
       return headers;
     },
   }),
-  tagTypes: ['Application'],
+  tagTypes: ["Application"],
   endpoints: (builder) => ({
     getApplications: builder.query<any, void>({
-      query: () => '/Applications/my-applications',
-      providesTags: ['Application']
+      query: () => "/Applications/my-applications",
+      providesTags: ["Application"],
     }),
     createApplication: builder.mutation<any, any>({
       query: (body) => ({
-        url: '/Applications',
-        method: 'POST',
-        body
+        url: "/Applications",
+        method: "POST",
+        body,
       }),
-      invalidatesTags: ['Application']
+      invalidatesTags: ["Application"],
     }),
     adminGetApplications: builder.query<any, { status?: string } | void>({
       query: (params) => ({
-        url: '/Applications/admin',
-        params: params || undefined
+        url: "/Applications/admin",
+        params: params || undefined,
       }),
-      providesTags: ['Application']
+      providesTags: ["Application"],
     }),
-    adminReviewApplication: builder.mutation<any, { id: string; status: string; rejectionReason?: string }>({
+    adminReviewApplication: builder.mutation<
+      any,
+      { id: string; status: string; rejectionReason?: string }
+    >({
       query: ({ id, ...body }) => ({
         url: `/Applications/admin/${id}/review`,
-        method: 'PATCH',
-        body
+        method: "PATCH",
+        body,
       }),
-      invalidatesTags: ['Application']
+      invalidatesTags: ["Application"],
+    }),
+    adminRestoreApplication: builder.mutation<any, string>({
+      query: (id) => ({
+        url: `/Applications/admin/${id}/restore`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Application"],
     }),
   }),
 });
 
-export const { 
-  useGetApplicationsQuery, 
+export const {
+  useGetApplicationsQuery,
   useCreateApplicationMutation,
   useAdminGetApplicationsQuery,
-  useAdminReviewApplicationMutation
+  useAdminReviewApplicationMutation,
+  useAdminRestoreApplicationMutation,
 } = applicationApi;

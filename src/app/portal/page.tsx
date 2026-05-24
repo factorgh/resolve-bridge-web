@@ -20,7 +20,8 @@ import {
   LocalAtmRounded,
   SpeedRounded,
   CloudDoneRounded,
-  CheckCircleRounded
+  CheckCircleRounded,
+  QrCodeRounded
 } from '@mui/icons-material';
 
 /* ─── Dashboard Sub-component ─────────────────────────────────────────── */
@@ -30,8 +31,8 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
   const { data: userData } = useGetMeQuery();
   const user = userData?.data;
   const firstName = user?.firstName || 'User';
-  const { data: metricsResponse, isLoading: metricsLoading } = useGetDashboardMetricsQuery();
-  const { data: newsResponse, isLoading: newsLoading } = useGetNewsArticlesQuery();
+  const { data: metricsResponse, isLoading: metricsLoading, isError: metricsError } = useGetDashboardMetricsQuery();
+  const { data: newsResponse, isLoading: newsLoading, isError: newsError } = useGetNewsArticlesQuery();
   
   const metrics = metricsResponse?.data;
   const articles = newsResponse?.data || [];
@@ -47,6 +48,38 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
   const [payAmount, setPayAmount] = useState<number>(0);
   const [momoPin, setMomoPin] = useState('');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
+  const [selectedQrApp, setSelectedQrApp] = useState<any>(null);
+  const [qrUrl, setQrUrl] = useState<string>('');
+  const [isGeneratingQr, setIsGeneratingQr] = useState<boolean>(false);
+
+  const handleLoadQrCode = async (appId: string) => {
+    setIsGeneratingQr(true);
+    try {
+      const tokenStr = typeof window !== 'undefined' ? localStorage.getItem('rb_token') : null;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1';
+      
+      const res = await fetch(`${apiUrl}/Applications/${appId}/verify-token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${tokenStr}`
+        }
+      });
+      const result = await res.json();
+      if (result.success && result.data?.verifyUrl) {
+        const url = new URL(result.data.verifyUrl);
+        const frontendVerifyUrl = `${window.location.origin}/verify/policy${url.search}`;
+        setQrUrl(frontendVerifyUrl);
+      } else {
+        toast.error('Failed to generate secure policy verification token.');
+      }
+    } catch (err) {
+      toast.error('Network error during verification token handshake.');
+    } finally {
+      setIsGeneratingQr(false);
+    }
+  };
 
   const C = {
     bg: '#f8fafc', 
@@ -80,7 +113,7 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
   const [promoIdx, setPromoIdx] = useState(0);
   const [selectedBlog, setSelectedBlog] = useState<any>(null);
 
-  const isLoading = metricsLoading || newsLoading;
+  const isLoading = (metricsLoading || newsLoading) && !metricsError && !newsError;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -521,6 +554,7 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
                           .reduce((sum: number, t: any) => sum + Math.abs(t.amount || 0), 0);
                         const outstanding = Math.max(0, expectedPayable - paidToDate);
                         const progress = Math.min(100, Math.round((paidToDate / expectedPayable) * 100));
+                        const isInsurance = app.productId?.productType === 'Insurance';
 
                         return (
                           <tr key={app._id} style={{ borderBottom: `1px solid ${C.border}` }}>
@@ -534,21 +568,52 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
                               <span style={{ fontSize: 13, color: C.textSub }}>{app.productId?.institutionId?.name || 'ResolveBridge Partner'}</span>
                             </td>
                             <td style={{ padding: '20px 24px' }}>
-                              <span style={{ fontSize: 14, fontWeight: 700, color: outstanding > 0 ? C.text : C.emerald }}>
-                                {outstanding > 0 ? `GH₵ ${outstanding.toLocaleString()}` : '✓ Fully Settled'}
-                              </span>
-                              <span style={{ fontSize: 10, color: C.textMuted, marginLeft: 6 }}>/ GHS {expectedPayable.toLocaleString()} cap</span>
+                              {isInsurance ? (
+                                <span style={{ fontSize: 13, fontWeight: 700, color: C.emerald }}>
+                                  ✓ Policy Premium Active
+                                </span>
+                              ) : (
+                                <>
+                                  <span style={{ fontSize: 14, fontWeight: 700, color: outstanding > 0 ? C.text : C.emerald }}>
+                                    {outstanding > 0 ? `GH₵ ${outstanding.toLocaleString()}` : '✓ Fully Settled'}
+                                  </span>
+                                  <span style={{ fontSize: 10, color: C.textMuted, marginLeft: 6 }}>/ GHS {expectedPayable.toLocaleString()} cap</span>
+                                </>
+                              )}
                             </td>
                             <td style={{ padding: '20px 24px', width: 200 }}>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                <span style={{ fontSize: 11, fontWeight: 800, color: C.textSub }}>{progress}% Paid</span>
-                                <div style={{ width: '100%', height: 6, background: C.bg, borderRadius: 3, overflow: 'hidden' }}>
-                                  <div style={{ width: `${progress}%`, height: '100%', background: C.emerald, borderRadius: 3 }} />
+                              {isInsurance ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                  <span style={{ fontSize: 11, fontWeight: 800, color: C.emerald }}>100% Valid Shield Cover</span>
+                                  <div style={{ width: '100%', height: 6, background: C.bg, borderRadius: 3, overflow: 'hidden' }}>
+                                    <div style={{ width: '100%', height: '100%', background: C.emerald, borderRadius: 3 }} />
+                                  </div>
                                 </div>
-                              </div>
+                              ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                  <span style={{ fontSize: 11, fontWeight: 800, color: C.textSub }}>{progress}% Paid</span>
+                                  <div style={{ width: '100%', height: 6, background: C.bg, borderRadius: 3, overflow: 'hidden' }}>
+                                    <div style={{ width: `${progress}%`, height: '100%', background: C.emerald, borderRadius: 3 }} />
+                                  </div>
+                                </div>
+                              )}
                             </td>
                             <td style={{ padding: '20px 24px', textAlign: 'right' }}>
-                              {app.status === 'Completed' || outstanding <= 0 ? (
+                              {isInsurance ? (
+                                <button
+                                  onClick={() => {
+                                    setSelectedQrApp(app);
+                                    handleLoadQrCode(app._id);
+                                  }}
+                                  style={{
+                                    background: C.emerald, color: '#fff', border: 'none', borderRadius: 10,
+                                    padding: '8px 16px', fontSize: 12, fontWeight: 800, cursor: 'pointer',
+                                    display: 'inline-flex', alignItems: 'center', gap: 6
+                                  }}
+                                >
+                                  <QrCodeRounded sx={{ fontSize: 15 }} /> QR Cover Badge
+                                </button>
+                              ) : app.status === 'Completed' || outstanding <= 0 ? (
                                 <span style={{
                                   fontSize: 10.5, fontWeight: 900, color: C.emerald,
                                   background: C.emeraldLight, padding: '6px 12px', borderRadius: 8
@@ -769,6 +834,111 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
 
                   <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 20, fontSize: 11.5, color: C.textMuted, display: 'flex', alignItems: 'center', gap: 8 }}>
                     <ShieldRounded sx={{ fontSize: 14, color: C.emerald }} /> Payments are secured by Bank-Grade Cryptographic MoMo SWIFT Nodes.
+                  </div>
+                </div>
+              )}
+            </Drawer>
+
+            {/* Policy Verification QR Code Drawer */}
+            <Drawer
+              anchor="right"
+              open={!!selectedQrApp}
+              onClose={() => {
+                setSelectedQrApp(null);
+                setQrUrl('');
+              }}
+              PaperProps={{
+                style: { width: '100%', maxWidth: 440, background: '#0d131f', color: '#f9fafb', padding: 32, boxSizing: 'border-box', borderLeft: '1px solid rgba(255,255,255,0.06)' }
+              }}
+            >
+              {selectedQrApp && (
+                <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+                      <h3 style={{ margin: 0, fontSize: 18, color: '#fff', fontFamily: F.heading, fontWeight: 800 }}>Digital Coverage Card</h3>
+                      <IconButton 
+                        onClick={() => {
+                          setSelectedQrApp(null);
+                          setQrUrl('');
+                        }} 
+                        style={{ color: '#9ca3af' }}
+                      >
+                        <CloseRounded />
+                      </IconButton>
+                    </div>
+
+                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 20, marginBottom: 24, textAlign: 'center' }}>
+                      <p style={{ margin: 0, fontSize: 9.5, color: '#9ca3af', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em' }}>POLICY COVER ID</p>
+                      <h4 style={{ margin: '4px 0 0', fontSize: 16, color: '#fff', fontWeight: 800 }}>RB-{selectedQrApp._id?.substring(0, 12).toUpperCase()}</h4>
+                      <p style={{ margin: '2px 0 0', fontSize: 12.5, color: '#10b981', fontWeight: 700 }}>{selectedQrApp.productId?.name}</p>
+                    </div>
+
+                    {isGeneratingQr ? (
+                      <div style={{ padding: 40, textAlign: 'center', color: '#9ca3af' }}>
+                        <div style={{
+                          width: 32,
+                          height: 32,
+                          border: '3px solid rgba(255,255,255,0.05)',
+                          borderTopColor: '#3b82f6',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite',
+                          margin: '0 auto 12px'
+                        }} />
+                        <span style={{ fontSize: 13 }}>Signing Secure Token...</span>
+                        <style dangerouslySetInnerHTML={{__html: `
+                          @keyframes spin {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                          }
+                        `}} />
+                      </div>
+                    ) : qrUrl ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, marginTop: 12 }}>
+                        
+                        {/* High Fidelity Scannable QR Display Card */}
+                        <div style={{ 
+                          background: '#fff', 
+                          padding: 18, 
+                          borderRadius: 20, 
+                          boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <img 
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}`}
+                            alt="Policy Cover Verification QR Code"
+                            style={{ width: 200, height: 200 }}
+                          />
+                        </div>
+
+                        <p style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', lineHeight: 1.5, padding: '0 12px' }}>
+                          Windshield scannable policy certificate. Law enforcement and vehicle inspectors can validate policy validity instantly.
+                        </p>
+
+                        <div style={{ width: '100%', marginTop: 8 }}>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(qrUrl);
+                              toast.success('Secure validation link copied to clipboard!');
+                            }}
+                            style={{
+                              width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)',
+                              color: '#fff', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', fontSize: 12.5,
+                              fontWeight: 800, transition: '0.2s'
+                            }}
+                          >
+                            Copy Verification Link
+                          </button>
+                        </div>
+
+                      </div>
+                    ) : null}
+
+                  </div>
+
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 20, fontSize: 11.5, color: '#9ca3af', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <ShieldRounded sx={{ fontSize: 14, color: '#10b981' }} /> Authenticated by cryptographic JWT cover stamps.
                   </div>
                 </div>
               )}

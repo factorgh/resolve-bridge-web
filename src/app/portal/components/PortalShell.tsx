@@ -18,6 +18,7 @@ import {
   SupportAgentRounded,
   ExitToAppRounded
 } from '@mui/icons-material';
+import FloatingChat from './FloatingChat';
 
 /* ─── Design tokens ──────────────────────────────────────────────────────── */
 export const C = {
@@ -285,7 +286,7 @@ export default function PortalShell({
                {!collapsed && <span style={{ fontWeight: 800, color: '#fff', fontSize: 16 }}>ResolveBridge</span>}
             </div>
             
-            <div style={{ flex: 1, padding: '10px' }}>
+            <div style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
                {NAV.map(n => {
                  const active = activeNavItem?.id === n.id;
                  return (
@@ -623,6 +624,7 @@ export default function PortalShell({
           <div style={{ padding: isMobile ? '24px 20px 100px' : '40px 32px' }}>
              {children}
           </div>
+          <FloatingChat />
        </main>
     </div>
   );
