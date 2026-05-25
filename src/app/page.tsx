@@ -256,8 +256,8 @@ export default function Home() {
       <Box component="section" sx={{
         position: 'relative',
         background: '#04080f',
-        pt: { xs: '110px', sm: '130px', md: '160px', lg: '180px' },
-        pb: { xs: 8, md: 24 },
+        pt: { xs: '120px', sm: '140px', md: '170px', lg: '200px' },
+        pb: { xs: '80px', sm: '100px', md: '160px', lg: '180px' },
         overflow: 'hidden',
         borderBottom: '1px solid rgba(0,0,0,0.05)'
       }}>
@@ -275,18 +275,18 @@ export default function Home() {
                     fontFamily: "'Plus Jakarta Sans', sans-serif",
                     fontWeight: 900,
                     color: '#fff',
-                    fontSize: { xs: '1.8rem', sm: '2.6rem', md: '3.6rem' },
+                    fontSize: { xs: '2rem', sm: '3rem', md: '3.8rem' },
                     lineHeight: 1.15,
-                    letterSpacing: '-0.02em',
+                    letterSpacing: '-0.03em',
                     mb: { xs: 2, md: 2.5 }
                   }}>
-                    Find the best loan,<br />
-                    <Box component="span" sx={{
+                    Get Informed.<br />
+                    Compare. <Box component="span" sx={{
                       background: 'linear-gradient(130deg, #10b981 0%, #059669 100%)',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text',
-                    }}>Not just a loan.</Box>
+                    }}>Decide.</Box>
                   </Typography>
                 </motion.div>
 
@@ -294,7 +294,7 @@ export default function Home() {
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}>
                   <Typography sx={{
                     fontFamily: "'Inter', sans-serif",
-                    fontSize: { xs: '0.85rem', md: '1.05rem' },
+                    fontSize: { xs: '0.95rem', md: '1.15rem' },
                     color: '#94a3b8',
                     fontWeight: 500,
                     lineHeight: 1.5,
@@ -302,7 +302,7 @@ export default function Home() {
                     maxWidth: { xs: '100%', md: 540 },
                     mx: { xs: 'auto', md: 0 }
                   }}>
-                    Instantly compare verified rates from Africa's top 50+ lenders. Transparent, secure, and institutional-grade credit planning.
+                    Informed choices start here.
                   </Typography>
                 </motion.div>
 
