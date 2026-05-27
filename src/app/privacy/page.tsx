@@ -90,7 +90,7 @@ export default function PrivacyPage() {
                    <Divider className="border-white/5 mb-8 md:mb-10" />
                    <Box>
                       <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-500 block mb-2 text-[10px] md:text-xs">Data Protection Officer</Typography>
-                      <Typography variant="h4" className="text-blue-500 font-black italic tracking-tighter text-xl md:text-3xl">privacy@resolvebridge.com</Typography>
+                      <Typography variant="h4" className="text-blue-500 font-black italic tracking-tighter text-xl md:text-3xl">leslie.gyamfi@resolvebridge.com</Typography>
                    </Box>
                 </Box>
               </Paper>

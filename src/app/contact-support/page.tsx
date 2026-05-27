@@ -13,15 +13,14 @@ import {
   Avatar
 } from '@mui/material';
 import { 
-  SupportAgentRounded, 
-  SendRounded, 
-  VerifiedUserRounded,
-  ExpandMoreRounded,
-  ChatBubbleOutlineRounded,
-  LocalPhoneRounded,
+  ChatBubbleOutlineRounded, 
+  LocalPhoneRounded, 
+  BusinessRounded, 
+  OfflineBoltRounded,
   CheckCircleOutlineRounded,
-  BusinessRounded,
-  OfflineBoltRounded
+  VerifiedUserRounded,
+  SendRounded,
+  ExpandMoreRounded
 } from '@mui/icons-material';
 import PageTemplate from '../components/PageTemplate';
 
@@ -44,6 +43,37 @@ const FAQS = [
   }
 ];
 
+const supportOptions = [
+  {
+    icon: <ChatBubbleOutlineRounded fontSize="large" />,
+    title: "Technical Support Email",
+    value: "leslie.gyamfi@resolvebridge.com",
+    href: "mailto:leslie.gyamfi@resolvebridge.com",
+    avatarBg: "bg-blue-50 text-blue-600"
+  },
+  {
+    icon: <LocalPhoneRounded fontSize="large" />,
+    title: "Emergency Support Hotlines",
+    value: "0249709299 / 0246219871",
+    href: "tel:0249709299",
+    avatarBg: "bg-purple-50 text-purple-600"
+  },
+  {
+    icon: <BusinessRounded fontSize="large" />,
+    title: "Ghana Regional Headquarters",
+    value: "Accra Digital Center, Ring Road West",
+    href: "#",
+    avatarBg: "bg-emerald-50 text-emerald-600"
+  },
+  {
+    icon: <OfflineBoltRounded fontSize="large" />,
+    title: "System Status Indicators",
+    value: "🟢 All SWIFT Core Nodes Online",
+    href: "#",
+    avatarBg: "bg-orange-50 text-orange-600"
+  }
+];
+
 export default function ContactSupportPage() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -52,6 +82,13 @@ export default function ContactSupportPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.message) return;
+    
+    // Construct mailto link directly to Leslie
+    const subjectLine = formData.subject || 'Support Request';
+    const emailBody = `Hi Leslie,\n\n${formData.message}\n\n---\nSender Details:\nName: ${formData.name}\nEmail: ${formData.email}`;
+    const mailtoUrl = `mailto:leslie.gyamfi@resolvebridge.com?subject=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(emailBody)}`;
+    
+    window.location.href = mailtoUrl;
     setSubmitted(true);
   };
 
@@ -59,18 +96,18 @@ export default function ContactSupportPage() {
     <PageTemplate 
       title="Resolution" 
       gradientTitle="Support Hub"
-      subtitle="Connect with our global operations center. Submit inquiries, check system status, or browse active technical FAQs."
+      subtitle="Connect directly with our global operations center. Submit inquiries, check system status, or browse active technical FAQs."
       noCard={true}
     >
-      <Box className="pb-32 flex flex-col gap-16 font-sans">
+      <Box className="pb-24 flex flex-col gap-12 md:gap-20 px-4 md:px-0">
         
-        {/* Split Grid Hub: Left (Channels/Telemetry) - Right (Ticket Form) */}
-        <Grid container spacing={8} alignItems="stretch">
+        {/* Balanced Split Grid Hub: Left (Channels) - Right (Form) */}
+        <Grid container spacing={6} alignItems="stretch">
           
-          {/* Left Column: Premium Channels Info Card */}
+          {/* Left Column: Premium light channels matching existing design pattern */}
           <Grid size={{ xs: 12, lg: 5 }} className="flex flex-col gap-6">
-            <Paper className="p-8 rounded-[40px] border border-slate-100 bg-white shadow-lg flex-1 flex flex-col justify-between relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2" />
+            <Paper className="p-8 md:p-10 rounded-[32px] md:rounded-[40px] border border-slate-100 bg-white shadow-sm flex-1 flex flex-col justify-between relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
               
               <Box className="relative z-10 flex flex-col gap-8">
                 
@@ -83,8 +120,8 @@ export default function ContactSupportPage() {
                 </Box>
 
                 <div>
-                  <Typography variant="caption" className="text-blue-600 font-black uppercase tracking-[0.25em] block mb-2">Direct Communication</Typography>
-                  <Typography variant="h3" className="text-3xl font-black tracking-tight text-slate-900 leading-tight">
+                  <Typography variant="caption" className="text-blue-600 font-black uppercase tracking-[0.25em] block mb-2 text-xs">Direct Communication</Typography>
+                  <Typography variant="h3" className="text-3xl font-black tracking-tighter text-slate-900 leading-tight">
                     Instant <span className="text-blue-600 italic">Resolution</span> Gateways.
                   </Typography>
                   <Typography className="text-slate-500 text-sm font-medium mt-3 leading-relaxed">
@@ -93,46 +130,24 @@ export default function ContactSupportPage() {
                 </div>
 
                 {/* Left Telemetry List */}
-                <Stack spacing={4} className="mt-2">
-                  <Stack direction="row" spacing={3} alignItems="center">
-                    <Avatar className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl">
-                      <ChatBubbleOutlineRounded />
-                    </Avatar>
-                    <Box>
-                      <Typography className="font-extrabold text-slate-900 text-sm">Technical Support Email</Typography>
-                      <Typography className="text-blue-600 text-xs font-black uppercase tracking-wider mt-0.5">hello@resolvebridge.com</Typography>
-                    </Box>
-                  </Stack>
-
-                  <Stack direction="row" spacing={3} alignItems="center">
-                    <Avatar className="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl">
-                      <LocalPhoneRounded />
-                    </Avatar>
-                    <Box>
-                      <Typography className="font-extrabold text-slate-900 text-sm">Emergency Support Hotlines</Typography>
-                      <Typography className="text-slate-500 text-xs font-semibold mt-0.5">0249709299 / 0246219871</Typography>
-                    </Box>
-                  </Stack>
-
-                  <Stack direction="row" spacing={3} alignItems="center">
-                    <Avatar className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl">
-                      <BusinessRounded />
-                    </Avatar>
-                    <Box>
-                      <Typography className="font-extrabold text-slate-900 text-sm">Ghana Regional Headquarters</Typography>
-                      <Typography className="text-slate-500 text-xs font-semibold mt-0.5">Accra Digital Center, Ring Road West</Typography>
-                    </Box>
-                  </Stack>
-
-                  <Stack direction="row" spacing={3} alignItems="center">
-                    <Avatar className="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl">
-                      <OfflineBoltRounded />
-                    </Avatar>
-                    <Box>
-                      <Typography className="font-extrabold text-slate-900 text-sm">System Status Indicators</Typography>
-                      <Typography className="text-emerald-500 text-xs font-black uppercase tracking-wider mt-0.5">🟢 All SWIFT Core Nodes Online</Typography>
-                    </Box>
-                  </Stack>
+                <Stack spacing={3.5} className="mt-2">
+                  {supportOptions.map((option, idx) => (
+                    <motion.a
+                      href={option.href}
+                      key={idx}
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                      className="flex items-center gap-6 group hover:no-underline"
+                    >
+                      <Avatar className={`w-14 h-14 rounded-[20px] flex-shrink-0 shadow-sm transition-transform group-hover:scale-110 ${option.avatarBg}`}>
+                        {option.icon}
+                      </Avatar>
+                      <Box>
+                        <Typography className="font-black text-slate-900 text-sm leading-tight mb-1">{option.title}</Typography>
+                        <Typography className="text-slate-500 text-xs font-semibold leading-relaxed tracking-wide">{option.value}</Typography>
+                      </Box>
+                    </motion.a>
+                  ))}
                 </Stack>
               </Box>
 
@@ -145,35 +160,38 @@ export default function ContactSupportPage() {
             </Paper>
           </Grid>
 
-          {/* Right Column: Secure Support Ticket Form */}
+          {/* Right Column: Secure Support Form (Clean White styled matching Privacy/PageTemplate patterns) */}
           <Grid size={{ xs: 12, lg: 7 }}>
-            <Paper className="p-8 md:p-12 rounded-[40px] bg-white border border-slate-100 shadow-lg relative overflow-hidden h-full flex flex-col justify-center">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2" />
+            <Paper className="p-8 md:p-10 rounded-[32px] md:rounded-[40px] bg-white border border-slate-100 shadow-sm relative overflow-hidden h-full flex flex-col justify-center">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
               
               {submitted ? (
                 <motion.div 
                   initial={{ scale: 0.95, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="text-center py-12 flex flex-col items-center gap-4 relative z-10"
+                  className="text-center py-10 flex flex-col items-center gap-4 relative z-10"
                 >
-                  <CheckCircleOutlineRounded sx={{ fontSize: 64, color: '#10b981' }} />
-                  <Typography variant="h5" className="font-extrabold text-slate-900">Ticket Submitted Successfully</Typography>
+                  <Avatar className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-[20px] shadow-sm flex items-center justify-center">
+                    <CheckCircleOutlineRounded sx={{ fontSize: 36 }} />
+                  </Avatar>
+                  <Typography variant="h4" className="font-black text-slate-900 tracking-tighter text-2xl">Email Client Launched</Typography>
                   <Typography className="text-slate-500 text-sm max-w-sm leading-relaxed mx-auto font-medium">
-                    We've routed your inquiry to our central operations desk. A support representative will respond shortly at <b>{formData.email}</b>.
+                    We have opened your default mail client to transmit this message directly to <b>leslie.gyamfi@resolvebridge.com</b>.
                   </Typography>
                   <Button 
                     onClick={() => { setSubmitted(false); setFormData({ name: '', email: '', subject: '', message: '' }); }}
-                    className="mt-6 border border-slate-200 text-slate-700 rounded-xl px-6 py-2.5 font-bold hover:bg-slate-50 lowercase"
+                    variant="outlined"
+                    className="mt-4 border-slate-200 text-slate-700 hover:text-blue-600 hover:bg-slate-50 rounded-xl px-6 py-2.5 font-bold text-xs normal-case"
                     sx={{ textTransform: 'none' }}
                   >
-                    Submit Another Inquiry
+                    Send Another Email
                   </Button>
                 </motion.div>
               ) : (
                 <form onSubmit={handleSubmit} className="flex flex-col gap-6 relative z-10">
                   <div>
-                    <Typography variant="h4" className="font-black text-slate-900 leading-none mb-3">Submit a Support Ticket</Typography>
-                    <Typography className="text-slate-500 text-[12.5px] font-medium">Our team is standing by to resolve any operational roadblocks.</Typography>
+                    <Typography variant="h4" className="font-black text-slate-900 tracking-tighter text-2xl md:text-3xl leading-none mb-3">Email Technical Support</Typography>
+                    <Typography className="text-slate-500 text-[12.5px] font-medium">Your request will be delivered directly to Leslie Gyamfi's inbox.</Typography>
                   </div>
 
                   <Grid container spacing={3}>
@@ -260,7 +278,7 @@ export default function ContactSupportPage() {
                     sx={{ textTransform: 'none' }}
                     endIcon={<SendRounded />}
                   >
-                    Submit Secure Ticket
+                    Send Direct Email
                   </Button>
                 </form>
               )}
@@ -270,7 +288,7 @@ export default function ContactSupportPage() {
         </Grid>
 
         {/* FAQs Accordion Segment - Dedicated Section Below Split Dashboard */}
-        <Box className="mt-12">
+        <Box className="mt-16 md:mt-20">
           <Box className="text-center mb-12">
             <Typography variant="caption" className="text-blue-600 font-black uppercase tracking-[0.3em] block mb-2 text-[10px] md:text-xs">
               Knowledge Base
@@ -279,7 +297,7 @@ export default function ContactSupportPage() {
               Frequently Asked <span className="text-blue-600 italic">Questions.</span>
             </Typography>
             <Typography className="text-slate-500 font-medium text-base max-w-xl mx-auto px-4">
-              Browse immediate structural answers regarding digital insurance tokens, interest rates, and double-entry ledger settlements.
+              Browse immediate answers regarding digital insurance tokens, interest rates, and double-entry ledger settlements.
             </Typography>
           </Box>
 
