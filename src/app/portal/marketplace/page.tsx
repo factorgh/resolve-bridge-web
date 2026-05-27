@@ -5,6 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import PortalShell, { C, F } from '../components/PortalShell';
 import { useGetProductsQuery } from '@/lib/redux/api/productApi';
+import { useCreateApplicationMutation } from '@/lib/redux/api/applicationApi';
+import { useGetMeQuery } from '@/lib/redux/api/userApi';
+import { toast } from 'react-hot-toast';
 import { 
   LocalOfferRounded, 
   VerifiedUserRounded, 
@@ -28,7 +31,7 @@ import EmptyState from '../components/EmptyState';
 
 /* ─── Components ─────────────────────────────────────────────────────────── */
 
-const ProductCard = ({ prod, viewMode }: { prod: any, viewMode: 'grid' | 'list' }) => {
+const ProductCard = ({ prod, viewMode, onInstantApply }: { prod: any, viewMode: 'grid' | 'list', onInstantApply: (prod: any) => void }) => {
   const isList = viewMode === 'list';
   
   return (
@@ -102,13 +105,16 @@ const ProductCard = ({ prod, viewMode }: { prod: any, viewMode: 'grid' | 'list' 
 
       {/* Actions */}
       <div style={{ display: 'flex', gap: 12, marginTop: isList ? 0 : 'auto' }}>
-        <Link href={`/portal/apply-${prod.cat}?productId=${prod.id}&lender=${encodeURIComponent(prod.provider)}`} style={{ 
-          textDecoration: 'none', background: C.text, color: '#fff', 
-          padding: '16px', borderRadius: 16, fontSize: 14, fontWeight: 800,
-          flex: 2, textAlign: 'center', transition: '0.2s'
-        }}>
+        <button 
+          onClick={() => onInstantApply(prod)}
+          style={{ 
+            textDecoration: 'none', background: C.text, color: '#fff', border: 'none',
+            padding: '16px', borderRadius: 16, fontSize: 14, fontWeight: 800,
+            flex: 2, textAlign: 'center', transition: '0.2s', cursor: 'pointer'
+          }}
+        >
           Instant Apply
-        </Link>
+        </button>
         <button 
           onClick={() => (window as any).openProductDetails(prod)}
           style={{ 
@@ -124,7 +130,13 @@ const ProductCard = ({ prod, viewMode }: { prod: any, viewMode: 'grid' | 'list' 
   );
 };
 
-export default function MarketplacePage() {
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
+
+function MarketplaceContent() {
+  const searchParams = useSearchParams();
+  const providerParam = searchParams.get('provider');
+  
   const [activeCat, setActiveCat] = useState('loan');
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -132,6 +144,92 @@ export default function MarketplacePage() {
   const [sortBy, setSortBy] = useState('trust');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+
+  const [instantApplyProduct, setInstantApplyProduct] = useState<any>(null);
+  const [applyAmount, setApplyAmount] = useState<number>(1000);
+  const [applyTenure, setApplyTenure] = useState<number>(6);
+  const [createApplication, { isLoading: isSubmitting }] = useCreateApplicationMutation();
+  const [applicationSuccess, setApplicationSuccess] = useState(false);
+  const [paymentFrequency, setPaymentFrequency] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
+
+  const { data: userData } = useGetMeQuery();
+
+  const rateNum = instantApplyProduct ? (Number(String(instantApplyProduct.rate).replace(/[^0-9.]/g, '')) || 10) : 10;
+  const ratePercent = rateNum / 100;
+  const totalInterest = applyAmount * ratePercent * (applyTenure / 12);
+  const totalRepayment = applyAmount + totalInterest;
+
+  const monthlyVal = Math.round(totalRepayment / applyTenure);
+  const weeklyVal = Math.round(totalRepayment / (applyTenure * 4.33));
+  const dailyVal = Math.round(totalRepayment / (applyTenure * 30.42));
+
+  const handleInstantApplyStart = (p: any) => {
+    setInstantApplyProduct(p);
+    setApplyAmount(p.minAmount || 1000);
+    setApplyTenure(p.minTenureMonths || 6);
+    setApplicationSuccess(false);
+    setPaymentFrequency('monthly');
+  };
+
+  const handleConfirmSubmit = async () => {
+    if (!instantApplyProduct) return;
+    
+    try {
+      const cleanAmount = Number(applyAmount);
+      const cleanTerm = Number(applyTenure);
+      const user = userData?.data;
+      
+      const payload = {
+        productId: instantApplyProduct.id || instantApplyProduct._id,
+        amount: cleanAmount,
+        tenureMonths: cleanTerm,
+        applicationData: {
+          personal: {
+            title: user?.title || 'Mr.',
+            firstName: user?.firstName || '',
+            lastName: user?.lastName || '',
+            phone: user?.phoneNumber || user?.phone || '',
+            email: user?.email || '',
+            dob: user?.dob || '',
+            nationality: user?.nationality || 'Ghanaian',
+            residentialAddress: user?.residentialAddress || 'Accra',
+            city: user?.city || 'Accra'
+          },
+          financial: {
+            hasAccountWithLender: 'No',
+            existingLoan: 'No',
+            preferredFrequency: paymentFrequency,
+            calculatedDues: paymentFrequency === 'daily' ? dailyVal : paymentFrequency === 'weekly' ? weeklyVal : monthlyVal
+          },
+          employment: {
+            employment: user?.employmentStatus || 'Employed (Salaried)',
+            employer: user?.employer || 'Ecosystem Company',
+            occupation: user?.occupation || 'Professional',
+            monthlyIncome: user?.monthlyIncome || '5000'
+          },
+          referees: [
+            { name: 'Ecosystem Reference 1', relation: 'Contact', phone: '0244123456' },
+            { name: 'Ecosystem Reference 2', relation: 'Contact', phone: '0244123457' }
+          ]
+        }
+      };
+
+      const result = await createApplication(payload).unwrap();
+      if (result?.success) {
+        setApplicationSuccess(true);
+        toast.success("Application submitted successfully!");
+      }
+    } catch (err: any) {
+      console.error('Failed to submit application instantly:', err);
+      toast.error(err?.data?.message || 'Verification failure: could not submit your instant application.');
+    }
+  };
+
+  useEffect(() => {
+    if (providerParam) {
+      setSearch(providerParam);
+    }
+  }, [providerParam]);
   const [filters, setFilters] = useState({
     providers: [] as string[],
     precision: 75
@@ -247,7 +345,12 @@ export default function MarketplacePage() {
                 gap: 24 
               }}>
                  {filteredProducts.map(prod => (
-                   <ProductCard key={prod.id} prod={prod} viewMode={viewMode} />
+                   <ProductCard 
+                     key={prod.id} 
+                     prod={prod} 
+                     viewMode={viewMode} 
+                     onInstantApply={handleInstantApplyStart} 
+                   />
                  ))}
               </div>
 
@@ -351,10 +454,22 @@ export default function MarketplacePage() {
                    </Typography>
                 </Box>
 
-                <Box sx={{ pt: 4, borderTop: `1px solid ${C.border}`, display: 'flex', gap: 2 }}>
-                   <Link href={`/portal/apply-${selectedProduct.cat}`} style={{ flex: 1, textDecoration: 'none' }}>
-                      <button style={{ width: '100%', padding: '20px', borderRadius: 20, border: 'none', background: C.text, color: '#fff', fontWeight: 900, fontSize: 15, cursor: 'pointer' }}>Apply for this Product</button>
-                   </Link>
+                <Box sx={{ pt: 4, borderTop: `1px solid ${C.border}`, display: 'flex', gap: 2, flexDirection: isMobile ? 'column' : 'row' }}>
+                   <button 
+                      onClick={() => {
+                        handleInstantApplyStart(selectedProduct);
+                        setSelectedProduct(null);
+                      }}
+                      style={{ 
+                        flex: 1, padding: '20px', borderRadius: 20, border: 'none', 
+                        background: C.text, color: '#fff', fontWeight: 900, fontSize: 15, cursor: 'pointer' 
+                      }}
+                    >
+                      Instant Apply
+                    </button>
+                    <Link href={`/portal/apply-${selectedProduct.cat?.toLowerCase()}?productId={selectedProduct.id}&lender=${encodeURIComponent(selectedProduct.provider)}`} style={{ flex: 1, textDecoration: 'none' }}>
+                       <button style={{ width: '100%', padding: '20px', borderRadius: 20, border: `2px solid ${C.border}`, background: '#fff', color: C.textSub, fontWeight: 900, fontSize: 15, cursor: 'pointer' }}>Standard Application</button>
+                    </Link>
                 </Box>
              </Box>
            )}
@@ -447,8 +562,496 @@ export default function MarketplacePage() {
           </Box>
         </Drawer>
 
+        {/* Instant Apply Modal */}
+        <AnimatePresence>
+          {instantApplyProduct && (
+            <div style={{ 
+              position: 'fixed', 
+              inset: 0, 
+              zIndex: 1100, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              padding: isMobile ? 0 : 24 
+            }}>
+              {/* Backdrop */}
+              <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }} 
+                onClick={() => { if (!isSubmitting && !applicationSuccess) setInstantApplyProduct(null); }} 
+                style={{ position: 'absolute', inset: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(12px)' }} 
+              />
+
+              {/* Modal Container */}
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: 30 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 30 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 250 }}
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  maxWidth: 620,
+                  background: 'rgba(255, 255, 255, 0.98)',
+                  borderRadius: isMobile ? 0 : 36,
+                  boxShadow: '0 30px 70px rgba(13,27,62,0.18), inset 0 1px 0 rgba(255,255,255,0.6)',
+                  border: `1px solid ${C.border}`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  overflow: 'hidden',
+                  maxHeight: isMobile ? '100%' : '90vh',
+                  zIndex: 1101,
+                }}
+              >
+                {applicationSuccess ? (
+                  /* Animated Success Splash */
+                  <div style={{ padding: 48, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
+                    <motion.div 
+                      initial={{ scale: 0 }} 
+                      animate={{ scale: 1 }} 
+                      transition={{ type: 'spring', damping: 12, stiffness: 200, delay: 0.2 }}
+                      style={{ 
+                        width: 96, 
+                        height: 96, 
+                        borderRadius: '50%', 
+                        background: '#e6f4ea', 
+                        border: `3px solid ${C.emerald}`, 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center' 
+                      }}
+                    >
+                      <motion.svg 
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ duration: 0.6, ease: 'easeOut', delay: 0.4 }}
+                        width="44" 
+                        height="44" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke={C.emerald} 
+                        strokeWidth="3.5" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="20 6 9 17 4 12"/>
+                      </motion.svg>
+                    </motion.div>
+                    
+                    <div>
+                      <h2 style={{ margin: '0 0 10px', fontSize: 26, fontWeight: 900, color: C.text, fontFamily: F.heading, letterSpacing: '-0.04em' }}>Application Pre-Approved!</h2>
+                      <p style={{ margin: '0 auto', fontSize: 15, color: C.textSub, lineHeight: 1.6, maxWidth: 400 }}>
+                        Your instant application has been verified by the Resolve secure vault, and submitted to <strong style={{ color: C.text }}>{instantApplyProduct.provider}</strong> for final approval and payout.
+                      </p>
+                    </div>
+
+                    <div style={{ 
+                      background: '#f8fafc', 
+                      border: `1.5px solid ${C.border}`, 
+                      borderRadius: 24, 
+                      padding: 24, 
+                      width: '100%', 
+                      display: 'grid', 
+                      gridTemplateColumns: '1fr 1fr', 
+                      gap: 16, 
+                      textAlign: 'left' 
+                    }}>
+                      <div>
+                        <p style={{ margin: '0 0 2px', fontSize: 10, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Facility Provider</p>
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.text }}>{instantApplyProduct.provider}</p>
+                      </div>
+                      <div>
+                        <p style={{ margin: '0 0 2px', fontSize: 10, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Plan Frequency</p>
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.blue, textTransform: 'capitalize' }}>{paymentFrequency} plan dues</p>
+                      </div>
+                      <div>
+                        <p style={{ margin: '0 0 2px', fontSize: 10, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Requested Size</p>
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.emerald }}>GH₵ {Number(applyAmount).toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p style={{ margin: '0 0 2px', fontSize: 10, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Matched Dues</p>
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.text }}>
+                          GH₵ {paymentFrequency === 'daily' ? dailyVal : paymentFrequency === 'weekly' ? weeklyVal : monthlyVal} / {paymentFrequency === 'daily' ? 'day' : paymentFrequency === 'weekly' ? 'week' : 'mo'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={() => {
+                        setInstantApplyProduct(null);
+                        setApplicationSuccess(false);
+                      }} 
+                      style={{ 
+                        width: '100%', 
+                        background: C.text, 
+                        color: '#fff', 
+                        border: 'none', 
+                        padding: '18px', 
+                        borderRadius: 16, 
+                        fontSize: 15, 
+                        fontWeight: 900, 
+                        cursor: 'pointer', 
+                        transition: '0.2s',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                      }}
+                    >
+                      Done & Return to Marketplace
+                    </button>
+                  </div>
+                ) : (
+                  /* Standard Confirmation View */
+                  <>
+                    {/* Header */}
+                    <div style={{ 
+                      padding: '24px 32px', 
+                      borderBottom: `1px solid ${C.border}`, 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center' 
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                        <div style={{ 
+                          width: 44, 
+                          height: 44, 
+                          background: '#f8fafc', 
+                          borderRadius: 12, 
+                          border: `1px solid ${C.border}`, 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          padding: 6 
+                        }}>
+                          <img src={instantApplyProduct.logo} alt="" style={{ maxWidth: '100%', maxHeight: '100%' }} />
+                        </div>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: C.text, fontFamily: F.heading }}>Instant Apply</h3>
+                          <span style={{ fontSize: 11, fontWeight: 800, color: C.textSub }}>{instantApplyProduct.provider} • {instantApplyProduct.name}</span>
+                        </div>
+                      </div>
+                      
+                      <button 
+                        disabled={isSubmitting}
+                        onClick={() => setInstantApplyProduct(null)} 
+                        style={{ 
+                          background: '#f1f5f9', 
+                          border: 'none', 
+                          width: 32, 
+                          height: 32, 
+                          borderRadius: '50%', 
+                          cursor: isSubmitting ? 'not-allowed' : 'pointer', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center' 
+                        }}
+                      >
+                        <CloseRounded sx={{ fontSize: 18, color: C.textSub }} />
+                      </button>
+                    </div>
+
+                    {/* Content Body */}
+                    <div style={{ padding: '32px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 24 }}>
+                      
+                      {/* Section 1: Pre-verified KYC Details */}
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                          <span style={{ fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pre-Verified KYC Details</span>
+                          <span style={{ 
+                            fontSize: 10, 
+                            fontWeight: 900, 
+                            color: C.emerald, 
+                            background: C.emeraldLight, 
+                            padding: '4px 10px', 
+                            borderRadius: 12,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4
+                          }}>
+                            <VerifiedRounded sx={{ fontSize: 12 }} /> Verified Vault Profile
+                          </span>
+                        </div>
+                        
+                        <div style={{ 
+                          background: 'linear-gradient(135deg, rgba(0, 134, 82, 0.02) 0%, rgba(32, 81, 229, 0.02) 100%)', 
+                          border: `1px solid rgba(0, 134, 82, 0.15)`, 
+                          borderRadius: 22, 
+                          padding: 20,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 12,
+                          boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.01)'
+                        }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, fontSize: 13 }}>
+                            <div>
+                              <p style={{ margin: '0 0 2px', fontSize: 10, color: C.textMuted, fontWeight: 700, textTransform: 'uppercase' }}>Full Name</p>
+                              <p style={{ margin: 0, fontWeight: 800, color: C.text }}>
+                                {userData?.data?.firstName ? `${userData.data.firstName} ${userData.data.lastName || ''}` : 'Ecosystem Customer'}
+                              </p>
+                            </div>
+                            <div>
+                              <p style={{ margin: '0 0 2px', fontSize: 10, color: C.textMuted, fontWeight: 700, textTransform: 'uppercase' }}>Identity Document</p>
+                              <p style={{ margin: 0, fontWeight: 800, color: C.text }}>Ghana Card (Linked)</p>
+                            </div>
+                            <div>
+                              <p style={{ margin: '0 0 2px', fontSize: 10, color: C.textMuted, fontWeight: 700, textTransform: 'uppercase' }}>Phone Number</p>
+                              <p style={{ margin: 0, fontWeight: 800, color: C.text }}>
+                                {userData?.data?.phoneNumber || userData?.data?.phone || '—'}
+                              </p>
+                            </div>
+                            <div>
+                              <p style={{ margin: '0 0 2px', fontSize: 10, color: C.textMuted, fontWeight: 700, textTransform: 'uppercase' }}>Linked Email</p>
+                              <p style={{ margin: 0, fontWeight: 800, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {userData?.data?.email || '—'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section 2: Customization Sliders */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Customize Offer terms</span>
+                        
+                        {/* Amount Slider */}
+                        <div style={{ background: '#f8fafc', border: `1px solid ${C.border}`, padding: 20, borderRadius: 20 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                            <span style={{ fontSize: 13, fontWeight: 800, color: C.textSub }}>Requested Amount</span>
+                            <span style={{ fontSize: 20, fontWeight: 900, color: C.blue, fontFamily: F.heading }}>GH₵ {Number(applyAmount).toLocaleString()}</span>
+                          </div>
+                          <input 
+                            type="range"
+                            min={instantApplyProduct.minAmount || 500}
+                            max={instantApplyProduct.maxAmount || 50000}
+                            step={100}
+                            value={applyAmount}
+                            onChange={(e) => setApplyAmount(Number(e.target.value))}
+                            style={{ width: '100%', accentColor: C.blue, cursor: 'pointer' }}
+                          />
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 11, fontWeight: 700, color: C.textMuted }}>
+                            <span>GH₵ {Number(instantApplyProduct.minAmount || 500).toLocaleString()}</span>
+                            <span>GH₵ {Number(instantApplyProduct.maxAmount || 50000).toLocaleString()}</span>
+                          </div>
+                        </div>
+
+                        {/* Tenure Slider */}
+                        <div style={{ background: '#f8fafc', border: `1px solid ${C.border}`, padding: 20, borderRadius: 20 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                            <span style={{ fontSize: 13, fontWeight: 800, color: C.textSub }}>Repayment Tenure</span>
+                            <span style={{ fontSize: 20, fontWeight: 900, color: C.blue, fontFamily: F.heading }}>{applyTenure} Months</span>
+                          </div>
+                          <input 
+                            type="range"
+                            min={instantApplyProduct.minTenureMonths || 3}
+                            max={instantApplyProduct.maxTenureMonths || 36}
+                            step={1}
+                            value={applyTenure}
+                            onChange={(e) => setApplyTenure(Number(e.target.value))}
+                            style={{ width: '100%', accentColor: C.blue, cursor: 'pointer' }}
+                          />
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 11, fontWeight: 700, color: C.textMuted }}>
+                            <span>{instantApplyProduct.minTenureMonths || 3} Mos</span>
+                            <span>{instantApplyProduct.maxTenureMonths || 36} Mos</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section 3: Repayment Frequency Selector & Calculations */}
+                      <div>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 12 }}>Select Preferred Payment Plan</span>
+                        
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 20 }}>
+                          {[
+                            { id: 'daily', label: 'Daily Dues', val: dailyVal, suffix: '/ day', tag: 'Micro-plan' },
+                            { id: 'weekly', label: 'Weekly Dues', val: weeklyVal, suffix: '/ week', tag: 'Flexi-plan' },
+                            { id: 'monthly', label: 'Monthly Dues', val: monthlyVal, suffix: '/ month', tag: 'Standard' }
+                          ].map(plan => {
+                            const isSelected = paymentFrequency === plan.id;
+                            return (
+                              <motion.div
+                                key={plan.id}
+                                whileHover={{ y: -3, scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => setPaymentFrequency(plan.id as any)}
+                                style={{
+                                  background: isSelected ? 'rgba(32, 81, 229, 0.04)' : '#fff',
+                                  border: `2px solid ${isSelected ? C.blue : C.border}`,
+                                  borderRadius: 20,
+                                  padding: '16px 12px',
+                                  textAlign: 'center',
+                                  cursor: 'pointer',
+                                  boxShadow: isSelected ? '0 10px 25px rgba(32, 81, 229, 0.08)' : '0 4px 12px rgba(0,0,0,0.02)',
+                                  transition: 'all 0.2s ease',
+                                }}
+                              >
+                                <span style={{ 
+                                  fontSize: 8.5, 
+                                  fontWeight: 900, 
+                                  background: isSelected ? C.blue : '#f1f5f9', 
+                                  color: isSelected ? '#fff' : C.textSub, 
+                                  padding: '3px 8px', 
+                                  borderRadius: 8,
+                                  textTransform: 'uppercase',
+                                  display: 'inline-block',
+                                  marginBottom: 8
+                                }}>
+                                  {plan.tag}
+                                </span>
+                                <p style={{ margin: '0 0 2px', fontSize: 12.5, fontWeight: 800, color: C.textSub }}>{plan.label}</p>
+                                <p style={{ margin: 0, fontSize: 16.5, fontWeight: 900, color: isSelected ? C.blue : C.text }}>
+                                  GHS {plan.val}
+                                </p>
+                                <span style={{ fontSize: 9.5, color: C.textMuted }}>{plan.suffix}</span>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Recalculated Breakdown Details */}
+                        <div style={{ 
+                          background: `linear-gradient(135deg, ${C.sidebar} 0%, #1e293b 100%)`, 
+                          borderRadius: 26, 
+                          padding: 24,
+                          color: '#fff',
+                          boxShadow: '0 20px 40px rgba(15,23,42,0.12)'
+                        }}>
+                          <span style={{ fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Real-time Breakdown</span>
+                          
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 12, marginBottom: 20 }}>
+                            <div>
+                              <span style={{ fontSize: 32, fontWeight: 900, fontFamily: F.heading }}>
+                                GH₵ {paymentFrequency === 'daily' ? dailyVal : paymentFrequency === 'weekly' ? weeklyVal : monthlyVal}
+                              </span>
+                              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginLeft: 6 }}>/ {paymentFrequency === 'daily' ? 'day' : paymentFrequency === 'weekly' ? 'week' : 'month'}</span>
+                            </div>
+                            <span style={{ fontSize: 13, fontWeight: 800, color: C.emerald }}>
+                              {instantApplyProduct.rate}% APR Rate
+                            </span>
+                          </div>
+
+                          <div style={{ 
+                            borderTop: '1px solid rgba(255,255,255,0.1)', 
+                            paddingTop: 16,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 10,
+                            fontSize: 12,
+                            color: 'rgba(255,255,255,0.7)'
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                              <span>Principal Value</span>
+                              <span style={{ fontWeight: 800, color: '#fff' }}>GH₵ {Number(applyAmount).toLocaleString()}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                              <span>Total Simple Interest</span>
+                              <span style={{ fontWeight: 800, color: '#fff' }}>
+                                GH₵ {Math.round(totalInterest).toLocaleString()}
+                              </span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: 10 }}>
+                              <span style={{ color: '#fff', fontWeight: 800 }}>Total Repayment Payable</span>
+                              <span style={{ fontWeight: 900, color: C.emerald, fontSize: 13 }}>
+                                GH₵ {Math.round(totalRepayment).toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Info Warning */}
+                      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                        <InfoOutlined sx={{ fontSize: 18, color: C.blue, mt: 0.2 }} />
+                        <p style={{ margin: 0, fontSize: 11, color: C.textSub, lineHeight: 1.5 }}>
+                          By clicking "Confirm & Submit", you authorize ResolveBridge to submit your pre-verified vault information directly to {instantApplyProduct.provider} to fast-track your approval.
+                        </p>
+                      </div>
+
+                    </div>
+
+                    {/* Footer Buttons */}
+                    <div style={{ 
+                      padding: '24px 32px', 
+                      borderTop: `1px solid ${C.border}`, 
+                      display: 'flex', 
+                      gap: 16,
+                      background: '#f8fafc'
+                    }}>
+                      <button 
+                        disabled={isSubmitting}
+                        onClick={() => setInstantApplyProduct(null)} 
+                        style={{ 
+                          flex: 1, 
+                          padding: '16px', 
+                          borderRadius: 16, 
+                          border: `2px solid ${C.border}`, 
+                          background: '#fff', 
+                          color: C.textSub, 
+                          fontWeight: 800, 
+                          fontSize: 14, 
+                          cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                          transition: '0.2s'
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        disabled={isSubmitting}
+                        onClick={handleConfirmSubmit} 
+                        style={{ 
+                          flex: 1.5, 
+                          padding: '16px', 
+                          borderRadius: 16, 
+                          border: 'none', 
+                          background: C.text, 
+                          color: '#fff', 
+                          fontWeight: 800, 
+                          fontSize: 14, 
+                          cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 10,
+                          transition: '0.2s',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                        }}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <div style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                            <span>Submitting...</span>
+                          </>
+                        ) : (
+                          <span>Confirm & Submit</span>
+                        )}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </motion.div>
+              
+              <style>{`
+                @keyframes spin {
+                  0% { transform: rotate(0deg); }
+                  100% { transform: rotate(360deg); }
+                }
+              `}</style>
+            </div>
+          )}
+        </AnimatePresence>
+
         {isMobile && <div style={{ height: 100 }} />}
       </div>
     </PortalShell>
+  );
+}
+
+export default function MarketplacePage() {
+  return (
+    <Suspense fallback={
+      <div style={{ display: 'flex', minHeight: '80vh', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ fontSize: 16, color: '#475569', fontWeight: 600 }}>Loading marketplace...</p>
+      </div>
+    }>
+      <MarketplaceContent />
+    </Suspense>
   );
 }

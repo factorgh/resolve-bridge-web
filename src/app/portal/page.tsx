@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import PortalShell from './components/PortalShell';
 import { useGetDashboardMetricsQuery, useGetNewsArticlesQuery, useGetMeQuery } from '@/lib/redux/api/userApi';
 import { useGetApplicationsQuery } from '@/lib/redux/api/applicationApi';
 import { useGetTransactionsQuery, useCreateTransactionMutation } from '@/lib/redux/api/transactionApi';
+import { useGetInstitutionsQuery } from '@/lib/redux/api/productApi';
 import { toast } from 'react-hot-toast';
 import { Drawer, IconButton } from '@mui/material';
 import { 
@@ -41,6 +42,13 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
   const { data: appsResponse, isLoading: appsLoading, refetch: refetchApps } = useGetApplicationsQuery();
   const { data: txResponse, isLoading: txLoading, refetch: refetchTx } = useGetTransactionsQuery();
   const [createTransaction] = useCreateTransactionMutation();
+  const { data: instsResponse, isLoading: instsLoading } = useGetInstitutionsQuery();
+  const institutions = useMemo(() => {
+    if (instsResponse?.success && instsResponse?.data) {
+      return instsResponse.data.filter((inst: any) => inst.isActive !== false && inst.isVerified === true);
+    }
+    return [];
+  }, [instsResponse]);
 
   const [selectedPayApp, setSelectedPayApp] = useState<any>(null);
   const [momoPhone, setMomoPhone] = useState('0244123456');
@@ -332,6 +340,69 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
                        </motion.div>
                     </div>
                 </div>
+
+                 {/* Approved Ecosystem Partners */}
+                 <div>
+                     <h3 style={{ margin: '24px 0 20px', fontSize: 13, fontWeight: 800, color: C.textSub, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Approved Ecosystem Partners</h3>
+                     {instsLoading ? (
+                       <div style={{ padding: '20px 0', fontSize: 12, color: C.textMuted }}>Synchronizing verified portal lenders...</div>
+                     ) : institutions.length === 0 ? (
+                       <div style={{ padding: '20px 0', fontSize: 12, color: C.textMuted }}>No certified partners found.</div>
+                     ) : (
+                       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 20 }}>
+                         {institutions.slice(0, 6).map((inst: any) => (
+                           <motion.div 
+                             key={inst._id}
+                             whileHover={{ y: -4, boxShadow: '0 10px 25px rgba(0,0,0,0.04)' }}
+                             onClick={() => router.push(`/portal/marketplace?provider=${encodeURIComponent(inst.name)}`)}
+                             style={{ 
+                               background: '#fff', 
+                               borderRadius: 24, 
+                               border: `1px solid ${C.border}`, 
+                               padding: 20, 
+                               cursor: 'pointer', 
+                               display: 'flex', 
+                               flexDirection: 'column', 
+                               gap: 12,
+                               transition: '0.2s'
+                             }}
+                           >
+                             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                               <div style={{ 
+                                 width: 44, 
+                                 height: 44, 
+                                 background: '#f8fafc', 
+                                 borderRadius: 12, 
+                                 border: `1.5px solid ${C.border}`, 
+                                 display: 'flex', 
+                                 alignItems: 'center', 
+                                 justifyContent: 'center', 
+                                 padding: 6,
+                                 flexShrink: 0
+                               }}>
+                                 {inst.logoUrl ? (
+                                   <img src={inst.logoUrl} alt="" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                                 ) : (
+                                   <span style={{ fontSize: 18 }}>🏦</span>
+                                 )}
+                               </div>
+                               <div style={{ minWidth: 0, flex: 1 }}>
+                                 <h4 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inst.name}</h4>
+                                 <span style={{ fontSize: 10, fontWeight: 950, color: C.blue, textTransform: 'uppercase', letterSpacing: '0.02em' }}>{inst.type}</span>
+                               </div>
+                             </div>
+                             
+                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${C.border}`, paddingTop: 10, fontSize: 10.5 }}>
+                               <span style={{ color: C.emerald, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.emerald }} /> Active Cover
+                               </span>
+                               <span style={{ color: C.textMuted, fontWeight: 700 }}>Rate: {inst.billingStatus === 'Active' ? 'Tier 1' : 'Core'}</span>
+                             </div>
+                           </motion.div>
+                         ))}
+                       </div>
+                     )}
+                 </div>
               </div>
 
               {/* Right Column: Promos & News */}

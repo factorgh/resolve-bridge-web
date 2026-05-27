@@ -74,6 +74,22 @@ export const userApi = createApi({
       }),
       invalidatesTags: ['User']
     }),
+    adminUpdateUserScore: builder.mutation<any, { id: string; customScore?: number; monthlyIncome?: string; employmentStatus?: string }>({
+      query: ({ id, ...body }) => ({
+        url: `/Users/${id}/score`,
+        method: 'PATCH',
+        body
+      }),
+      invalidatesTags: ['User']
+    }),
+    paySubscription: builder.mutation<any, { phoneNumber: string; carrier: string; pin: string }>({
+      query: (body) => ({
+        url: '/Users/pay-subscription',
+        method: 'POST',
+        body
+      }),
+      invalidatesTags: ['User']
+    }),
   }),
 });
 
@@ -83,5 +99,7 @@ export const {
   useGetDashboardMetricsQuery, 
   useGetNewsArticlesQuery,
   useAdminGetUsersQuery,
-  useAdminUpdateUserMutation
+  useAdminUpdateUserMutation,
+  useAdminUpdateUserScoreMutation,
+  usePaySubscriptionMutation
 } = userApi;

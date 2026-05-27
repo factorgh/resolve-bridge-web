@@ -597,11 +597,11 @@ export default function InsuranceIntegrationPage() {
           open={!!selectedClaim}
           onClose={() => setSelectedClaim(null)}
           PaperProps={{
-            style: { width: '100%', maxWidth: 440, background: '#0a0d17', borderLeft: `1px solid ${C.border}`, padding: 32, boxSizing: 'border-box' }
+            style: { width: '100%', maxWidth: 440, background: C.surface, borderLeft: `1px solid ${C.border}`, padding: 32, boxSizing: 'border-box' }
           }}
         >
           {selectedClaim && (
-            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', color: '#fff' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', color: C.text }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
                   <h3 style={{ margin: 0, fontSize: 18, color: C.text, fontFamily: F.heading, fontWeight: 700 }}>Review Emergency Claim</h3>
@@ -675,10 +675,10 @@ export default function InsuranceIntegrationPage() {
           open={isFilingClaim}
           onClose={() => setIsFilingClaim(false)}
           PaperProps={{
-            style: { width: '100%', maxWidth: 440, background: '#0a0d17', borderLeft: `1px solid ${C.border}`, padding: 32, boxSizing: 'border-box' }
+            style: { width: '100%', maxWidth: 440, background: C.surface, borderLeft: `1px solid ${C.border}`, padding: 32, boxSizing: 'border-box' }
           }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', color: '#fff' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', color: C.text }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
                 <h3 style={{ margin: 0, fontSize: 18, color: C.text, fontFamily: F.heading, fontWeight: 700 }}>Simulate Claims Incident</h3>

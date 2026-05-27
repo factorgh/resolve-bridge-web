@@ -7,7 +7,8 @@ import { Drawer, IconButton } from '@mui/material';
 import AdminShell, { C, F } from '../components/AdminShell';
 import { 
   useAdminGetUsersQuery, 
-  useAdminUpdateUserMutation 
+  useAdminUpdateUserMutation,
+  useAdminUpdateUserScoreMutation
 } from '@/lib/redux/api/userApi';
 import { useGetRegionsQuery } from '@/lib/redux/api/regionApi';
 import { 
@@ -26,9 +27,14 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isMobile, setIsMobile] = useState(false);
 
+  const [scoreOverride, setScoreOverride] = useState<number | ''>('');
+  const [incomeInput, setIncomeInput] = useState('');
+  const [empStatusInput, setEmpStatusInput] = useState('');
+
   // Redux hooks for retrieving and updating users
   const { data: usersResponse, isLoading, refetch } = useAdminGetUsersQuery();
   const [updateUser, { isLoading: isUpdating }] = useAdminUpdateUserMutation();
+  const [updateUserScore, { isLoading: isScoring }] = useAdminUpdateUserScoreMutation();
   const { data: regionsResponse } = useGetRegionsQuery();
   const regions = regionsResponse?.data || [];
 
@@ -39,6 +45,40 @@ export default function AdminUsersPage() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    if (selectedUser) {
+      setIncomeInput(selectedUser.monthlyIncome || '');
+      setEmpStatusInput(selectedUser.employmentStatus || 'Employed / Permanent');
+      setScoreOverride(selectedUser.creditScore || '');
+    } else {
+      setIncomeInput('');
+      setEmpStatusInput('');
+      setScoreOverride('');
+    }
+  }, [selectedUser]);
+
+  const handleScoreAssessment = async () => {
+    if (!selectedUser) return;
+    try {
+      const res = await updateUserScore({
+        id: selectedUser._id,
+        customScore: scoreOverride ? Number(scoreOverride) : undefined,
+        monthlyIncome: incomeInput,
+        employmentStatus: empStatusInput
+      }).unwrap();
+      
+      if (res.success) {
+        toast.success(`Assessed credit score of ${res.data.creditScore} successfully!`);
+        setSelectedUser(res.data); // Refresh local drawer view immediately
+        refetch();
+      } else {
+        toast.error(res.message || 'Scoring engine failed');
+      }
+    } catch (err: any) {
+      toast.error(err.data?.message || 'Error executing scoring engine');
+    }
+  };
 
   if (!mounted) return null;
 
@@ -305,6 +345,111 @@ export default function AdminUsersPage() {
                   </span>
                 </div>
               </div>
+
+              {/* Credit Scoring Integration Console (Only for Customers) */}
+              {selectedUser.role === 'Customer' && (
+                <div style={{ 
+                  background: '#fff', 
+                  border: `1.5px solid ${C.borderStrong}`, 
+                  borderRadius: 24, 
+                  padding: 24,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 20,
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.02)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: C.bluePale, color: C.blueLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>📊</div>
+                    <span style={{ fontSize: 12, fontWeight: 900, color: C.text, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Fintech Credit Engine</span>
+                  </div>
+
+                  {/* Telemetry Gauge and Data */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 20, background: C.bg, borderRadius: 16, padding: 16, alignItems: 'center' }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <p style={{ margin: 0, fontSize: 10, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Assessed Score</p>
+                      <p style={{ margin: '4px 0 0', fontSize: 32, fontWeight: 900, color: C.blueLight }}>{selectedUser.creditScore || 650}</p>
+                      <span style={{ fontSize: 10, color: C.emerald, fontWeight: 700 }}>
+                        {selectedUser.healthIndexMessage || 'Pending Assessment'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 11.5 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: C.textSub }}>Health Index:</span>
+                        <span style={{ fontWeight: 800, color: C.text }}>{selectedUser.healthIndex || 60}%</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: C.textSub }}>Cash Flow:</span>
+                        <span style={{ fontWeight: 800, color: C.text }}>GH₵ {selectedUser.cashFlow?.toLocaleString() || '0.00'}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: C.textSub }}>Net Worth:</span>
+                        <span style={{ fontWeight: 800, color: C.text }}>GH₵ {selectedUser.netWorth?.toLocaleString() || '0.00'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Form fields */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <div>
+                      <span style={{ fontSize: 11.5, color: C.textSub, display: 'block', marginBottom: 6 }}>Monthly Income</span>
+                      <input 
+                        type="text" 
+                        value={incomeInput} 
+                        onChange={(e) => setIncomeInput(e.target.value)}
+                        placeholder="e.g. GH₵ 7,500"
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${C.borderStrong}`, background: '#f8fafc', color: C.text, fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                    <div>
+                      <span style={{ fontSize: 11.5, color: C.textSub, display: 'block', marginBottom: 6 }}>Employment Status</span>
+                      <select 
+                        value={empStatusInput} 
+                        onChange={(e) => setEmpStatusInput(e.target.value)}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${C.borderStrong}`, background: '#f8fafc', color: C.text, fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
+                      >
+                        <option value="Employed / Permanent">Employed (Permanent)</option>
+                        <option value="Employed / Contract">Employed (Contract)</option>
+                        <option value="Self-Employed">Self-Employed</option>
+                        <option value="Student">Student</option>
+                        <option value="Unemployed">Unemployed</option>
+                      </select>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: 11.5, color: C.textSub, display: 'block', marginBottom: 6 }}>Custom Credit Score Override (FICO: 300-850)</span>
+                      <input 
+                        type="number" 
+                        value={scoreOverride} 
+                        onChange={(e) => setScoreOverride(e.target.value === '' ? '' : Number(e.target.value))}
+                        placeholder="Leave empty to use algorithmic score"
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${C.borderStrong}`, background: '#f8fafc', color: C.text, fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={handleScoreAssessment}
+                    disabled={isScoring}
+                    style={{ 
+                      width: '100%', 
+                      padding: '14px', 
+                      borderRadius: 12, 
+                      border: 'none', 
+                      background: `linear-gradient(135deg, ${C.blue} 0%, ${C.blueLight} 100%)`, 
+                      color: '#fff', 
+                      fontWeight: 800, 
+                      fontSize: 13, 
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 14px rgba(32, 81, 229, 0.2)',
+                      transition: 'all 0.2s ease',
+                      marginTop: 8
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(1.05)'}
+                    onMouseLeave={(e) => e.currentTarget.style.filter = 'brightness(1)'}
+                  >
+                    {isScoring ? 'Processing Assessment...' : 'Execute Algorithmic Scoring'}
+                  </button>
+                </div>
+              )}
 
               {/* Adjust Parameters Form */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
