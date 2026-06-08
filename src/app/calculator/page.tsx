@@ -37,6 +37,65 @@ export default function LoanCalculatorPage() {
   const [loanTerm, setLoanTerm] = useState(33); 
   const [mounted, setMounted] = useState(false);
 
+  const [amountStr, setAmountStr] = useState("211000");
+  const [rateStr, setRateStr] = useState("18.5");
+  const [termStr, setTermStr] = useState("33");
+
+  const handleAmountChange = (valStr: string) => {
+    setAmountStr(valStr);
+    const parsed = parseFloat(valStr);
+    if (!isNaN(parsed)) {
+      const clamped = Math.max(0, Math.min(1000000, parsed));
+      setLoanAmount(clamped);
+    }
+  };
+
+  const handleAmountBlur = () => {
+    let parsed = parseFloat(amountStr);
+    if (isNaN(parsed)) {
+      parsed = 1000;
+    }
+    const clamped = Math.max(1000, Math.min(1000000, parsed));
+    setLoanAmount(clamped);
+    setAmountStr(clamped.toString());
+  };
+
+  const handleRateChange = (valStr: string) => {
+    setRateStr(valStr);
+    const parsed = parseFloat(valStr);
+    if (!isNaN(parsed)) {
+      setInterestRate(parsed);
+    }
+  };
+
+  const handleRateBlur = () => {
+    let parsed = parseFloat(rateStr);
+    if (isNaN(parsed)) {
+      parsed = 1;
+    }
+    const clamped = Math.max(1, Math.min(45, parsed));
+    setInterestRate(clamped);
+    setRateStr(clamped.toString());
+  };
+
+  const handleTermChange = (valStr: string) => {
+    setTermStr(valStr);
+    const parsed = parseFloat(valStr);
+    if (!isNaN(parsed)) {
+      setLoanTerm(parsed);
+    }
+  };
+
+  const handleTermBlur = () => {
+    let parsed = parseFloat(termStr);
+    if (isNaN(parsed)) {
+      parsed = 3;
+    }
+    const clamped = Math.max(3, Math.min(60, parsed));
+    setLoanTerm(clamped);
+    setTermStr(clamped.toString());
+  };
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -105,16 +164,37 @@ export default function LoanCalculatorPage() {
                 <Stack spacing={6} md-spacing={8} className="flex-grow">
                   {/* Amount Slider */}
                   <Box>
-                    <Stack direction="row" justifyContent="space-between" className="mb-4">
-                      <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-400">Principal Amount</Typography>
-                      <Typography className="font-black text-lg md:text-xl text-blue-600">${loanAmount.toLocaleString()}</Typography>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" className="mb-4">
+                      <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-400">Principal Amount ($)</Typography>
+                      <input 
+                        type="number"
+                        value={amountStr}
+                        onChange={(e) => handleAmountChange(e.target.value)}
+                        onBlur={handleAmountBlur}
+                        style={{
+                          width: '120px',
+                          border: 'none',
+                          borderBottom: '2px solid #2563eb',
+                          background: 'none',
+                          fontSize: '18px',
+                          fontWeight: 900,
+                          color: '#2563eb',
+                          textAlign: 'right',
+                          outline: 'none',
+                          padding: '2px',
+                          fontFamily: 'inherit'
+                        }}
+                      />
                     </Stack>
                     <Slider 
                       value={loanAmount}
                       min={1000}
-                      max={500000}
+                      max={1000000}
                       step={1000}
-                      onChange={(_, v) => setLoanAmount(v as number)}
+                      onChange={(_, v) => {
+                        setLoanAmount(v as number);
+                        setAmountStr((v as number).toString());
+                      }}
                       className="text-blue-600"
                       sx={{ '& .MuiSlider-thumb': { width: { xs: 20, md: 28 }, height: { xs: 20, md: 28 }, backgroundColor: '#fff', border: '6px solid currentColor' } }}
                     />
@@ -122,16 +202,38 @@ export default function LoanCalculatorPage() {
 
                   {/* Interest Slider */}
                   <Box>
-                    <Stack direction="row" justifyContent="space-between" className="mb-4">
-                      <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-400">Annual Interest Rate</Typography>
-                      <Typography className="font-black text-lg md:text-xl text-blue-600">{interestRate}%</Typography>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" className="mb-4">
+                      <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-400">Annual Interest Rate (%)</Typography>
+                      <input 
+                        type="number"
+                        step="0.1"
+                        value={rateStr}
+                        onChange={(e) => handleRateChange(e.target.value)}
+                        onBlur={handleRateBlur}
+                        style={{
+                          width: '80px',
+                          border: 'none',
+                          borderBottom: '2px solid #2563eb',
+                          background: 'none',
+                          fontSize: '18px',
+                          fontWeight: 900,
+                          color: '#2563eb',
+                          textAlign: 'right',
+                          outline: 'none',
+                          padding: '2px',
+                          fontFamily: 'inherit'
+                        }}
+                      />
                     </Stack>
                     <Slider 
                       value={interestRate}
                       min={1}
                       max={45}
                       step={0.5}
-                      onChange={(_, v) => setInterestRate(v as number)}
+                      onChange={(_, v) => {
+                        setInterestRate(v as number);
+                        setRateStr((v as number).toString());
+                      }}
                       className="text-blue-600"
                       sx={{ '& .MuiSlider-thumb': { width: { xs: 20, md: 28 }, height: { xs: 20, md: 28 }, backgroundColor: '#fff', border: '6px solid currentColor' } }}
                     />
@@ -139,16 +241,37 @@ export default function LoanCalculatorPage() {
 
                   {/* Term Slider */}
                   <Box>
-                    <Stack direction="row" justifyContent="space-between" className="mb-4">
-                      <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-400">Repayment Period</Typography>
-                      <Typography className="font-black text-lg md:text-xl text-blue-600">{loanTerm} Months</Typography>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" className="mb-4">
+                      <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-400">Repayment Period (Months)</Typography>
+                      <input 
+                        type="number"
+                        value={termStr}
+                        onChange={(e) => handleTermChange(e.target.value)}
+                        onBlur={handleTermBlur}
+                        style={{
+                          width: '80px',
+                          border: 'none',
+                          borderBottom: '2px solid #2563eb',
+                          background: 'none',
+                          fontSize: '18px',
+                          fontWeight: 900,
+                          color: '#2563eb',
+                          textAlign: 'right',
+                          outline: 'none',
+                          padding: '2px',
+                          fontFamily: 'inherit'
+                        }}
+                      />
                     </Stack>
                     <Slider 
                       value={loanTerm}
                       min={3}
                       max={60}
                       step={3}
-                      onChange={(_, v) => setLoanTerm(v as number)}
+                      onChange={(_, v) => {
+                        setLoanTerm(v as number);
+                        setTermStr((v as number).toString());
+                      }}
                       className="text-blue-600"
                       sx={{ '& .MuiSlider-thumb': { width: { xs: 20, md: 28 }, height: { xs: 20, md: 28 }, backgroundColor: '#fff', border: '6px solid currentColor' } }}
                     />

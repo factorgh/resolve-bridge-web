@@ -158,6 +158,70 @@ export default function Home() {
   const [calcRate, setCalcRate] = useState(18);
   const [calcTerm, setCalcTerm] = useState(24);
 
+  const [amountStr, setAmountStr] = useState("10000");
+  const [rateStr, setRateStr] = useState("18");
+  const [termStr, setTermStr] = useState("24");
+
+  const handleAmountChange = (valStr: string) => {
+    setAmountStr(valStr);
+    const parsed = parseFloat(valStr);
+    if (!isNaN(parsed)) {
+      // Clamp calcAmount instantly to bounds to prevent astronomical UI numbers
+      const clamped = Math.max(0, Math.min(1000000, parsed));
+      setCalcAmount(clamped);
+    }
+  };
+
+  const handleAmountBlur = () => {
+    let parsed = parseFloat(amountStr);
+    if (isNaN(parsed)) {
+      parsed = 1000;
+    }
+    const clamped = Math.max(1000, Math.min(1000000, parsed));
+    setCalcAmount(clamped);
+    setAmountStr(clamped.toString());
+  };
+
+  const handleRateChange = (valStr: string) => {
+    setRateStr(valStr);
+    const parsed = parseFloat(valStr);
+    if (!isNaN(parsed)) {
+      // Clamp calcRate instantly to bounds to prevent astronomical UI numbers
+      const clamped = Math.max(0, Math.min(36, parsed));
+      setCalcRate(clamped);
+    }
+  };
+
+  const handleRateBlur = () => {
+    let parsed = parseFloat(rateStr);
+    if (isNaN(parsed)) {
+      parsed = 10;
+    }
+    const clamped = Math.max(10, Math.min(36, parsed));
+    setCalcRate(clamped);
+    setRateStr(clamped.toString());
+  };
+
+  const handleTermChange = (valStr: string) => {
+    setTermStr(valStr);
+    const parsed = parseFloat(valStr);
+    if (!isNaN(parsed)) {
+      // Clamp calcTerm instantly to bounds to prevent astronomical UI numbers
+      const clamped = Math.max(0, Math.min(84, parsed));
+      setCalcTerm(clamped);
+    }
+  };
+
+  const handleTermBlur = () => {
+    let parsed = parseFloat(termStr);
+    if (isNaN(parsed)) {
+      parsed = 6;
+    }
+    const clamped = Math.max(6, Math.min(84, parsed));
+    setCalcTerm(clamped);
+    setTermStr(clamped.toString());
+  };
+
   const { monthly, weekly, daily } = useMemo(() => {
     const r = calcRate / 100 / 12;
     const n = calcTerm;
@@ -172,35 +236,99 @@ export default function Home() {
   const CalculatorInputs = () => (
     <Stack spacing={4}>
       <Box>
-        <Stack direction="row" justifyContent="space-between" mb={2}>
-          <Typography sx={{ fontSize: '11px', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Loan Amount</Typography>
-          <Typography sx={{ fontSize: '16px', fontWeight: 900, color: '#0f172a' }}>GH₵ {calcAmount.toLocaleString()}</Typography>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography sx={{ fontSize: '11px', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Loan Amount (GH₵)</Typography>
+          <input 
+            type="number"
+            value={amountStr}
+            onChange={(e) => handleAmountChange(e.target.value)}
+            onBlur={handleAmountBlur}
+            style={{
+              width: '120px',
+              border: 'none',
+              borderBottom: '2px solid #10b981',
+              background: 'none',
+              fontSize: '16px',
+              fontWeight: 900,
+              color: '#10b981',
+              textAlign: 'right',
+              outline: 'none',
+              padding: '2px',
+              fontFamily: 'inherit'
+            }}
+          />
         </Stack>
         <Slider 
-          value={calcAmount} min={1000} max={250000} step={1000} 
-          onChange={(_, v) => setCalcAmount(v as number)}
+          value={calcAmount} min={1000} max={1000000} step={1000} 
+          onChange={(_, v) => {
+            setCalcAmount(v as number);
+            setAmountStr((v as number).toString());
+          }}
           sx={{ color: '#10b981', '& .MuiSlider-thumb': { backgroundColor: '#fff', border: '4px solid currentColor' } }}
         />
       </Box>
       <Box>
-        <Stack direction="row" justifyContent="space-between" mb={2}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography sx={{ fontSize: '11px', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Interest Rate (% p.a)</Typography>
-          <Typography sx={{ fontSize: '16px', fontWeight: 900, color: '#0f172a' }}>{calcRate}%</Typography>
+          <input 
+            type="number"
+            step="0.5"
+            value={rateStr}
+            onChange={(e) => handleRateChange(e.target.value)}
+            onBlur={handleRateBlur}
+            style={{
+              width: '80px',
+              border: 'none',
+              borderBottom: '2px solid #10b981',
+              background: 'none',
+              fontSize: '16px',
+              fontWeight: 900,
+              color: '#10b981',
+              textAlign: 'right',
+              outline: 'none',
+              padding: '2px',
+              fontFamily: 'inherit'
+            }}
+          />
         </Stack>
         <Slider 
           value={calcRate} min={10} max={36} step={0.5} 
-          onChange={(_, v) => setCalcRate(v as number)}
+          onChange={(_, v) => {
+            setCalcRate(v as number);
+            setRateStr((v as number).toString());
+          }}
           sx={{ color: '#10b981', '& .MuiSlider-thumb': { backgroundColor: '#fff', border: '4px solid currentColor' } }}
         />
       </Box>
       <Box>
-        <Stack direction="row" justifyContent="space-between" mb={2}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography sx={{ fontSize: '11px', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Period (Months)</Typography>
-          <Typography sx={{ fontSize: '16px', fontWeight: 900, color: '#0f172a' }}>{calcTerm} Mo</Typography>
+          <input 
+            type="number"
+            value={termStr}
+            onChange={(e) => handleTermChange(e.target.value)}
+            onBlur={handleTermBlur}
+            style={{
+              width: '80px',
+              border: 'none',
+              borderBottom: '2px solid #10b981',
+              background: 'none',
+              fontSize: '16px',
+              fontWeight: 900,
+              color: '#10b981',
+              textAlign: 'right',
+              outline: 'none',
+              padding: '2px',
+              fontFamily: 'inherit'
+            }}
+          />
         </Stack>
         <Slider 
           value={calcTerm} min={6} max={84} step={6} 
-          onChange={(_, v) => setCalcTerm(v as number)}
+          onChange={(_, v) => {
+            setCalcTerm(v as number);
+            setTermStr((v as number).toString());
+          }}
           sx={{ color: '#10b981', '& .MuiSlider-thumb': { backgroundColor: '#fff', border: '4px solid currentColor' } }}
         />
       </Box>
@@ -210,18 +338,18 @@ export default function Home() {
   const CalculatorResults = () => (
     <Box sx={{ position: 'relative', zIndex: 1 }}>
       <Typography sx={{ fontSize: '11px', fontWeight: 900, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.15em', mb: 1 }}>Estimated Monthly</Typography>
-      <Typography sx={{ fontSize: '42px', fontWeight: 900, color: '#fff', mb: 4, letterSpacing: '-0.04em' }}>GH₵ {Math.round(monthly).toLocaleString()}</Typography>
+      <Typography sx={{ fontSize: { xs: '32px', sm: '38px', md: '42px' }, fontWeight: 900, color: '#fff', mb: 4, letterSpacing: '-0.04em', wordBreak: 'break-word' }}>GH₵ {Math.round(monthly).toLocaleString()}</Typography>
       
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', mb: 4 }} />
       
       <Stack spacing={3}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography sx={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>Weekly Breakdown</Typography>
-          <Typography sx={{ fontSize: '18px', fontWeight: 900, color: '#10b981' }}>GH₵ {Math.round(weekly).toLocaleString()}</Typography>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
+          <Typography sx={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}>Weekly Breakdown</Typography>
+          <Typography sx={{ fontSize: { xs: '15px', md: '18px' }, fontWeight: 900, color: '#10b981', textAlign: 'right', wordBreak: 'break-word' }}>GH₵ {Math.round(weekly).toLocaleString()}</Typography>
         </Stack>
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography sx={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>Daily Commitment</Typography>
-          <Typography sx={{ fontSize: '18px', fontWeight: 900, color: '#fff' }}>GH₵ {Math.round(daily).toLocaleString()}</Typography>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
+          <Typography sx={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}>Daily Commitment</Typography>
+          <Typography sx={{ fontSize: { xs: '15px', md: '18px' }, fontWeight: 900, color: '#fff', textAlign: 'right', wordBreak: 'break-word' }}>GH₵ {Math.round(daily).toLocaleString()}</Typography>
         </Stack>
       </Stack>
       
@@ -524,7 +652,7 @@ export default function Home() {
                 }}>
                   {/* Inputs */}
                   <Box>
-                    <CalculatorInputs />
+                    {CalculatorInputs()}
                   </Box>
 
                   {/* Results Pane */}
@@ -534,7 +662,7 @@ export default function Home() {
                     position: 'relative', overflow: 'hidden', boxShadow: '0 20px 40px rgba(2,6,23,0.3)'
                   }}>
                     <Box sx={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, background: 'rgba(16,185,129,0.1)', borderRadius: '50%', blur: '40px' }} />
-                    <CalculatorResults />
+                    {CalculatorResults()}
                   </Box>
                 </Box>
               </motion.div>

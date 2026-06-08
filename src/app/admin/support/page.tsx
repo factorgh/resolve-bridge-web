@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   SupportAgentRounded, 
@@ -16,13 +17,33 @@ import {
   useGetChatHistoryQuery, 
   useSendMessageMutation 
 } from '@/lib/redux/api/chatApi';
+import { useAdminGetUsersQuery } from '@/lib/redux/api/userApi';
 
-export default function AdminSupportPage() {
+function SupportDeskContent() {
   const [mounted, setMounted] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [selectedCustomerName, setSelectedCustomerName] = useState<string>('');
   const [replyText, setReplyText] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const customerId = searchParams.get('customerId');
+    const customerName = searchParams.get('customerName');
+    if (customerId) {
+      setSelectedCustomerId(customerId);
+      if (customerName) {
+        setSelectedCustomerName(decodeURIComponent(customerName));
+      }
+    }
+  }, [searchParams]);
+
+  // User search query for initiating support threads
+  const { data: searchResults, isLoading: isSearching } = useAdminGetUsersQuery(searchQuery, {
+    skip: !searchQuery.trim()
+  });
 
   // Poll conversation list every 3 seconds to capture incoming chat sessions!
   const { data: conversationsResponse, refetch: refetchConversations } = useGetAdminConversationsQuery(undefined, {
@@ -108,6 +129,84 @@ export default function AdminSupportPage() {
               Active Channels
             </h3>
             <p style={{ margin: '4px 0 0', fontSize: 11, color: C.textMuted }}>Select a customer thread to reply</p>
+          </div>
+
+          {/* Search Bar */}
+          <div style={{ padding: '12px 16px', borderBottom: `1px solid ${C.border}`, position: 'relative' }}>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search customers to message..."
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: 12,
+                border: `1px solid ${C.border}`,
+                background: 'rgba(0,0,0,0.02)',
+                color: C.text,
+                fontSize: 12,
+                outline: 'none',
+              }}
+            />
+            {searchQuery.trim().length > 0 && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 16,
+                right: 16,
+                background: C.surface,
+                border: `1px solid ${C.border}`,
+                borderRadius: 12,
+                boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                zIndex: 10,
+                maxHeight: 250,
+                overflowY: 'auto',
+                padding: 4,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2
+              }}>
+                {isSearching ? (
+                  <p style={{ margin: 0, padding: 12, fontSize: 11.5, color: C.textMuted, textAlign: 'center' }}>Searching customers...</p>
+                ) : searchResults && searchResults.data && searchResults.data.length > 0 ? (
+                  searchResults.data.map((usr: any) => (
+                    <button
+                      key={usr.id}
+                      onClick={() => {
+                        setSelectedCustomerId(usr.id);
+                        setSelectedCustomerName(`${usr.firstName} ${usr.lastName}`);
+                        setSearchQuery('');
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: 'none',
+                        background: 'transparent',
+                        borderRadius: 8,
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        transition: '0.2s',
+                        outline: 'none'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = C.bluePale}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>
+                        {usr.firstName} {usr.lastName}
+                      </span>
+                      <span style={{ fontSize: 10, color: C.textMuted }}>
+                        {usr.email}
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <p style={{ margin: 0, padding: 12, fontSize: 11.5, color: C.textMuted, textAlign: 'center' }}>No matching applicants found</p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* List */}
@@ -325,5 +424,13 @@ export default function AdminSupportPage() {
         </div>
       </div>
     </AdminShell>
+  );
+}
+
+export default function AdminSupportPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: '#9aa5bf' }}>Loading workspace...</div>}>
+       <SupportDeskContent />
+    </Suspense>
   );
 }

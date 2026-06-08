@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Drawer, IconButton, Dialog } from "@mui/material";
+import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
 import AdminShell, { C, F } from "../components/AdminShell";
 import {
@@ -42,6 +43,7 @@ export default function AdminProductsPage() {
   const [prodName, setProdName] = useState("");
   const [prodDesc, setProdDesc] = useState("");
   const [prodType, setProdType] = useState("Loan");
+  const [customType, setCustomType] = useState("");
   const [selectedInstId, setSelectedInstId] = useState("");
   const [minAmount, setMinAmount] = useState<number>(100);
   const [maxAmount, setMaxAmount] = useState<number>(10000);
@@ -103,7 +105,16 @@ export default function AdminProductsPage() {
     if (editingProduct) {
       setProdName(editingProduct.name || "");
       setProdDesc(editingProduct.description || "");
-      setProdType(editingProduct.productType || "Loan");
+      
+      const isStandard = ["Loan", "BNPL", "Insurance"].includes(editingProduct.productType);
+      if (isStandard) {
+        setProdType(editingProduct.productType || "Loan");
+        setCustomType("");
+      } else {
+        setProdType("custom");
+        setCustomType(editingProduct.productType || "");
+      }
+
       setSelectedInstId(
         editingProduct.institutionId?._id || editingProduct.institutionId || "",
       );
@@ -120,6 +131,7 @@ export default function AdminProductsPage() {
       setProdName("");
       setProdDesc("");
       setProdType("Loan");
+      setCustomType("");
       setSelectedInstId("");
       setMinAmount(100);
       setMaxAmount(10000);
@@ -139,6 +151,14 @@ export default function AdminProductsPage() {
     ? blacklistedResponse?.data || []
     : productResponse?.data || [];
   const institutions = instsResponse?.data || [];
+
+  const customCategories: string[] = Array.from(
+    new Set(
+      products
+        .map((p: any) => p.productType)
+        .filter((type: string) => type && !["Loan", "BNPL", "Insurance", "custom"].includes(type))
+    )
+  );
 
   const myInstitutionId = user?.institutionId;
   const isSuperAdmin = user?.role === "SuperAdmin" || user?.role === "Admin";
@@ -192,6 +212,12 @@ export default function AdminProductsPage() {
       toast.error("Please fill in all required product fields");
       return;
     }
+    if (prodType === "custom" && !customType.trim()) {
+      toast.error("Please enter a custom category name");
+      return;
+    }
+
+    const finalProductType = prodType === "custom" ? customType.trim() : prodType;
 
     try {
       if (editingProduct) {
@@ -200,7 +226,7 @@ export default function AdminProductsPage() {
           body: {
             name: prodName,
             description: prodDesc,
-            productType: prodType,
+            productType: finalProductType,
             institutionId: instId,
             minAmount,
             maxAmount,
@@ -224,7 +250,7 @@ export default function AdminProductsPage() {
         const res = await createProduct({
           name: prodName,
           description: prodDesc,
-          productType: prodType,
+          productType: finalProductType,
           institutionId: instId,
           minAmount,
           maxAmount,
@@ -906,8 +932,42 @@ export default function AdminProductsPage() {
                   BNPL (Electronic installments / Retailer grids)
                 </option>
                 <option value="Insurance">Insurance premium financing</option>
+                {customCategories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat} (Custom Category)
+                  </option>
+                ))}
+                <option value="custom">Add Custom Category...</option>
               </select>
             </div>
+
+            {prodType === "custom" && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{ marginTop: 4 }}
+              >
+                <span style={{ fontSize: 12, color: C.textSub }}>
+                  Custom Category Name
+                </span>
+                <input
+                  placeholder="e.g. AgriFinance, Crowdfunding, Lease..."
+                  value={customType}
+                  onChange={(e) => setCustomType(e.target.value)}
+                  style={{
+                    width: "100%",
+                    marginTop: 8,
+                    padding: 12,
+                    borderRadius: 10,
+                    border: `1px solid ${C.borderStrong}`,
+                    background: C.bg,
+                    color: C.text,
+                    fontSize: 13,
+                    outline: "none",
+                  }}
+                />
+              </motion.div>
+            )}
 
             {/* BNPL Product Image Upload & Template Picker */}
             {prodType === "BNPL" && (

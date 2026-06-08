@@ -1,18 +1,6 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { baseApi } from './baseApi';
 
-export const documentApi = createApi({
-  reducerPath: 'documentApi',
-  baseQuery: fetchBaseQuery({ 
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1',
-    prepareHeaders: (headers) => {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('rb_token') : null;
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
-  tagTypes: ['Document'],
+export const documentApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getDocuments: builder.query<any, void>({
       query: () => '/Documents/my-documents',
@@ -23,6 +11,20 @@ export const documentApi = createApi({
         url: '/Documents/upload',
         method: 'POST',
         body
+      }),
+      invalidatesTags: ['Document']
+    }),
+    uploadFileRaw: builder.mutation<any, FormData>({
+      query: (body) => ({
+        url: '/Documents/upload-file',
+        method: 'POST',
+        body
+      })
+    }),
+    deleteDocument: builder.mutation<any, string>({
+      query: (id) => ({
+        url: `/Documents/my-documents/${id}`,
+        method: 'DELETE'
       }),
       invalidatesTags: ['Document']
     }),
@@ -39,11 +41,14 @@ export const documentApi = createApi({
       invalidatesTags: ['Document']
     }),
   }),
+  overrideExisting: true,
 });
 
 export const { 
   useGetDocumentsQuery, 
   useUploadDocumentMutation,
+  useUploadFileRawMutation,
+  useDeleteDocumentMutation,
   useAdminGetPendingDocumentsQuery,
   useAdminVerifyDocumentMutation
 } = documentApi;

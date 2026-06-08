@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { baseApi } from './baseApi';
 
 export interface PaymentHistoryItem {
   _id: string;
@@ -19,20 +19,7 @@ export interface PaymentHistoryResponse {
   skip: number;
 }
 
-export const paymentApi = createApi({
-  reducerPath: "paymentApi",
-  tagTypes: ["Payment"],
-  baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api/v1",
-    prepareHeaders: (headers) => {
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("rb_token") : null;
-      if (token) {
-        headers.set("authorization", `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+export const paymentApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     initiatePayment: builder.mutation<
       any,
@@ -69,6 +56,7 @@ export const paymentApi = createApi({
       invalidatesTags: ["Payment"],
     }),
   }),
+  overrideExisting: true,
 });
 
 export const {

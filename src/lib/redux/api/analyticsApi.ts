@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { baseApi } from './baseApi';
 
 export interface AnalyticsOverview {
   statusCounts: Record<string, number>;
@@ -10,20 +10,7 @@ export interface AnalyticsOverview {
   recentEvents: Array<any>;
 }
 
-export const analyticsApi = createApi({
-  reducerPath: "analyticsApi",
-  tagTypes: ["Analytics"],
-  baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api/v1",
-    prepareHeaders: (headers) => {
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("rb_token") : null;
-      if (token) {
-        headers.set("authorization", `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+export const analyticsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getAdminAnalyticsOverview: builder.query<
       { success: boolean; data: AnalyticsOverview },
@@ -38,6 +25,7 @@ export const analyticsApi = createApi({
       query: () => "/Analytics/events",
     }),
   }),
+  overrideExisting: true,
 });
 
 export const {

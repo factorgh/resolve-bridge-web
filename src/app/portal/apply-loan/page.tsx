@@ -9,6 +9,7 @@ import 'react-phone-number-input/style.css';
 import { useCreateApplicationMutation } from '@/lib/redux/api/applicationApi';
 import { useGetProductsQuery } from '@/lib/redux/api/productApi';
 import { useGetDocumentsQuery, useUploadDocumentMutation } from '@/lib/redux/api/documentApi';
+import { toast } from 'react-hot-toast';
 
 /* ─── Data ─────────────────────────────────────────────────────────────────── */
 const LOAN_TYPES = [
@@ -183,6 +184,16 @@ export default function ApplyLoanPage() {
     const preProdId = params.get('productId');
     if (preLender) setForm(f => ({ ...f, lender: decodeURIComponent(preLender) }));
     if (preProdId) setProductId(preProdId);
+
+    // Check payment callback status
+    const payment = params.get('payment');
+    if (payment === 'success') {
+      toast.success('Connection fee payment completed successfully! Application is now formally submitted.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (payment === 'failed') {
+      toast.error('Connection fee payment failed or was cancelled.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }, []);
 
   // Dynamically resolve product ID based on form selection if not set by query param
@@ -280,7 +291,16 @@ export default function ApplyLoanPage() {
 
       const result = await createApplication(payload).unwrap();
       if (result?.success) {
-        setSubmitted(true);
+        const requiresPayment = result.data?.requiresPayment || result.requiresPayment;
+        const url = result.data?.authorizationUrl || result.authorizationUrl;
+        if (requiresPayment && url) {
+          toast.success('Redirecting to Paystack secure checkout to settle connection fee...');
+          setTimeout(() => {
+            window.location.href = url;
+          }, 1500);
+        } else {
+          setSubmitted(true);
+        }
       }
     } catch (err: any) {
       console.error('Failed to submit application:', err);

@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { baseApi } from './baseApi';
 
 export interface DashboardMetrics {
   healthIndex: number;
@@ -30,19 +30,7 @@ export interface NewsArticle {
   publishedAt: string;
 }
 
-export const userApi = createApi({
-  reducerPath: 'userApi',
-  tagTypes: ['User'],
-  baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1',
-    prepareHeaders: (headers) => {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('rb_token') : null;
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+export const userApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getMe: builder.query<any, void>({
       query: () => '/Users/me',
@@ -62,8 +50,8 @@ export const userApi = createApi({
     getNewsArticles: builder.query<{ success: boolean; data: NewsArticle[] }, void>({
       query: () => '/News',
     }),
-    adminGetUsers: builder.query<any, void>({
-      query: () => '/Users',
+    adminGetUsers: builder.query<any, string | void>({
+      query: (q) => q ? `/Users?q=${encodeURIComponent(q)}` : '/Users',
       providesTags: ['User']
     }),
     adminUpdateUser: builder.mutation<any, { id: string; role?: string; isActive?: boolean; kycStatus?: string }>({
@@ -90,7 +78,38 @@ export const userApi = createApi({
       }),
       invalidatesTags: ['User']
     }),
+    b2bGetStaff: builder.query<any, void>({
+      query: () => '/Users/b2b/staff',
+      providesTags: ['User']
+    }),
+    b2bOnboardStaff: builder.mutation<any, any>({
+      query: (body) => ({
+        url: '/Users/b2b/staff',
+        method: 'POST',
+        body
+      }),
+      invalidatesTags: ['User']
+    }),
+    b2bDeboardStaff: builder.mutation<any, string>({
+      query: (id) => ({
+        url: `/Users/b2b/staff/${id}`,
+        method: 'DELETE'
+      }),
+      invalidatesTags: ['User']
+    }),
+    b2bUpdateStaffPermissions: builder.mutation<
+      any,
+      { id: string; permissions: string[] }
+    >({
+      query: ({ id, permissions }) => ({
+        url: `/Users/b2b/staff/${id}/permissions`,
+        method: 'PATCH',
+        body: { permissions }
+      }),
+      invalidatesTags: ['User']
+    }),
   }),
+  overrideExisting: true,
 });
 
 export const { 
@@ -101,5 +120,9 @@ export const {
   useAdminGetUsersQuery,
   useAdminUpdateUserMutation,
   useAdminUpdateUserScoreMutation,
-  usePaySubscriptionMutation
+  usePaySubscriptionMutation,
+  useB2bGetStaffQuery,
+  useB2bOnboardStaffMutation,
+  useB2bDeboardStaffMutation,
+  useB2bUpdateStaffPermissionsMutation
 } = userApi;

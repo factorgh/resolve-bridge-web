@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,6 +19,7 @@ import {
   ExitToAppRounded
 } from '@mui/icons-material';
 import FloatingChat from './FloatingChat';
+import { useGetNotificationsQuery, useMarkNotificationReadMutation } from '@/lib/redux/api/notificationApi';
 
 /* ─── Design tokens ──────────────────────────────────────────────────────── */
 export const C = {
@@ -109,8 +110,88 @@ export default function PortalShell({
   const [notifOpen, setNotifOpen] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState<any>(null);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
+
+  const { data: notifData } = useGetNotificationsQuery(undefined, {
+    pollingInterval: 10000,
+  });
+  const [markNotificationRead] = useMarkNotificationReadMutation();
+  const notifications = notifData?.data || [];
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+  
+  const [notifSearch, setNotifSearch] = useState('');
+
+  const getNotificationConfig = (item: any) => {
+    if (item.type === 'ApplicationReview') {
+      if (item.title?.toLowerCase().includes('approve') || item.message?.toLowerCase().includes('approve')) {
+        return { icon: <VerifiedRounded sx={{ fontSize: 18 }} />, color: C.emerald };
+      }
+      if (item.title?.toLowerCase().includes('reject') || item.message?.toLowerCase().includes('reject')) {
+        return { icon: <AssignmentLateRounded sx={{ fontSize: 18 }} />, color: C.red };
+      }
+      if (item.title?.toLowerCase().includes('disburse') || item.message?.toLowerCase().includes('disburse')) {
+        return { icon: <BoltRounded sx={{ fontSize: 18 }} />, color: C.purple };
+      }
+      return { icon: <HistoryRounded sx={{ fontSize: 18 }} />, color: C.blue };
+    }
+    return { icon: <NotificationsRounded sx={{ fontSize: 18 }} />, color: C.blue };
+  };
+
+  const formatNotifTime = (createdAtStr: string) => {
+    const diffMs = Date.now() - new Date(createdAtStr).getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
+  };
+
+  const mappedNotifs = useMemo(() => {
+    return notifications.map(n => {
+      const config = getNotificationConfig(n);
+      return {
+        id: n._id,
+        title: n.title,
+        desc: n.message,
+        time: formatNotifTime(n.createdAt),
+        icon: config.icon,
+        color: config.color,
+        unread: !n.isRead,
+        raw: n
+      };
+    });
+  }, [notifications]);
+
+  const filteredNotifs = useMemo(() => {
+    return mappedNotifs.filter(n => 
+      n.title.toLowerCase().includes(notifSearch.toLowerCase()) ||
+      n.desc.toLowerCase().includes(notifSearch.toLowerCase())
+    );
+  }, [mappedNotifs, notifSearch]);
+
+  const handleMarkAllRead = async () => {
+    const unread = notifications.filter((n: any) => !n.isRead);
+    try {
+      await Promise.all(unread.map((n: any) => markNotificationRead(n._id).unwrap()));
+    } catch (err) {
+      console.error("Failed to mark all as read:", err);
+    }
+  };
+
+  const handleSelectNotification = async (n: any) => {
+    setSelectedNotif(n);
+    if (n.unread) {
+      try {
+        await markNotificationRead(n.id).unwrap();
+      } catch (err) {
+        console.error("Failed to mark notification read:", err);
+      }
+    }
+  };
 
   const LOADING_STEPS = [
     "Establishing Secure Handshake...",
@@ -131,7 +212,8 @@ export default function PortalShell({
       try {
         setUser(JSON.parse(stored)); 
         
-        // Custom Page Loader Sequence
+        // Custom Page Loader Sequence commented out to avoid page load delay
+        /*
         let step = 0;
         const interval = setInterval(() => {
            if (step < LOADING_STEPS.length - 1) {
@@ -145,6 +227,9 @@ export default function PortalShell({
               }, 400);
            }
         }, 300);
+        */
+        setIsInitialLoading(false);
+        setReady(true);
 
       } catch (e) {
         console.error('Session corruption detected', e);
@@ -383,7 +468,9 @@ export default function PortalShell({
                   }}
                 >
                    <NotificationsRounded sx={{ fontSize: 18, color: C.text }} />
-                   <span style={{ position: 'absolute', top: 10, right: 10, width: 8, height: 8, borderRadius: '50%', background: C.red, border: '2px solid #fff' }} />
+                   {unreadCount > 0 && (
+                     <span style={{ position: 'absolute', top: 10, right: 10, width: 8, height: 8, borderRadius: '50%', background: C.red, border: '2px solid #fff' }} />
+                   )}
                 </button>
 
                 <div style={{ width: 1, height: 24, background: C.border, margin: '0 4px' }} />
@@ -504,46 +591,48 @@ export default function PortalShell({
                     <Box sx={{ p: 3, borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                        <Box>
                           <Typography sx={{ fontSize: 18, fontWeight: 900, fontFamily: F.heading, color: C.text, lineHeight: 1.2 }}>Intelligence Feed</Typography>
-                          <Typography sx={{ fontSize: 10, color: C.textMuted, fontWeight: 800, letterSpacing: '0.05em' }}>VERIFIED INSTITUTIONAL SIGNALS</Typography>
                        </Box>
-                       <IconButton onClick={() => setNotifOpen(false)} sx={{ width: 36, height: 36 }}><CloseRounded sx={{ fontSize: 20 }} /></IconButton>
                     </Box>
 
                     {/* Search Bar */}
                     <Box sx={{ p: 2, background: 'rgba(0,0,0,0.01)', borderBottom: `1px solid ${C.border}` }}>
                        <div style={{ position: 'relative' }}>
                           <input 
+                            value={notifSearch}
+                            onChange={(e) => setNotifSearch(e.target.value)}
                             placeholder="Search signals..."
-                            style={{ width: '100%', padding: '10px 16px 10px 36px', borderRadius: 12, border: `1px solid ${C.border}`, background: '#fff', fontSize: 13, outline: 'none', color: C.text }}
+                            style={{ width: '100%', padding: '10px 16px 10px 36px', borderRadius: 12, border: `1.5px solid ${C.border}`, background: '#fff', fontSize: 13, outline: 'none', color: C.text }}
                           />
                           <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 16, color: C.textMuted }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                        </div>
                     </Box>
 
                     <Box sx={{ flex: 1, overflowY: 'auto' }}>
-                       {[
-                         { id: 1, title: 'Loan Milestone Confirmed', desc: 'Stanbic Bank has confirmed your Personal Loan package details.', time: '12m ago', icon: <HistoryRounded sx={{ fontSize: 18 }} />, color: C.blue, unread: true },
-                         { id: 2, title: 'New Marketplace Match', desc: 'Enterprise has issued a new quote for your Auto Insurance request.', time: '2h ago', icon: <BoltRounded sx={{ fontSize: 18 }} />, color: C.emerald, unread: true },
-                         { id: 3, title: 'Action Required', desc: 'Documentation needed for your Fidelity Bank enrollment.', time: '5h ago', icon: <AssignmentLateRounded sx={{ fontSize: 18 }} />, color: C.red, unread: true },
-                       ].map((n) => (
-                         <Box key={n.id} onClick={() => setSelectedNotif(n)} sx={{ 
-                           p: '20px 24px', display: 'flex', gap: 16, borderBottom: `1px solid ${C.border}`, 
-                           background: selectedNotif?.id === n.id ? C.bluePale : (n.unread ? 'rgba(32,81,229,0.02)' : 'transparent'),
-                           cursor: 'pointer', transition: '0.2s',
-                           '&:hover': { background: selectedNotif?.id === n.id ? C.bluePale : 'rgba(0,0,0,0.02)' }
-                         }}>
-                            <Box sx={{ width: 36, height: 36, borderRadius: 10, background: `${n.color}10`, color: n.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                               {n.icon}
-                            </Box>
-                            <Box sx={{ minWidth: 0, flex: 1 }}>
-                               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 0.5 }}>
-                                  <Typography sx={{ fontSize: 14, fontWeight: 800, color: C.text }}>{n.title}</Typography>
-                                  <Typography sx={{ fontSize: 10, color: C.textMuted, fontWeight: 700 }}>{n.time}</Typography>
-                               </Box>
-                               <Typography sx={{ fontSize: 12.5, color: C.textSub, lineHeight: 1.4 }}>{n.desc}</Typography>
-                            </Box>
+                       {filteredNotifs.length > 0 ? (
+                         filteredNotifs.map((n) => (
+                           <Box key={n.id} onClick={() => handleSelectNotification(n)} sx={{ 
+                             p: '20px 24px', display: 'flex', gap: 16, borderBottom: `1px solid ${C.border}`, 
+                             background: selectedNotif?.id === n.id ? C.bluePale : (n.unread ? 'rgba(32,81,229,0.02)' : 'transparent'),
+                             cursor: 'pointer', transition: '0.2s',
+                             '&:hover': { background: selectedNotif?.id === n.id ? C.bluePale : 'rgba(0,0,0,0.02)' }
+                           }}>
+                              <Box sx={{ width: 36, height: 36, borderRadius: 10, background: `${n.color}10`, color: n.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                 {n.icon}
+                              </Box>
+                              <Box sx={{ minWidth: 0, flex: 1 }}>
+                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 0.5 }}>
+                                    <Typography sx={{ fontSize: 14, fontWeight: 800, color: C.text }}>{n.title}</Typography>
+                                    <Typography sx={{ fontSize: 10, color: C.textMuted, fontWeight: 700 }}>{n.time}</Typography>
+                                 </Box>
+                                 <Typography sx={{ fontSize: 12.5, color: C.textSub, lineHeight: 1.4 }}>{n.desc}</Typography>
+                              </Box>
+                           </Box>
+                         ))
+                       ) : (
+                         <Box sx={{ p: 4, textAlign: 'center', color: C.textMuted }}>
+                           <Typography sx={{ fontSize: 13, fontWeight: 700 }}>No Signals Found</Typography>
                          </Box>
-                       ))}
+                       )}
                     </Box>
 
                     <Box sx={{ p: 2.5, borderTop: `1px solid ${C.border}`, display: 'flex', gap: 1.5 }}>
@@ -554,8 +643,9 @@ export default function PortalShell({
                          Settings
                        </button>
                        <button 
-                        onClick={() => setNotifOpen(false)}
-                        style={{ flex: 2, padding: '12px', borderRadius: 14, border: 'none', background: C.text, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', transition: '0.2s' }}
+                        disabled={unreadCount === 0}
+                        onClick={handleMarkAllRead}
+                        style={{ flex: 2, padding: '12px', borderRadius: 14, border: 'none', background: C.text, color: '#fff', fontWeight: 800, fontSize: 13, cursor: unreadCount === 0 ? 'not-allowed' : 'pointer', transition: '0.2s', opacity: unreadCount === 0 ? 0.5 : 1 }}
                        >
                          Mark All as Read
                        </button>
@@ -605,12 +695,21 @@ export default function PortalShell({
 
                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                               <Typography sx={{ fontSize: 10, fontWeight: 900, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em', mb: 1 }}>Recommended Actions</Typography>
-                              <button 
-                                onClick={() => { router.push('/portal/marketplace'); setNotifOpen(false); }}
-                                style={{ width: '100%', padding: '16px', borderRadius: 18, border: 'none', background: C.text, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', transition: '0.2s', boxShadow: '0 4px 12px rgba(13,27,62,0.1)' }}
-                              >
-                                Review Activity in Marketplace
-                              </button>
+                              {selectedNotif.raw?.targetId ? (
+                                <button 
+                                  onClick={() => { router.push('/portal/statement'); setNotifOpen(false); }}
+                                  style={{ width: '100%', padding: '16px', borderRadius: 18, border: 'none', background: C.text, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', transition: '0.2s', boxShadow: '0 4px 12px rgba(13,27,62,0.1)' }}
+                                >
+                                  Review Application Status
+                                </button>
+                              ) : (
+                                <button 
+                                  onClick={() => { router.push('/portal/marketplace'); setNotifOpen(false); }}
+                                  style={{ width: '100%', padding: '16px', borderRadius: 18, border: 'none', background: C.text, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', transition: '0.2s', boxShadow: '0 4px 12px rgba(13,27,62,0.1)' }}
+                                >
+                                  Review Marketplace Matches
+                                </button>
+                              )}
                               <button 
                                 onClick={() => setSelectedNotif(null)}
                                 style={{ width: '100%', padding: '16px', borderRadius: 18, border: `1.5px solid ${C.border}`, background: '#fff', color: C.text, fontWeight: 800, fontSize: 13, cursor: 'pointer', transition: '0.2s' }}

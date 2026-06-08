@@ -23,7 +23,11 @@ import {
   InsightsRounded,
   LightModeRounded,
   DarkModeRounded,
-  SupportAgentRounded
+  SupportAgentRounded,
+  AssignmentTurnedInRounded,
+  AdminPanelSettingsRounded,
+  NotificationsActiveRounded,
+  DoneAllRounded
 } from "@mui/icons-material";
 import {
   useGetNotificationsQuery,
@@ -238,10 +242,21 @@ export default function AdminShell({
     localStorage.setItem('rb_theme', nextTheme);
   };
 
-  const { data: notificationPayload } = useGetNotificationsQuery();
-  const [markNotificationRead] = useMarkNotificationReadMutation();
+  const { data: notificationPayload } = useGetNotificationsQuery(undefined, {
+    pollingInterval: 10000,
+  });
+  const [markNotificationRead, { isLoading: isMarkingRead }] = useMarkNotificationReadMutation();
   const notifications = notificationPayload?.data || [];
   const unreadCount = notifications.filter((item) => !item.isRead).length;
+
+  const handleMarkAllRead = async () => {
+    const unread = notifications.filter((n: any) => !n.isRead);
+    try {
+      await Promise.all(unread.map((n: any) => markNotificationRead(n._id).unwrap()));
+    } catch (err) {
+      console.error("Failed to mark all as read:", err);
+    }
+  };
 
   const LOADING_STEPS = [
     "Establishing Cryptographic Handshake...",
@@ -509,6 +524,17 @@ export default function AdminShell({
           --rb-sidebar-active: rgba(59,130,246,0.16);
           --rb-sidebar-text: rgba(255,255,255,0.6);
           --rb-sidebar-hover: rgba(255,255,255,0.04);
+        }
+        @keyframes pulseGlow {
+          0% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+          }
+          70% {
+            box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+          }
         }
       ` }} />
 
@@ -1546,12 +1572,38 @@ export default function AdminShell({
                   SECURED SYSTEM AUDIT FEED
                 </Typography>
               </Box>
-              <IconButton
-                onClick={() => setNotifOpen(false)}
-                sx={{ width: 34, height: 34, color: C.textSub }}
-              >
-                <CloseRounded sx={{ fontSize: 18 }} />
-              </IconButton>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                {unreadCount > 0 && (
+                  <IconButton
+                    onClick={handleMarkAllRead}
+                    title="Mark all as read"
+                    disabled={isMarkingRead}
+                    sx={{
+                      width: 34,
+                      height: 34,
+                      color: C.blue,
+                      border: `1px solid ${C.border}`,
+                      borderRadius: "10px",
+                      background: "rgba(59,130,246,0.05)",
+                      "&:hover": { background: "rgba(59,130,246,0.15)" },
+                    }}
+                  >
+                    <DoneAllRounded sx={{ fontSize: 16 }} />
+                  </IconButton>
+                )}
+                <IconButton
+                  onClick={() => setNotifOpen(false)}
+                  sx={{
+                    width: 34,
+                    height: 34,
+                    color: C.textSub,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: "10px",
+                  }}
+                >
+                  <CloseRounded sx={{ fontSize: 18 }} />
+                </IconButton>
+              </Box>
             </Box>
 
             <Box sx={{ flex: 1, overflowY: "auto" }}>
@@ -1564,6 +1616,16 @@ export default function AdminShell({
                       : n.type === "AdminAction"
                         ? C.blue
                         : C.amber;
+
+                  const getNotifIcon = () => {
+                    if (n.type === "ApplicationReview") {
+                      return <AssignmentTurnedInRounded sx={{ fontSize: 16 }} />;
+                    } else if (n.type === "AdminAction") {
+                      return <AdminPanelSettingsRounded sx={{ fontSize: 16 }} />;
+                    }
+                    return <NotificationsActiveRounded sx={{ fontSize: 16 }} />;
+                  };
+
                   return (
                     <Box
                       key={n._id}
@@ -1574,10 +1636,11 @@ export default function AdminShell({
                         background: expanded
                           ? C.bluePale
                           : !n.isRead
-                            ? "rgba(59,130,246,0.05)"
+                            ? "rgba(59,130,246,0.03)"
                             : "transparent",
                         cursor: "pointer",
                         transition: "0.2s",
+                        position: "relative",
                         "&:hover": {
                           background: expanded
                             ? C.bluePale
@@ -1597,15 +1660,9 @@ export default function AdminShell({
                             alignItems: "center",
                             justifyContent: "center",
                             flexShrink: 0,
-                            fontSize: 16,
-                            fontWeight: 800,
                           }}
                         >
-                          {n.type === "ApplicationReview"
-                            ? "A"
-                            : n.type === "AdminAction"
-                              ? "S"
-                              : "N"}
+                          {getNotifIcon()}
                         </Box>
                         <Box sx={{ minWidth: 0, flex: 1 }}>
                           <Box
@@ -1621,9 +1678,25 @@ export default function AdminShell({
                                 fontSize: 13,
                                 fontWeight: 800,
                                 color: C.text,
+                                display: "flex",
+                                alignItems: "center",
                               }}
                             >
                               {n.title}
+                              {!n.isRead && (
+                                <span
+                                  style={{
+                                    width: 6,
+                                    height: 6,
+                                    borderRadius: "50%",
+                                    background: C.blue,
+                                    boxShadow: `0 0 0 0 ${C.blue}80`,
+                                    display: "inline-block",
+                                    animation: "pulseGlow 1.5s infinite",
+                                    marginLeft: 8,
+                                  }}
+                                />
+                              )}
                             </Typography>
                             <Typography
                               sx={{
@@ -1672,31 +1745,106 @@ export default function AdminShell({
                                   fontSize: 12.5,
                                   color: C.textSub,
                                   lineHeight: 1.6,
-                                  mb: 2,
+                                  mb: 2.5,
                                 }}
                               >
                                 {n.message}
                               </Typography>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedNotif(null);
-                                }}
-                                style={{
-                                  width: "100%",
-                                  padding: "10px 14px",
-                                  borderRadius: 10,
-                                  border: "none",
-                                  background: C.blue,
-                                  color: "#fff",
-                                  fontWeight: 800,
-                                  fontSize: 12,
-                                  cursor: "pointer",
-                                  transition: "0.2s",
-                                }}
-                              >
-                                Close
-                              </button>
+                              <Box sx={{ display: "flex", gap: 1.5 }}>
+                                {n.type === "ApplicationReview" && n.targetId && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setNotifOpen(false);
+                                      router.push(`/admin/applications?appId=${n.targetId}`);
+                                    }}
+                                    style={{
+                                      flex: 2,
+                                      padding: "10px 16px",
+                                      borderRadius: 10,
+                                      border: "none",
+                                      background: `linear-gradient(135deg, ${C.blue}, #2563eb)`,
+                                      color: "#fff",
+                                      fontWeight: 800,
+                                      fontSize: 12,
+                                      cursor: "pointer",
+                                      boxShadow: "0 4px 12px rgba(37,99,235,0.2)",
+                                      transition: "all 0.2s",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      gap: 6
+                                    }}
+                                    onMouseOver={(e) => {
+                                      e.currentTarget.style.transform = "translateY(-1px)";
+                                      e.currentTarget.style.boxShadow = "0 6px 16px rgba(37,99,235,0.3)";
+                                    }}
+                                    onMouseOut={(e) => {
+                                      e.currentTarget.style.transform = "translateY(0)";
+                                      e.currentTarget.style.boxShadow = "0 4px 12px rgba(37,99,235,0.2)";
+                                    }}
+                                  >
+                                    Review Case
+                                  </button>
+                                )}
+                                
+                                {!n.isRead && (
+                                  <button
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      await markNotificationRead(n._id);
+                                    }}
+                                    disabled={isMarkingRead}
+                                    style={{
+                                      flex: 1,
+                                      padding: "10px 14px",
+                                      borderRadius: 10,
+                                      border: `1px solid ${C.border}`,
+                                      background: C.surface,
+                                      color: C.textSub,
+                                      fontWeight: 700,
+                                      fontSize: 11.5,
+                                      cursor: isMarkingRead ? "not-allowed" : "pointer",
+                                      transition: "0.2s",
+                                    }}
+                                    onMouseOver={(e) => {
+                                      if (!isMarkingRead) e.currentTarget.style.background = "rgba(255,255,255,0.02)";
+                                    }}
+                                    onMouseOut={(e) => {
+                                      e.currentTarget.style.background = C.surface;
+                                    }}
+                                  >
+                                    {isMarkingRead ? "Marking..." : "Mark read"}
+                                  </button>
+                                )}
+                                
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedNotif(null);
+                                  }}
+                                  style={{
+                                    flex: n.type === "ApplicationReview" && n.targetId ? 1 : 2,
+                                    padding: "10px 14px",
+                                    borderRadius: 10,
+                                    border: `1px solid ${C.border}`,
+                                    background: "transparent",
+                                    color: C.textSub,
+                                    fontWeight: 700,
+                                    fontSize: 11.5,
+                                    cursor: "pointer",
+                                    transition: "0.2s",
+                                  }}
+                                  onMouseOver={(e) => {
+                                    e.currentTarget.style.background = "rgba(255,255,255,0.02)";
+                                  }}
+                                  onMouseOut={(e) => {
+                                    e.currentTarget.style.background = "transparent";
+                                  }}
+                                >
+                                  Close
+                                </button>
+                              </Box>
                             </div>
                           </motion.div>
                         )}

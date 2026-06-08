@@ -16,6 +16,7 @@ import {
   useUpdateSubscriptionFeeMutation,
   useCreateInvoiceMutation,
   usePayInvoiceMutation,
+  useInitializeInvoicePaymentMutation,
   useTriggerBillingRunMutation,
 } from "@/lib/redux/api/billingApi";
 import { useGetInstitutionsQuery } from "@/lib/redux/api/productApi";
@@ -72,12 +73,6 @@ export default function AdminBillingPage() {
   const [invoiceAmount, setInvoiceAmount] = useState<number>(0);
   const [invoiceDesc, setInvoiceDesc] = useState<string>("");
 
-  // Simulated Mobile Money checkout drawer for Partner Admin
-  const [selectedPayInvoice, setSelectedPayInvoice] = useState<any>(null);
-  const [momoNumber, setMomoNumber] = useState("");
-  const [momoProvider, setMomoProvider] = useState("MTN Mobile Money");
-  const [securePin, setSecurePin] = useState("");
-  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
   // Redux triggers
   const {
@@ -107,6 +102,8 @@ export default function AdminBillingPage() {
   const [createInvoice, { isLoading: isCreatingInvoice }] =
     useCreateInvoiceMutation();
   const [payInvoice, { isLoading: isPaying }] = usePayInvoiceMutation();
+  const [initializeInvoicePayment, { isLoading: isInitializingPayment }] =
+    useInitializeInvoicePaymentMutation();
   const [triggerBillingRun, { isLoading: isRunningBilling }] =
     useTriggerBillingRunMutation();
   const [createFeePlan, { isLoading: isCreatingPlan }] =
@@ -127,6 +124,23 @@ export default function AdminBillingPage() {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
     handleResize();
     window.addEventListener("resize", handleResize);
+
+    // Check payment callback status
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const payment = params.get("payment");
+      if (payment === "success") {
+        toast.success("Platform subscription invoice paid successfully!");
+        window.history.replaceState({}, document.title, window.location.pathname);
+        refetchInvoices();
+        refetchInsts();
+        refetchTenants();
+      } else if (payment === "failed") {
+        toast.error("Invoice payment failed or was cancelled.");
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
@@ -346,45 +360,27 @@ export default function AdminBillingPage() {
     }
   };
 
-  const handlePartnerCheckout = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!selectedPayInvoice || !momoNumber || !securePin) {
-      toast.error("Please complete all security checkout fields");
-      return;
-    }
-
-    setIsCheckoutLoading(true);
+  const handleSettleInvoice = async (invoiceId: string) => {
     try {
-      toast.loading("Contacting SWIFT Mobile Money Node...", {
-        id: "momo-pay",
+      toast.loading("Initializing payment transaction...", {
+        id: "invoice-pay",
       });
-
-      // Simulate gateway authorization
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      const res = await payInvoice(selectedPayInvoice._id).unwrap();
-      if (res.success) {
-        toast.success("Platform subscription settled via Mobile Money!", {
-          id: "momo-pay",
+      const res = await initializeInvoicePayment(invoiceId).unwrap();
+      if (res.success && res.data?.authorizationUrl) {
+        toast.success("Redirecting to Paystack checkout...", {
+          id: "invoice-pay",
         });
-        setSelectedPayInvoice(null);
-        setMomoNumber("");
-        setSecurePin("");
-        refetchInvoices();
-        refetchInsts();
+        window.location.href = res.data.authorizationUrl;
       } else {
-        toast.error(
-          (res as any).message || "Payment Gateway rejected checkout",
-          { id: "momo-pay" },
-        );
+        toast.error(res.message || "Failed to initialize payment", {
+          id: "invoice-pay",
+        });
       }
     } catch (err: any) {
       toast.error(
-        err.data?.message || "Error connecting to Mobile Money node",
-        { id: "momo-pay" },
+        err.data?.message || "Error starting payment session with Paystack",
+        { id: "invoice-pay" }
       );
-    } finally {
-      setIsCheckoutLoading(false);
     }
   };
 
@@ -1170,14 +1166,14 @@ export default function AdminBillingPage() {
                                   padding: "6px 12px",
                                   fontSize: 11.5,
                                   fontWeight: 800,
-                                  cursor: "pointer",
+                                  cursor: isPaying ? "not-allowed" : "pointer",
                                   display: "inline-flex",
                                   alignItems: "center",
                                   gap: 4,
                                 }}
                               >
                                 <MonetizationOnRounded sx={{ fontSize: 14 }} />{" "}
-                                Mark Paid
+                                {isPaying ? "Paying..." : "Mark Paid"}
                               </button>
                             )}
                           </td>
@@ -1441,16 +1437,17 @@ export default function AdminBillingPage() {
                                       handleDeleteFeePlan(plan._id);
                                     }
                                   }}
+                                  disabled={isDeletingPlan}
                                   style={{
                                     background: "none",
                                     border: "none",
                                     color: C.red,
-                                    cursor: "pointer",
+                                    cursor: isDeletingPlan ? "not-allowed" : "pointer",
                                     fontSize: 12.5,
                                     fontWeight: 700,
                                   }}
                                 >
-                                  Delete
+                                  {isDeletingPlan ? "Deleting..." : "Delete"}
                                 </button>
                               </div>
                             </td>
@@ -1889,10 +1886,8 @@ export default function AdminBillingPage() {
                         >
                           {inv.status !== "Paid" ? (
                             <button
-                              onClick={() => {
-                                setSelectedPayInvoice(inv);
-                                setMomoNumber(user?.phoneNumber || "");
-                              }}
+                              onClick={() => handleSettleInvoice(inv._id)}
+                              disabled={isInitializingPayment}
                               style={{
                                 background: C.emeraldPale,
                                 color: C.emerald,
@@ -1901,20 +1896,21 @@ export default function AdminBillingPage() {
                                 padding: "6px 12px",
                                 fontSize: 11.5,
                                 fontWeight: 800,
-                                cursor: "pointer",
+                                cursor: isInitializingPayment ? "not-allowed" : "pointer",
                                 transition: "0.2s",
                                 display: "inline-flex",
                                 alignItems: "center",
                                 gap: 4,
+                                opacity: isInitializingPayment ? 0.6 : 1,
                               }}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.opacity = "0.9";
+                                if (!isInitializingPayment) e.currentTarget.style.opacity = "0.9";
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.opacity = "1";
+                                if (!isInitializingPayment) e.currentTarget.style.opacity = "1";
                               }}
                             >
-                              Settle Invoice
+                              {isInitializingPayment ? "Loading..." : "Settle Invoice"}
                             </button>
                           ) : (
                             <span
@@ -2666,257 +2662,7 @@ export default function AdminBillingPage() {
         </div>
       </Drawer>
 
-      {/* Simulated Mobile Money Platform Checkout Drawer (Partner Only) */}
-      <Drawer
-        anchor="right"
-        open={!!selectedPayInvoice}
-        onClose={() => {
-          setSelectedPayInvoice(null);
-          setSecurePin("");
-        }}
-        PaperProps={{
-          style: {
-            width: "100%",
-            maxWidth: 440,
-            background: "#0a0d17",
-            borderLeft: `1px solid ${C.border}`,
-            padding: 32,
-            boxSizing: "border-box",
-          },
-        }}
-      >
-        {selectedPayInvoice && (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              height: "100%",
-              justifyContent: "space-between",
-              color: "#fff",
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: 32,
-                }}
-              >
-                <h3
-                  style={{
-                    margin: 0,
-                    fontSize: 18,
-                    color: C.text,
-                    fontFamily: F.heading,
-                    fontWeight: 700,
-                  }}
-                >
-                  Settle Platform Fee
-                </h3>
-                <IconButton
-                  onClick={() => setSelectedPayInvoice(null)}
-                  style={{ color: C.textMuted }}
-                >
-                  <CloseRounded />
-                </IconButton>
-              </div>
 
-              {/* Invoice breakdown summary */}
-              <div
-                style={{
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 16,
-                  padding: 20,
-                  marginBottom: 28,
-                  background: "rgba(255,255,255,0.01)",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 9.5,
-                    color: C.emerald,
-                    fontWeight: 900,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  Ledger reference
-                </span>
-                <h4
-                  style={{
-                    margin: "6px 0 2px",
-                    fontSize: 14,
-                    color: C.text,
-                    fontFamily: "monospace",
-                  }}
-                >
-                  {selectedPayInvoice.reference}
-                </h4>
-                <p
-                  style={{
-                    margin: "8px 0 0",
-                    fontSize: 12.5,
-                    color: C.textSub,
-                  }}
-                >
-                  {selectedPayInvoice.description}
-                </p>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    borderTop: `1px solid ${C.border}`,
-                    paddingTop: 14,
-                    marginTop: 14,
-                  }}
-                >
-                  <span style={{ fontSize: 12, color: C.textMuted }}>
-                    Total Payable:
-                  </span>
-                  <span
-                    style={{ fontSize: 15, fontWeight: 800, color: C.text }}
-                  >
-                    GH₵ {selectedPayInvoice.amount?.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-
-              <form
-                onSubmit={handlePartnerCheckout}
-                style={{ display: "flex", flexDirection: "column", gap: 20 }}
-              >
-                <div
-                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
-                >
-                  <label
-                    style={{ fontSize: 11, fontWeight: 800, color: C.textSub }}
-                  >
-                    MOBILE MONEY OPERATOR
-                  </label>
-                  <select
-                    value={momoProvider}
-                    onChange={(e) => setMomoProvider(e.target.value)}
-                    style={{
-                      padding: "12px 14px",
-                      borderRadius: 10,
-                      border: `1px solid ${C.border}`,
-                      background: C.bg,
-                      color: C.text,
-                      outline: "none",
-                      fontSize: 13,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <option value="MTN Mobile Money">MTN Mobile Money</option>
-                    <option value="Telecel Cash">Telecel Cash</option>
-                    <option value="AT Money">AT Money</option>
-                  </select>
-                </div>
-
-                <div
-                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
-                >
-                  <label
-                    style={{ fontSize: 11, fontWeight: 800, color: C.textSub }}
-                  >
-                    MOMO PHONE NUMBER
-                  </label>
-                  <input
-                    type="tel"
-                    value={momoNumber}
-                    onChange={(e) => setMomoNumber(e.target.value)}
-                    required
-                    placeholder="e.g. 054XXXXXXX"
-                    style={{
-                      padding: "12px 14px",
-                      borderRadius: 10,
-                      border: `1px solid ${C.border}`,
-                      background: C.bg,
-                      color: C.text,
-                      outline: "none",
-                      fontSize: 13,
-                    }}
-                  />
-                </div>
-
-                <div
-                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
-                >
-                  <label
-                    style={{ fontSize: 11, fontWeight: 800, color: C.textSub }}
-                  >
-                    4-DIGIT SECURITY PIN
-                  </label>
-                  <input
-                    type="password"
-                    maxLength={4}
-                    value={securePin}
-                    onChange={(e) =>
-                      setSecurePin(e.target.value.replace(/\D/g, ""))
-                    }
-                    required
-                    placeholder="••••"
-                    style={{
-                      padding: "12px 14px",
-                      borderRadius: 10,
-                      border: `1px solid ${C.border}`,
-                      background: C.bg,
-                      color: C.text,
-                      outline: "none",
-                      fontSize: 16,
-                      letterSpacing: "0.5em",
-                      textAlign: "center",
-                    }}
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isCheckoutLoading}
-                  style={{
-                    width: "100%",
-                    padding: "14px",
-                    borderRadius: 10,
-                    background: C.emerald,
-                    color: "#fff",
-                    border: "none",
-                    cursor: isCheckoutLoading ? "not-allowed" : "pointer",
-                    fontSize: 13.5,
-                    fontWeight: 700,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    marginTop: 12,
-                    transition: "0.2s",
-                  }}
-                >
-                  {isCheckoutLoading
-                    ? "Processing Checkout..."
-                    : "Authorize MoMo Settle"}
-                </button>
-              </form>
-            </div>
-
-            <div
-              style={{
-                borderTop: `1px solid ${C.border}`,
-                paddingTop: 20,
-                fontSize: 11.5,
-                color: C.textMuted,
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              <SecurityRounded sx={{ fontSize: 14, color: C.emerald }} />{" "}
-              Payment dispatch is guarded by cryptographic end-to-end nodes.
-            </div>
-          </div>
-        )}
-      </Drawer>
     </AdminShell>
   );
 }

@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { baseApi } from './baseApi';
 
 export interface NotificationItem {
   _id: string;
@@ -12,24 +12,12 @@ export interface NotificationItem {
   title: string;
   message: string;
   isRead: boolean;
+  targetId?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export const notificationApi = createApi({
-  reducerPath: "notificationApi",
-  tagTypes: ["Notification"],
-  baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api/v1",
-    prepareHeaders: (headers) => {
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("rb_token") : null;
-      if (token) {
-        headers.set("authorization", `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+export const notificationApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getNotifications: builder.query<
       { success: boolean; data: NotificationItem[] },
@@ -49,6 +37,7 @@ export const notificationApi = createApi({
       invalidatesTags: ["Notification"],
     }),
   }),
+  overrideExisting: true,
 });
 
 export const { useGetNotificationsQuery, useMarkNotificationReadMutation } =

@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { baseApi } from './baseApi';
 
 export interface BillingInvoice {
   _id: string;
@@ -48,20 +48,7 @@ export interface InstitutionBillingProfile {
   unpaidBalance: number;
 }
 
-export const billingApi = createApi({
-  reducerPath: "billingApi",
-  tagTypes: ["Billing", "Institution"],
-  baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api/v1",
-    prepareHeaders: (headers) => {
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("rb_token") : null;
-      if (token) {
-        headers.set("authorization", `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+export const billingApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getInvoices: builder.query<
       { success: boolean; data: BillingInvoice[] },
@@ -180,6 +167,13 @@ export const billingApi = createApi({
       }),
       invalidatesTags: ["Billing", "Institution"],
     }),
+    initializeInvoicePayment: builder.mutation<any, string>({
+      query: (id) => ({
+        url: `/Billing/invoices/${id}/initialize-payment`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Billing", "Institution"],
+    }),
     triggerBillingRun: builder.mutation<
       { success: boolean; data: { count: number } },
       void
@@ -191,6 +185,7 @@ export const billingApi = createApi({
       invalidatesTags: ["Billing", "Institution"],
     }),
   }),
+  overrideExisting: true,
 });
 
 export const {
@@ -204,5 +199,6 @@ export const {
   useUpdateSubscriptionFeeMutation,
   useCreateInvoiceMutation,
   usePayInvoiceMutation,
+  useInitializeInvoicePaymentMutation,
   useTriggerBillingRunMutation,
 } = billingApi;

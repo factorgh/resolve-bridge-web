@@ -1,18 +1,6 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { baseApi } from './baseApi';
 
-export const authApi = createApi({
-  reducerPath: 'authApi',
-  baseQuery: fetchBaseQuery({ 
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1',
-    prepareHeaders: (headers) => {
-      const token = localStorage.getItem('rb_token');
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
-  tagTypes: ['User'],
+export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     register: builder.mutation({
       query: (credentials) => ({
@@ -52,6 +40,7 @@ export const authApi = createApi({
       providesTags: ['User'],
     }),
   }),
+  overrideExisting: true,
 });
 
 export const { useRegisterMutation, useLoginMutation, useGetMeQuery } = authApi;

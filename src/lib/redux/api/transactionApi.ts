@@ -1,18 +1,6 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { baseApi } from './baseApi';
 
-export const transactionApi = createApi({
-  reducerPath: 'transactionApi',
-  baseQuery: fetchBaseQuery({ 
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1',
-    prepareHeaders: (headers) => {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('rb_token') : null;
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
-  tagTypes: ['Transaction'],
+export const transactionApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getTransactions: builder.query<any, void>({
       query: () => '/Transactions',
@@ -27,6 +15,7 @@ export const transactionApi = createApi({
       invalidatesTags: ['Transaction']
     }),
   }),
+  overrideExisting: true,
 });
 
 export const { 

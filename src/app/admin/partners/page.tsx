@@ -36,7 +36,7 @@ export default function AdminPartnersPage() {
   const [newPromo, setNewPromo] = useState('');
 
   // Fetch all partners
-  const { data: instsResponse, isLoading, refetch } = useAdminGetInstitutionsQuery();
+  const { data: instsResponse, isLoading, isFetching: isFetchingPartners, refetch } = useAdminGetInstitutionsQuery();
   const [updateInstitution, { isLoading: isUpdating }] = useAdminUpdateInstitutionMutation();
 
   useEffect(() => {
@@ -151,13 +151,14 @@ export default function AdminPartnersPage() {
           </div>
           <button 
             onClick={() => refetch()}
+            disabled={isFetchingPartners}
             style={{ 
               background: C.surface, color: C.blueLight, border: `1px solid ${C.border}`, borderRadius: 10,
-              padding: '10px 18px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', transition: '0.2s',
+              padding: '10px 18px', fontSize: 12.5, fontWeight: 700, cursor: isFetchingPartners ? 'not-allowed' : 'pointer', transition: '0.2s',
               width: isMobile ? '100%' : 'auto', textAlign: 'center'
             }}
           >
-            Sync Partners
+            {isFetchingPartners ? 'Syncing...' : 'Sync Partners'}
           </button>
         </div>
 
@@ -415,11 +416,11 @@ export default function AdminPartnersPage() {
                     disabled={isUpdating}
                     style={{ 
                       width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: C.emerald,
-                      color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer',
+                      color: '#fff', fontWeight: 800, fontSize: 13, cursor: isUpdating ? 'not-allowed' : 'pointer',
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8
                     }}
                   >
-                    <VerifiedUserRounded sx={{ fontSize: 16 }} /> Verify & Activate partner
+                    <VerifiedUserRounded sx={{ fontSize: 16 }} /> {isUpdating ? 'Verifying...' : 'Verify & Activate partner'}
                   </button>
                 ) : (
                   <button 
@@ -427,11 +428,11 @@ export default function AdminPartnersPage() {
                     disabled={isUpdating}
                     style={{ 
                       width: '100%', padding: '14px', borderRadius: 12, border: `1.5px solid ${C.amber}`, background: 'transparent',
-                      color: C.amber, fontWeight: 800, fontSize: 13, cursor: 'pointer',
+                      color: C.amber, fontWeight: 800, fontSize: 13, cursor: isUpdating ? 'not-allowed' : 'pointer',
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8
                     }}
                   >
-                    <RemoveCircleOutlineRounded sx={{ fontSize: 16 }} /> Revoke Verification Lock
+                    <RemoveCircleOutlineRounded sx={{ fontSize: 16 }} /> {isUpdating ? 'Revoking...' : 'Revoke Verification Lock'}
                   </button>
                 )}
                 <p style={{ margin: '10px 0 0', fontSize: 10.5, color: C.textMuted, textAlign: 'center', lineHeight: 1.4 }}>
@@ -488,10 +489,10 @@ export default function AdminPartnersPage() {
                     disabled={isUpdating}
                     style={{
                       background: C.blueLight, color: '#fff', border: 'none', borderRadius: 10,
-                      padding: '0 16px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer'
+                      padding: '0 16px', fontSize: 12.5, fontWeight: 700, cursor: isUpdating ? 'not-allowed' : 'pointer'
                     }}
                   >
-                    Award
+                    {isUpdating ? 'Awarding...' : 'Award'}
                   </button>
                 </div>
               </div>
@@ -545,10 +546,10 @@ export default function AdminPartnersPage() {
                     disabled={isUpdating}
                     style={{
                       background: C.blueLight, color: '#fff', border: 'none', borderRadius: 10,
-                      padding: '0 16px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer'
+                      padding: '0 16px', fontSize: 12.5, fontWeight: 700, cursor: isUpdating ? 'not-allowed' : 'pointer'
                     }}
                   >
-                    Promote
+                    {isUpdating ? 'Promoting...' : 'Promote'}
                   </button>
                 </div>
               </div>

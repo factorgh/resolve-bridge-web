@@ -63,7 +63,7 @@ export default function AdminConsolePage() {
   const [hoveredPoint, setHoveredPoint] = useState<{ type: 'users' | 'revenue'; index: number } | null>(null);
 
   // Fetch real applications through our newly built multi-tenant API
-  const { data: appsResponse, isLoading: appsLoading, refetch } = useAdminGetApplicationsQuery();
+  const { data: appsResponse, isLoading: appsLoading, isFetching: appsFetching, refetch } = useAdminGetApplicationsQuery();
   
   // Fetch regions
   const { data: regionsResponse } = useGetRegionsQuery();
@@ -229,13 +229,14 @@ export default function AdminConsolePage() {
           </div>
           <button 
             onClick={() => refetch()}
+            disabled={appsFetching}
             style={{ 
               background: C.surface, color: C.blueLight, border: `1px solid ${C.border}`, borderRadius: 10,
-              padding: '10px 18px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', transition: '0.2s',
+              padding: '10px 18px', fontSize: 12.5, fontWeight: 700, cursor: appsFetching ? 'not-allowed' : 'pointer', transition: '0.2s',
               width: isMobile ? '100%' : 'auto', textAlign: 'center'
             }}
           >
-            Sync Pipeline
+            {appsFetching ? 'Syncing...' : 'Sync Pipeline'}
           </button>
         </div>
 
@@ -1172,10 +1173,10 @@ export default function AdminConsolePage() {
                     disabled={isReviewing}
                     style={{ 
                       width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: C.purple,
-                      color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', marginBottom: 12
+                      color: '#fff', fontWeight: 800, fontSize: 13, cursor: isReviewing ? 'not-allowed' : 'pointer', marginBottom: 12
                     }}
                   >
-                    Initiate Underwriting Review
+                    {isReviewing ? "Initiating..." : "Initiate Underwriting Review"}
                   </button>
                 )}
 
@@ -1186,10 +1187,10 @@ export default function AdminConsolePage() {
                       disabled={isReviewing}
                       style={{ 
                         flex: 1, padding: '14px', borderRadius: 12, border: 'none', background: C.emerald,
-                        color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer'
+                        color: '#fff', fontWeight: 800, fontSize: 13, cursor: isReviewing ? 'not-allowed' : 'pointer'
                       }}
                     >
-                      Approve Application
+                      {isReviewing ? "Approving..." : "Approve Application"}
                     </button>
                     
                     <button 
@@ -1203,10 +1204,10 @@ export default function AdminConsolePage() {
                       disabled={isReviewing}
                       style={{ 
                         flex: 1, padding: '14px', borderRadius: 12, border: `1.5px solid ${C.red}`, background: 'transparent',
-                        color: C.red, fontWeight: 800, fontSize: 13, cursor: 'pointer'
+                        color: C.red, fontWeight: 800, fontSize: 13, cursor: isReviewing ? 'not-allowed' : 'pointer'
                       }}
                     >
-                      Reject Application
+                      {isReviewing ? "Rejecting..." : "Reject Application"}
                     </button>
                   </div>
                 )}
@@ -1217,10 +1218,10 @@ export default function AdminConsolePage() {
                     disabled={isReviewing}
                     style={{ 
                       width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: C.blue,
-                      color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+                      color: '#fff', fontWeight: 800, fontSize: 13, cursor: isReviewing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
                     }}
                   >
-                    <ShieldRounded sx={{ fontSize: 16 }} /> Disburse Capital & Log Ledger
+                    <ShieldRounded sx={{ fontSize: 16 }} /> {isReviewing ? "Disbursing..." : "Disburse Capital & Log Ledger"}
                   </button>
                 )}
 
@@ -1230,10 +1231,10 @@ export default function AdminConsolePage() {
                     disabled={isReviewing}
                     style={{ 
                       width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: C.emerald,
-                      color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer'
+                      color: '#fff', fontWeight: 800, fontSize: 13, cursor: isReviewing ? 'not-allowed' : 'pointer'
                     }}
                   >
-                    Mark as Completed / Settled
+                    {isReviewing ? "Completing..." : "Mark as Completed / Settled"}
                   </button>
                 )}
 

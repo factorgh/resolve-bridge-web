@@ -26,7 +26,7 @@ export default function AdminKycPage() {
   const [selectedDoc, setSelectedDoc] = useState<any>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  const { data: docResponse, isLoading: docLoading, refetch } = useAdminGetPendingDocumentsQuery();
+  const { data: docResponse, isLoading: docLoading, isFetching: docFetching, refetch } = useAdminGetPendingDocumentsQuery();
   const [verifyDocument, { isLoading: isMutating }] = useAdminVerifyDocumentMutation();
 
   useEffect(() => {
@@ -88,13 +88,14 @@ export default function AdminKycPage() {
           </div>
           <button 
             onClick={() => refetch()}
+            disabled={docFetching}
             style={{ 
               background: C.surface, color: C.blueLight, border: `1px solid ${C.border}`, borderRadius: 10,
-              padding: '10px 18px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', transition: '0.2s',
+              padding: '10px 18px', fontSize: 12.5, fontWeight: 700, cursor: docFetching ? 'not-allowed' : 'pointer', transition: '0.2s',
               width: isMobile ? '100%' : 'auto', textAlign: 'center'
             }}
           >
-            Refresh Vault
+            {docFetching ? 'Refreshing...' : 'Refresh Vault'}
           </button>
         </div>
 
@@ -348,11 +349,11 @@ export default function AdminKycPage() {
                       disabled={isMutating}
                       style={{ 
                         flex: 1, padding: '14px', borderRadius: 12, border: 'none', background: C.emerald,
-                        color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer',
+                        color: '#fff', fontWeight: 800, fontSize: 13, cursor: isMutating ? 'not-allowed' : 'pointer',
                         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8
                       }}
                     >
-                      <CheckCircleRounded sx={{ fontSize: 16 }} /> Approve KYC
+                      <CheckCircleRounded sx={{ fontSize: 16 }} /> {isMutating ? 'Approving...' : 'Approve KYC'}
                     </button>
                     
                     <button 
@@ -360,11 +361,11 @@ export default function AdminKycPage() {
                       disabled={isMutating}
                       style={{ 
                         flex: 1, padding: '14px', borderRadius: 12, border: `1.5px solid ${C.red}`, background: 'transparent',
-                        color: C.red, fontWeight: 800, fontSize: 13, cursor: 'pointer',
+                        color: C.red, fontWeight: 800, fontSize: 13, cursor: isMutating ? 'not-allowed' : 'pointer',
                         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8
                       }}
                     >
-                      <CancelRounded sx={{ fontSize: 16 }} /> Reject
+                      <CancelRounded sx={{ fontSize: 16 }} /> {isMutating ? 'Rejecting...' : 'Reject'}
                     </button>
                   </div>
                 ) : (

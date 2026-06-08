@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { baseApi } from './baseApi';
 
 export interface MessageItem {
   _id: string;
@@ -33,20 +33,7 @@ export interface ConversationItem {
   unreadCount: number;
 }
 
-export const chatApi = createApi({
-  reducerPath: "chatApi",
-  tagTypes: ["Chat", "Conversation"],
-  baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api/v1",
-    prepareHeaders: (headers) => {
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("rb_token") : null;
-      if (token) {
-        headers.set("authorization", `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+export const chatApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getChatHistory: builder.query<{ success: boolean; data: MessageItem[] }, string | void>({
       query: (userId) => (userId ? `/Chat/history/${userId}` : "/Chat/history"),
@@ -65,6 +52,7 @@ export const chatApi = createApi({
       invalidatesTags: ["Chat", "Conversation"],
     }),
   }),
+  overrideExisting: true,
 });
 
 export const {

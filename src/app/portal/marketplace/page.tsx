@@ -216,8 +216,17 @@ function MarketplaceContent() {
 
       const result = await createApplication(payload).unwrap();
       if (result?.success) {
-        setApplicationSuccess(true);
-        toast.success("Application submitted successfully!");
+        const requiresPayment = result.data?.requiresPayment || result.requiresPayment;
+        const url = result.data?.authorizationUrl || result.authorizationUrl;
+        if (requiresPayment && url) {
+          toast.success("Redirecting to Paystack secure checkout to settle connection fee...");
+          setTimeout(() => {
+            window.location.href = url;
+          }, 1500);
+        } else {
+          setApplicationSuccess(true);
+          toast.success("Application submitted successfully!");
+        }
       }
     } catch (err: any) {
       console.error('Failed to submit application instantly:', err);
@@ -229,7 +238,15 @@ function MarketplaceContent() {
     if (providerParam) {
       setSearch(providerParam);
     }
-  }, [providerParam]);
+    const payment = searchParams.get('payment');
+    if (payment === 'success') {
+      toast.success('Connection fee payment completed successfully! Application is now formally submitted.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (payment === 'failed') {
+      toast.error('Connection fee payment failed or was cancelled.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [providerParam, searchParams]);
   const [filters, setFilters] = useState({
     providers: [] as string[],
     precision: 75

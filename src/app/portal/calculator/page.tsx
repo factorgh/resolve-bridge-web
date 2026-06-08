@@ -11,6 +11,67 @@ export default function CalculatorPage() {
   const [term, setTerm] = useState(24);
   const [rate, setRate] = useState(18);
   const [isMobile, setIsMobile] = useState(false);
+  
+  const [amountStr, setAmountStr] = useState("10000");
+  const [termStr, setTermStr] = useState("24");
+  const [rateStr, setRateStr] = useState("18");
+
+  const handleAmountChange = (valStr: string) => {
+    setAmountStr(valStr);
+    const parsed = parseFloat(valStr);
+    if (!isNaN(parsed)) {
+      const clamped = Math.max(0, Math.min(1000000, parsed));
+      setAmount(clamped);
+    }
+  };
+
+  const handleAmountBlur = () => {
+    let parsed = parseFloat(amountStr);
+    if (isNaN(parsed)) {
+      parsed = 1000;
+    }
+    const clamped = Math.max(1000, Math.min(1000000, parsed));
+    setAmount(clamped);
+    setAmountStr(clamped.toString());
+  };
+
+  const handleTermChange = (valStr: string) => {
+    setTermStr(valStr);
+    const parsed = parseInt(valStr);
+    if (!isNaN(parsed)) {
+      const clamped = Math.max(0, Math.min(84, parsed));
+      setTerm(clamped);
+    }
+  };
+
+  const handleTermBlur = () => {
+    let parsed = parseInt(termStr);
+    if (isNaN(parsed)) {
+      parsed = 24;
+    }
+    const clamped = Math.max(6, Math.min(84, parsed));
+    setTerm(clamped);
+    setTermStr(clamped.toString());
+  };
+
+  const handleRateChange = (valStr: string) => {
+    setRateStr(valStr);
+    const parsed = parseFloat(valStr);
+    if (!isNaN(parsed)) {
+      const clamped = Math.max(0, Math.min(36, parsed));
+      setRate(clamped);
+    }
+  };
+
+  const handleRateBlur = () => {
+    let parsed = parseFloat(rateStr);
+    if (isNaN(parsed)) {
+      parsed = 18;
+    }
+    const clamped = Math.max(10, Math.min(36, parsed));
+    setRate(clamped);
+    setRateStr(clamped.toString());
+  };
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -51,39 +112,75 @@ export default function CalculatorPage() {
             boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
           }}>
             <div style={{ marginBottom: 32 }}>
-               <label style={{ display: 'block', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Loan Amount (GH₵)</label>
-               <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
-                  <span style={{ fontSize: 24, fontWeight: 900, color: C.text, fontFamily: F.heading }}>GH₵</span>
+               <label style={{ display: 'block', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Loan Amount</label>
+               <div style={{ 
+                 display: 'flex', 
+                 alignItems: 'center', 
+                 gap: 12, 
+                 background: '#f8fafc', 
+                 border: `1px solid ${C.borderStrong}`, 
+                 borderRadius: 16, 
+                 padding: '12px 20px', 
+                 marginBottom: 16 
+               }}>
+                  <span style={{ fontSize: 20, fontWeight: 900, color: C.textSub, fontFamily: F.heading }}>GH₵</span>
                   <input 
                     type="number" 
-                    value={amount} 
-                    onChange={e => setAmount(Number(e.target.value))}
+                    value={amountStr} 
+                    onChange={e => handleAmountChange(e.target.value)}
+                    onBlur={handleAmountBlur}
                     style={{ 
-                      flex: 1, border: 'none', background: 'none', fontSize: 32, fontWeight: 900, 
+                      flex: 1, border: 'none', background: 'none', fontSize: 24, fontWeight: 900, 
                       color: C.blue, outline: 'none', fontFamily: F.heading, width: '100%' 
                     }}
                   />
                </div>
                <input 
-                 type="range" min="1000" max="250000" step="1000" value={amount} 
-                 onChange={e => setAmount(Number(e.target.value))}
+                 type="range" min="1000" max="1000000" step="1000" value={amount} 
+                 onChange={e => {
+                   const val = Number(e.target.value);
+                   setAmount(val);
+                   setAmountStr(val.toString());
+                 }}
                  style={{ width: '100%', accentColor: C.blue, height: 6, borderRadius: 3, cursor: 'pointer' }}
                />
                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, fontWeight: 700, color: C.textMuted }}>
                   <span>GH₵ 1,000</span>
-                  <span>GH₵ 250,000</span>
+                  <span>GH₵ 1,000,000</span>
                </div>
             </div>
 
             <div style={{ marginBottom: 32 }}>
-               <label style={{ display: 'block', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Repayment Term (Months)</label>
-               <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
-                  <span style={{ fontSize: 32, fontWeight: 900, color: C.text, fontFamily: F.heading }}>{term}</span>
+               <label style={{ display: 'block', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Repayment Term</label>
+               <div style={{ 
+                 display: 'flex', 
+                 alignItems: 'center', 
+                 gap: 12, 
+                 background: '#f8fafc', 
+                 border: `1px solid ${C.borderStrong}`, 
+                 borderRadius: 16, 
+                 padding: '12px 20px', 
+                 marginBottom: 16 
+               }}>
+                  <input 
+                    type="number" 
+                    value={termStr} 
+                    onChange={e => handleTermChange(e.target.value)}
+                    onBlur={handleTermBlur}
+                    style={{ 
+                      flex: 1, border: 'none', background: 'none', fontSize: 24, fontWeight: 900, 
+                      color: C.blue, outline: 'none', fontFamily: F.heading, width: '100%' 
+                    }}
+                  />
                   <span style={{ fontSize: 16, fontWeight: 700, color: C.textSub }}>Months</span>
                </div>
                <input 
                  type="range" min="6" max="84" step="6" value={term} 
-                 onChange={e => setTerm(Number(e.target.value))}
+                 onChange={e => {
+                   const val = Number(e.target.value);
+                   setTerm(val);
+                   setTermStr(val.toString());
+                 }}
                  style={{ width: '100%', accentColor: C.blue, height: 6, borderRadius: 3, cursor: 'pointer' }}
                />
                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, fontWeight: 700, color: C.textMuted }}>
@@ -93,14 +190,40 @@ export default function CalculatorPage() {
             </div>
 
             <div style={{ marginBottom: 0 }}>
-               <label style={{ display: 'block', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Expected Interest Rate (% p.a)</label>
-               <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
-                  <span style={{ fontSize: 32, fontWeight: 900, color: C.text, fontFamily: F.heading }}>{rate}%</span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: C.emerald, background: C.emeraldPale, padding: '4px 8px', borderRadius: 8 }}>Market Avg</span>
+               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <label style={{ fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Expected Interest Rate</label>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: C.emerald, background: C.emeraldPale, padding: '3px 8px', borderRadius: 6 }}>Market Avg</span>
+               </div>
+               <div style={{ 
+                 display: 'flex', 
+                 alignItems: 'center', 
+                 gap: 12, 
+                 background: '#f8fafc', 
+                 border: `1px solid ${C.borderStrong}`, 
+                 borderRadius: 16, 
+                 padding: '12px 20px', 
+                 marginBottom: 16 
+               }}>
+                  <input 
+                    type="number" 
+                    step="0.5"
+                    value={rateStr} 
+                    onChange={e => handleRateChange(e.target.value)}
+                    onBlur={handleRateBlur}
+                    style={{ 
+                      flex: 1, border: 'none', background: 'none', fontSize: 24, fontWeight: 900, 
+                      color: C.blue, outline: 'none', fontFamily: F.heading, width: '100%' 
+                    }}
+                  />
+                  <span style={{ fontSize: 18, fontWeight: 900, color: C.textSub, fontFamily: F.heading }}>% p.a</span>
                </div>
                <input 
                  type="range" min="10" max="36" step="0.5" value={rate} 
-                 onChange={e => setRate(Number(e.target.value))}
+                 onChange={e => {
+                   const val = Number(e.target.value);
+                   setRate(val);
+                   setRateStr(val.toString());
+                 }}
                  style={{ width: '100%', accentColor: C.blue, height: 6, borderRadius: 3, cursor: 'pointer' }}
                />
                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, fontWeight: 700, color: C.textMuted }}>

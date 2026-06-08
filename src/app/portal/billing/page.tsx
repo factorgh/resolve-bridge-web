@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { 
@@ -17,6 +17,10 @@ import { useGetTransactionsQuery } from '@/lib/redux/api/transactionApi';
 export default function CustomerBillingPage() {
   const [mounted, setMounted] = useState(false);
   const [showPayModal, setShowPayModal] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
   const { data: userData, refetch: refetchUser } = useGetMeQuery();
   const { data: txData, refetch: refetchTx } = useGetTransactionsQuery();
@@ -25,13 +29,64 @@ export default function CustomerBillingPage() {
   const user = userData?.data;
   const transactions = txData?.data || [];
 
-  // Filter subscription-specific transactions
-  const subscriptionTxs = transactions.filter((t: any) => 
-    t.category === 'Subscription' || t.desc?.toLowerCase().includes('subscription') || t.description?.toLowerCase().includes('subscription')
-  );
+  // Base subscription-specific transactions
+  const subscriptionTxs = useMemo(() => {
+    return transactions.filter((t: any) => 
+      t.category === 'Subscription' || t.desc?.toLowerCase().includes('subscription') || t.description?.toLowerCase().includes('subscription')
+    );
+  }, [transactions]);
+
+  // Reset page index to 1 automatically whenever active filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [startDate, endDate]);
+
+  // Filtered transactions based on date range
+  const filteredTxs = useMemo(() => {
+    let result = [...subscriptionTxs];
+
+    if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      result = result.filter((t: any) => {
+        const d = new Date(t.date || t.createdAt);
+        return d >= start;
+      });
+    }
+
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      result = result.filter((t: any) => {
+        const d = new Date(t.date || t.createdAt);
+        return d <= end;
+      });
+    }
+
+    return result;
+  }, [subscriptionTxs, startDate, endDate]);
+
+  // Paginated transactions to display
+  const paginatedTxs = useMemo(() => {
+    const startIdx = (currentPage - 1) * rowsPerPage;
+    return filteredTxs.slice(startIdx, startIdx + rowsPerPage);
+  }, [filteredTxs, currentPage, rowsPerPage]);
 
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const payment = params.get('payment');
+      if (payment === 'success') {
+        toast.success('Subscription payment completed successfully!');
+        window.history.replaceState({}, document.title, window.location.pathname);
+        refetchUser();
+        refetchTx();
+      } else if (payment === 'failed') {
+        toast.error('Subscription payment failed or was cancelled.');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
   }, []);
 
   if (!mounted) return null;
@@ -184,47 +239,230 @@ export default function CustomerBillingPage() {
               <p style={{ margin: '4px 0 0', fontSize: 12, color: C.textMuted }}>Settle your first platform subscription payment above to log ledger audits.</p>
             </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ borderBottom: `1px solid ${C.border}`, background: 'rgba(0,0,0,0.01)' }}>
-                    <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Reference</th>
-                    <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Invoice details</th>
-                    <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Paid Amount</th>
-                    <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', textAlign: 'right' }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {subscriptionTxs.map((tx: any) => (
-                    <tr key={tx._id || tx.id} style={{ borderBottom: `1px solid ${C.border}` }}>
-                      <td style={{ padding: '18px 24px' }}>
-                        <span style={{ fontSize: 12.5, fontFamily: 'monospace', fontWeight: 700, color: C.blue }}>
-                          {tx.reference || tx._id?.substring(0, 8).toUpperCase()}
-                        </span>
-                      </td>
-                      <td style={{ padding: '18px 24px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{tx.desc || tx.description}</span>
-                          <span style={{ fontSize: 10, color: C.textMuted, marginTop: 4 }}>
-                            Paid date: {new Date(tx.date || tx.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                          </span>
-                        </div>
-                      </td>
-                      <td style={{ padding: '18px 24px' }}>
-                        <span style={{ fontSize: 13.5, fontWeight: 800, color: C.text }}>
-                          GH₵ {Math.abs(tx.amount || 20).toLocaleString()}.00
-                        </span>
-                      </td>
-                      <td style={{ padding: '18px 24px', textAlign: 'right' }}>
-                        <span style={{ fontSize: 9.5, fontWeight: 900, background: C.emeraldPale, color: C.emerald, padding: '4px 8px', borderRadius: 4, textTransform: 'uppercase' }}>
-                          {tx.status || 'Completed'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <>
+              {/* Date Filter Toolbar */}
+              <div style={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                alignItems: 'center', 
+                gap: 16, 
+                padding: '16px 32px', 
+                background: 'rgba(0,0,0,0.01)', 
+                borderBottom: `1px solid ${C.border}` 
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: C.textSub }}>From</span>
+                  <input 
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: 8,
+                      border: `1.5px solid ${C.border}`,
+                      fontSize: 12.5,
+                      color: C.text,
+                      background: '#fff',
+                      outline: 'none',
+                      fontFamily: F.body,
+                    }}
+                  />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: C.textSub }}>To</span>
+                  <input 
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: 8,
+                      border: `1.5px solid ${C.border}`,
+                      fontSize: 12.5,
+                      color: C.text,
+                      background: '#fff',
+                      outline: 'none',
+                      fontFamily: F.body,
+                    }}
+                  />
+                </div>
+                {(startDate || endDate) && (
+                  <button
+                    onClick={() => { setStartDate(''); setEndDate(''); }}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: 8,
+                      border: 'none',
+                      background: C.redPale,
+                      color: C.red,
+                      fontWeight: 700,
+                      fontSize: 12,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.15)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = C.redPale}
+                  >
+                    Clear Filters
+                  </button>
+                )}
+              </div>
+
+              {filteredTxs.length === 0 ? (
+                <div style={{ padding: 60, textAlign: 'center' }}>
+                  <HistoryRounded sx={{ fontSize: 44, color: C.textMuted, marginBottom: 2 }} />
+                  <h4 style={{ margin: 0, fontSize: 14, color: C.text, fontWeight: 700 }}>No Invoices Match Filters</h4>
+                  <p style={{ margin: '4px 0 0', fontSize: 12, color: C.textMuted }}>Try adjusting your date range or clear the filters to see all transactions.</p>
+                </div>
+              ) : (
+                <>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                      <thead>
+                        <tr style={{ borderBottom: `1px solid ${C.border}`, background: 'rgba(0,0,0,0.01)' }}>
+                          <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Reference</th>
+                          <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Invoice details</th>
+                          <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Paid Amount</th>
+                          <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', textAlign: 'right' }}>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginatedTxs.map((tx: any) => (
+                          <tr key={tx._id || tx.id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                            <td style={{ padding: '18px 24px' }}>
+                              <span style={{ fontSize: 12.5, fontFamily: 'monospace', fontWeight: 700, color: C.blue }}>
+                                {tx.reference || tx._id?.substring(0, 8).toUpperCase()}
+                              </span>
+                            </td>
+                            <td style={{ padding: '18px 24px' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{tx.desc || tx.description}</span>
+                                <span style={{ fontSize: 10, color: C.textMuted, marginTop: 4 }}>
+                                  Paid date: {new Date(tx.date || tx.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </span>
+                              </div>
+                            </td>
+                            <td style={{ padding: '18px 24px' }}>
+                              <span style={{ fontSize: 13.5, fontWeight: 800, color: C.text }}>
+                                GH₵ {Math.abs(tx.amount || 20).toLocaleString()}.00
+                              </span>
+                            </td>
+                            <td style={{ padding: '18px 24px', textAlign: 'right' }}>
+                              <span style={{ fontSize: 9.5, fontWeight: 900, background: C.emeraldPale, color: C.emerald, padding: '4px 8px', borderRadius: 4, textTransform: 'uppercase' }}>
+                                {tx.status || 'Completed'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Interactive Pagination Footer */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '16px 32px',
+                    background: 'rgba(0,0,0,0.01)',
+                    flexWrap: 'wrap',
+                    gap: 16
+                  }}>
+                    {/* Left: Rows per page */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 12.5, color: C.textSub }}>Rows per page:</span>
+                      <select
+                        value={rowsPerPage}
+                        onChange={(e) => {
+                          setRowsPerPage(Number(e.target.value));
+                          setCurrentPage(1);
+                        }}
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: 8,
+                          border: `1.5px solid ${C.border}`,
+                          fontSize: 12.5,
+                          color: C.text,
+                          background: '#fff',
+                          outline: 'none',
+                          cursor: 'pointer',
+                          fontFamily: F.body
+                        }}
+                      >
+                        <option value={5}>5</option>
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                      </select>
+                    </div>
+
+                    {/* Right: Showing status and Next/Prev buttons */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                      <span style={{ fontSize: 12.5, color: C.textSub }}>
+                        Showing {Math.min((currentPage - 1) * rowsPerPage + 1, filteredTxs.length)}–{Math.min(currentPage * rowsPerPage, filteredTxs.length)} of {filteredTxs.length}
+                      </span>
+                      
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                          disabled={currentPage === 1}
+                          style={{
+                            padding: '8px 14px',
+                            borderRadius: 8,
+                            border: `1.5px solid ${C.border}`,
+                            background: currentPage === 1 ? 'rgba(0,0,0,0.02)' : '#fff',
+                            color: currentPage === 1 ? C.textMuted : C.text,
+                            fontSize: 12.5,
+                            fontWeight: 700,
+                            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                            transition: '0.2s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (currentPage !== 1) e.currentTarget.style.borderColor = C.blue;
+                          }}
+                          onMouseLeave={(e) => {
+                            if (currentPage !== 1) e.currentTarget.style.borderColor = C.border;
+                          }}
+                        >
+                          Previous
+                        </button>
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredTxs.length / rowsPerPage)))}
+                          disabled={currentPage >= Math.ceil(filteredTxs.length / rowsPerPage)}
+                          style={{
+                            padding: '8px 14px',
+                            borderRadius: 8,
+                            border: `1.5px solid ${C.border}`,
+                            background: currentPage >= Math.ceil(filteredTxs.length / rowsPerPage) ? 'rgba(0,0,0,0.02)' : '#fff',
+                            color: currentPage >= Math.ceil(filteredTxs.length / rowsPerPage) ? C.textMuted : C.text,
+                            fontSize: 12.5,
+                            fontWeight: 700,
+                            cursor: currentPage >= Math.ceil(filteredTxs.length / rowsPerPage) ? 'not-allowed' : 'pointer',
+                            transition: '0.2s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (currentPage < Math.ceil(filteredTxs.length / rowsPerPage)) e.currentTarget.style.borderColor = C.blue;
+                          }}
+                          onMouseLeave={(e) => {
+                            if (currentPage < Math.ceil(filteredTxs.length / rowsPerPage)) e.currentTarget.style.borderColor = C.border;
+                          }}
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </>
           )}
         </div>
 
