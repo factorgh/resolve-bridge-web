@@ -20,7 +20,7 @@ export default function CalculatorPage() {
     setAmountStr(valStr);
     const parsed = parseFloat(valStr);
     if (!isNaN(parsed)) {
-      const clamped = Math.max(0, Math.min(1000000, parsed));
+      const clamped = Math.max(0, Math.min(500000, parsed));
       setAmount(clamped);
     }
   };
@@ -30,7 +30,7 @@ export default function CalculatorPage() {
     if (isNaN(parsed)) {
       parsed = 1000;
     }
-    const clamped = Math.max(1000, Math.min(1000000, parsed));
+    const clamped = Math.max(1000, Math.min(500000, parsed));
     setAmount(clamped);
     setAmountStr(clamped.toString());
   };
@@ -136,7 +136,7 @@ export default function CalculatorPage() {
                   />
                </div>
                <input 
-                 type="range" min="1000" max="1000000" step="1000" value={amount} 
+                 type="range" min="1000" max="500000" step="1000" value={amount} 
                  onChange={e => {
                    const val = Number(e.target.value);
                    setAmount(val);
@@ -146,7 +146,7 @@ export default function CalculatorPage() {
                />
                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, fontWeight: 700, color: C.textMuted }}>
                   <span>GH₵ 1,000</span>
-                  <span>GH₵ 1,000,000</span>
+                  <span>GH₵ 500,000</span>
                </div>
             </div>
 

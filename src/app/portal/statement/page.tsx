@@ -15,13 +15,15 @@ import {
   LocalActivityRounded,
   FileDownloadRounded,
   FilterListRounded,
-  SearchRounded
+  SearchRounded,
+  ChatBubbleOutlineRounded
 } from '@mui/icons-material';
 import { useGetApplicationsQuery } from '@/lib/redux/api/applicationApi';
 import { useGetTransactionsQuery } from '@/lib/redux/api/transactionApi';
 import EmptyState from '../components/EmptyState';
 import { AddRounded, AccountBalanceWalletRounded } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
+import { IconButton } from '@mui/material';
 
 const STATEMENT_TYPES = [
   { id: 'all', label: 'All Transactions', desc: 'Complete financial history', icon: <ReceiptLongRounded /> },
@@ -195,24 +197,22 @@ export default function StatementPage() {
               </button>
             ))}
           </div>
-          {!isMobile && (
-            <div style={{ display: 'flex', gap: 12, paddingRight: 12 }}>
-               <button 
-                 onClick={() => setShowFilters(!showFilters)}
-                 style={{ 
-                   background: showFilters ? `${C.blue}10` : 'none', 
-                   border: 'none', 
-                   color: showFilters ? C.blue : C.textSub, 
-                   cursor: 'pointer',
-                   width: 40, height: 40, borderRadius: 12,
-                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                   transition: '0.2s'
-                 }}
-               >
-                 <FilterListRounded />
-               </button>
-            </div>
-          )}
+          <div style={{ display: isMobile ? 'none' : 'flex', gap: 12, paddingRight: 12 }}>
+             <button 
+               onClick={() => setShowFilters(!showFilters)}
+               style={{ 
+                 background: showFilters ? `${C.blue}10` : 'none', 
+                 border: 'none', 
+                 color: showFilters ? C.blue : C.textSub, 
+                 cursor: 'pointer',
+                 width: 40, height: 40, borderRadius: 12,
+                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                 transition: '0.2s'
+               }}
+             >
+               <FilterListRounded />
+             </button>
+          </div>
         </div>
 
         {/* Animated Filter Bar */}
@@ -369,14 +369,12 @@ export default function StatementPage() {
                     </div>
 
                     {/* Progress - Compact */}
-                    {!isMobile && (
-                      <div style={{ flex: 1.5, display: 'flex', alignItems: 'center', gap: 12 }}>
-                         <div style={{ flex: 1, height: 6, background: '#f1f5f9', borderRadius: 3, overflow: 'hidden' }}>
-                            <div style={{ width: `${app.progress}%`, height: '100%', background: app.color, borderRadius: 3 }} />
-                         </div>
-                         <span style={{ fontSize: 11, fontWeight: 900, color: C.textSub, width: 30 }}>{app.progress}%</span>
-                      </div>
-                    )}
+                    <div style={{ display: isMobile ? 'none' : 'flex', flex: 1.5, alignItems: 'center', gap: 12 }}>
+                       <div style={{ flex: 1, height: 6, background: '#f1f5f9', borderRadius: 3, overflow: 'hidden' }}>
+                          <div style={{ width: `${app.progress}%`, height: '100%', background: app.color, borderRadius: 3 }} />
+                       </div>
+                       <span style={{ fontSize: 11, fontWeight: 900, color: C.textSub, width: 30 }}>{app.progress}%</span>
+                    </div>
 
                     {/* Status Badge */}
                     <div style={{ 
@@ -404,6 +402,22 @@ export default function StatementPage() {
                     }}>
                        {app.status === 'UnderReview' ? 'Under Review' : app.status === 'PaymentPending' ? 'Payment Pending' : app.status}
                     </div>
+
+                    <IconButton 
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent opening details modal
+                        window.dispatchEvent(new CustomEvent('open-chat', { 
+                          detail: { 
+                            prefill: `Hello, I would like to make an enquiry about my application for the product "${app.product}" with ${app.provider}.` 
+                          } 
+                        }));
+                      }}
+                      sx={{ color: C.blue, '&:hover': { background: `${C.blue}14` } }}
+                      title="Enquire from Partner"
+                    >
+                       <ChatBubbleOutlineRounded sx={{ fontSize: 18 }} />
+                    </IconButton>
 
                     <ArrowForwardIosRounded sx={{ color: C.border, fontSize: 14 }} />
                  </motion.div>

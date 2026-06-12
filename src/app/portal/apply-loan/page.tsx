@@ -73,7 +73,7 @@ function StepIndicator({ steps, current, isMobile }: { steps: string[]; current:
                 ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 : i + 1}
             </div>
-            {!isMobile && <span style={{ fontSize: 12.5, fontWeight: i === current ? 700 : 500, color: i === current ? C.text : C.textMuted, whiteSpace: 'nowrap', fontFamily: F.body }}>{label}</span>}
+            <span style={{ display: isMobile ? 'none' : 'inline', fontSize: 12.5, fontWeight: i === current ? 700 : 500, color: i === current ? C.text : C.textMuted, whiteSpace: 'nowrap', fontFamily: F.body }}>{label}</span>
           </div>
           {i < steps.length - 1 && (
             <div style={{ flex: 1, height: 2, background: i < current ? C.green : C.border, margin: isMobile ? '0 8px' : '0 14px', borderRadius: 99, transition: 'background 0.3s' }} />
@@ -649,6 +649,13 @@ export default function ApplyLoanPage() {
                                 onChange={async (e) => {
                                   const file = e.target.files?.[0];
                                   if (!file) return;
+
+                                  const maxFileSizeMb = Number(process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB) || 10;
+                                  if (file.size > maxFileSizeMb * 1024 * 1024) {
+                                    alert(`File exceeds the ${maxFileSizeMb}MB size limit.`);
+                                    return;
+                                  }
+
                                   setUploadingDocLabel(doc.l);
                                   try {
                                     await uploadDocument({
@@ -687,7 +694,7 @@ export default function ApplyLoanPage() {
                                    <>
                                      <span style={{ fontSize: 24, filter: 'grayscale(0.2)' }}>{doc.i}</span>
                                      <p style={{ margin: 0, fontSize: 11.5, fontWeight: 700, color: C.textSub }}>Click to Upload</p>
-                                     <p style={{ margin: 0, fontSize: 9.5, color: C.textMuted }}>PDF, PNG, JPG up to 10MB</p>
+                                     <p style={{ margin: 0, fontSize: 9.5, color: C.textMuted }}>PDF, PNG, JPG up to {Number(process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB) || 10}MB</p>
                                    </>
                                  )}
                               </div>

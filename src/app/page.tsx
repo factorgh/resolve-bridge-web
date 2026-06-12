@@ -167,7 +167,7 @@ export default function Home() {
     const parsed = parseFloat(valStr);
     if (!isNaN(parsed)) {
       // Clamp calcAmount instantly to bounds to prevent astronomical UI numbers
-      const clamped = Math.max(0, Math.min(1000000, parsed));
+      const clamped = Math.max(0, Math.min(500000, parsed));
       setCalcAmount(clamped);
     }
   };
@@ -177,7 +177,7 @@ export default function Home() {
     if (isNaN(parsed)) {
       parsed = 1000;
     }
-    const clamped = Math.max(1000, Math.min(1000000, parsed));
+    const clamped = Math.max(1000, Math.min(500000, parsed));
     setCalcAmount(clamped);
     setAmountStr(clamped.toString());
   };
@@ -259,7 +259,7 @@ export default function Home() {
           />
         </Stack>
         <Slider 
-          value={calcAmount} min={1000} max={1000000} step={1000} 
+          value={calcAmount} min={1000} max={500000} step={1000} 
           onChange={(_, v) => {
             setCalcAmount(v as number);
             setAmountStr((v as number).toString());

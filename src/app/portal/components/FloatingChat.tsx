@@ -65,6 +65,19 @@ export default function FloatingChat() {
     }, 100);
   };
 
+  // Listen to external request to open chat with a prefilled message
+  useEffect(() => {
+    const handleOpenChat = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      setIsOpen(true);
+      if (customEvent.detail && customEvent.detail.prefill) {
+        setMsgText(customEvent.detail.prefill);
+      }
+    };
+    window.addEventListener('open-chat', handleOpenChat);
+    return () => window.removeEventListener('open-chat', handleOpenChat);
+  }, []);
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!msgText.trim() || isSending) return;

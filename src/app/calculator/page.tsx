@@ -45,7 +45,7 @@ export default function LoanCalculatorPage() {
     setAmountStr(valStr);
     const parsed = parseFloat(valStr);
     if (!isNaN(parsed)) {
-      const clamped = Math.max(0, Math.min(1000000, parsed));
+      const clamped = Math.max(0, Math.min(500000, parsed));
       setLoanAmount(clamped);
     }
   };
@@ -55,7 +55,7 @@ export default function LoanCalculatorPage() {
     if (isNaN(parsed)) {
       parsed = 1000;
     }
-    const clamped = Math.max(1000, Math.min(1000000, parsed));
+    const clamped = Math.max(1000, Math.min(500000, parsed));
     setLoanAmount(clamped);
     setAmountStr(clamped.toString());
   };
@@ -165,7 +165,7 @@ export default function LoanCalculatorPage() {
                   {/* Amount Slider */}
                   <Box>
                     <Stack direction="row" justifyContent="space-between" alignItems="center" className="mb-4">
-                      <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-400">Principal Amount ($)</Typography>
+                      <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-400">Principal Amount (GH₵)</Typography>
                       <input 
                         type="number"
                         value={amountStr}
@@ -189,7 +189,7 @@ export default function LoanCalculatorPage() {
                     <Slider 
                       value={loanAmount}
                       min={1000}
-                      max={1000000}
+                      max={500000}
                       step={1000}
                       onChange={(_, v) => {
                         setLoanAmount(v as number);
@@ -317,7 +317,7 @@ export default function LoanCalculatorPage() {
                 <Box className="relative z-10 text-center">
                   <Typography variant="caption" className="font-black uppercase tracking-widest text-blue-500 block mb-6 px-4">Estimated Monthly Payment</Typography>
                   <Typography variant="h1" sx={{ color: 'white' }} className="font-black tracking-tighter mb-10 flex items-baseline justify-center text-5xl md:text-6xl lg:text-8xl">
-                    <span style={{ fontSize: '0.45em', opacity: 0.5, marginRight: '8px' }}>$</span>
+                    <span style={{ fontSize: '0.45em', opacity: 0.5, marginRight: '8px' }}>GH₵</span>
                     {monthlyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     <span style={{ fontSize: '0.25em', opacity: 0.3, marginLeft: '8px' }}>/mo</span>
                   </Typography>
@@ -326,13 +326,13 @@ export default function LoanCalculatorPage() {
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <Box className="p-6 md:p-8 rounded-2xl md:rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md">
                         <Typography variant="caption" className="text-slate-500 font-bold uppercase tracking-widest block mb-1">Weekly Payment</Typography>
-                        <Typography variant="h6" className="text-white font-black text-xl md:text-2xl">${weeklyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Typography>
+                        <Typography variant="h6" className="text-white font-black text-xl md:text-2xl">GH₵ {weeklyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Typography>
                       </Box>
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <Box className="p-6 md:p-8 rounded-2xl md:rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md">
                         <Typography variant="caption" className="text-slate-500 font-bold uppercase tracking-widest block mb-1">Daily Breakdown</Typography>
-                        <Typography variant="h6" className="text-white font-black text-xl md:text-2xl">${dailyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Typography>
+                        <Typography variant="h6" className="text-white font-black text-xl md:text-2xl">GH₵ {dailyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Typography>
                       </Box>
                     </Grid>
                   </Grid>
@@ -341,13 +341,13 @@ export default function LoanCalculatorPage() {
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <Box className="p-6 md:p-8 rounded-2xl md:rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md">
                         <Typography variant="caption" className="text-slate-500 font-bold uppercase tracking-widest block mb-1">Total Principal</Typography>
-                        <Typography variant="h6" className="text-white font-black text-xl md:text-2xl">${loanAmount.toLocaleString()}</Typography>
+                        <Typography variant="h6" className="text-white font-black text-xl md:text-2xl">GH₵ {loanAmount.toLocaleString()}</Typography>
                       </Box>
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <Box className="p-6 md:p-8 rounded-2xl md:rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md">
                         <Typography variant="caption" className="text-slate-500 font-bold uppercase tracking-widest block mb-1">Cost of Borrowing</Typography>
-                        <Typography variant="h6" className="text-white font-black text-xl md:text-2xl">${totalInterest.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Typography>
+                        <Typography variant="h6" className="text-white font-black text-xl md:text-2xl">GH₵ {totalInterest.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Typography>
                       </Box>
                     </Grid>
                   </Grid>
@@ -355,7 +355,7 @@ export default function LoanCalculatorPage() {
                   <Divider sx={{ borderColor: 'rgba(255,255,255,0.05)', my: { xs: 6, md: 10 } }} />
 
                   <Typography className="text-slate-400 font-bold text-sm md:text-lg">
-                    Total Estimated Repayment: <span className="text-white font-black ml-2">${totalPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                    Total Estimated Repayment: <span className="text-white font-black ml-2">GH₵ {totalPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                   </Typography>
                 </Box>
               </Paper>

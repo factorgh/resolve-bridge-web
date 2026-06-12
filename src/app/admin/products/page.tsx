@@ -1112,7 +1112,7 @@ export default function AdminProductsPage() {
                           color: C.textMuted,
                         }}
                       >
-                        Supports JPG, PNG, WebP up to 5MB
+                        Supports JPG, PNG, WebP up to {Number(process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB) || 5}MB
                       </p>
                     </div>
                   )}
@@ -1123,6 +1123,11 @@ export default function AdminProductsPage() {
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
+                        const maxFileSizeMb = Number(process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB) || 5;
+                        if (file.size > maxFileSizeMb * 1024 * 1024) {
+                          toast.error(`File exceeds the ${maxFileSizeMb}MB size limit.`);
+                          return;
+                        }
                         const reader = new FileReader();
                         reader.onloadend = () => {
                           setImageUrl(reader.result as string);

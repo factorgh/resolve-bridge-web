@@ -22,7 +22,9 @@ import {
   SpeedRounded,
   CloudDoneRounded,
   CheckCircleRounded,
-  QrCodeRounded
+  QrCodeRounded,
+  ChatBubbleOutlineRounded,
+  ShoppingCartRounded
 } from '@mui/icons-material';
 
 /* ─── Dashboard Sub-component ─────────────────────────────────────────── */
@@ -113,9 +115,9 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
 
   /* ─── Promo & Blog Logic ─────────────────────────────────────────── */
   const PROMOS = [
-    { id: 1, tag: 'EXCLUSIVE', title: '0% Interest BNPL', desc: 'Upgrade your home office today with our new tech financing partnership.', btn: 'Explore Tech Loans', color: `linear-gradient(135deg, ${C.blue}, ${C.purple})`, shadow: C.blue },
-    { id: 2, tag: 'NEW', title: 'Instant Health Quote', desc: 'Get covered in 60 seconds with Enterprise Resolve Health premiums.', btn: 'Get Quote', color: `linear-gradient(135deg, ${C.emerald}, ${C.blue})`, shadow: C.emerald },
-    { id: 3, tag: 'LIMITED', title: 'Stanbic High-Yield', desc: 'Unlock 14% p.a on your savings when you link your account today.', btn: 'Link Account', color: `linear-gradient(135deg, ${C.purple}, ${C.red})`, shadow: C.purple },
+    { id: 1, tag: 'EXCLUSIVE', title: '0% Interest BNPL', desc: 'Upgrade your home office today with our new tech financing partnership.', btn: 'Explore Tech Loans', color: `linear-gradient(135deg, ${C.blue}, ${C.purple})`, shadow: C.blue, icon: <ShoppingCartRounded sx={{ fontSize: 180, position: 'absolute', right: -30, bottom: -30, opacity: 0.08, transform: 'rotate(-15deg)', color: '#fff' }} /> },
+    { id: 2, tag: 'NEW', title: 'Instant Health Quote', desc: 'Get covered in 60 seconds with Enterprise Resolve Health premiums.', btn: 'Get Quote', color: `linear-gradient(135deg, ${C.emerald}, ${C.blue})`, shadow: C.emerald, icon: <ShieldRounded sx={{ fontSize: 180, position: 'absolute', right: -30, bottom: -30, opacity: 0.08, transform: 'rotate(-15deg)', color: '#fff' }} /> },
+    { id: 3, tag: 'LIMITED', title: 'Stanbic High-Yield', desc: 'Unlock 14% p.a on your savings when you link your account today.', btn: 'Link Account', color: `linear-gradient(135deg, ${C.purple}, ${C.red})`, shadow: C.purple, icon: <AccountBalanceRounded sx={{ fontSize: 180, position: 'absolute', right: -30, bottom: -30, opacity: 0.08, transform: 'rotate(-15deg)', color: '#fff' }} /> },
   ];
 
   const [promoIdx, setPromoIdx] = useState(0);
@@ -134,14 +136,21 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
     return (
       <div style={{ maxWidth: 1100, margin: '0 auto', opacity: 0.8 }}>
          <div style={{ height: 44, width: 300, background: '#f1f5f9', borderRadius: 12, marginBottom: 40, animation: 'pulse 2s infinite' }} />
-         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', gap: 48 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
-               <div style={{ height: 300, background: '#f1f5f9', borderRadius: 32, animation: 'pulse 2s infinite' }} />
-               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 20 }}>
-                  {[1,2,3].map(i => <div key={i} style={{ height: 120, background: '#f1f5f9', borderRadius: 24, animation: 'pulse 2s infinite' }} />)}
+         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '380px 1fr', gap: 48 }}>
+            {/* Left Column (Small) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+               <div style={{ height: 260, background: '#f1f5f9', borderRadius: 32, animation: 'pulse 2s infinite' }} />
+               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {[1,2,3].map(i => <div key={i} style={{ height: 100, background: '#f1f5f9', borderRadius: 20, animation: 'pulse 2s infinite' }} />)}
                </div>
             </div>
-            <div style={{ height: 500, background: '#f1f5f9', borderRadius: 32, animation: 'pulse 2s infinite' }} />
+            {/* Right Column (Large) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
+               <div style={{ height: 260, background: '#f1f5f9', borderRadius: 32, animation: 'pulse 2s infinite' }} />
+               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 20 }}>
+                  {[1,2,3].map(i => <div key={i} style={{ height: 160, background: '#f1f5f9', borderRadius: 24, animation: 'pulse 2s infinite' }} />)}
+               </div>
+            </div>
          </div>
          <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
       </div>
@@ -226,25 +235,26 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
        {/* Trust & Simplicity Banner */}
        <div style={{ 
          background: '#fff', 
-         padding: '10px 20px', 
+         padding: '12px 20px', 
          borderRadius: 14, 
          border: `1.5px solid ${C.border}`,
          marginBottom: 32,
          display: 'flex',
-         alignItems: 'center',
-         gap: 20,
+         flexDirection: isMobile ? 'column' : 'row',
+         alignItems: isMobile ? 'flex-start' : 'center',
+         gap: isMobile ? 12 : 20,
          overflow: 'hidden'
        }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
              <div style={{ width: 24, height: 24, borderRadius: '50%', background: C.emeraldLight, color: C.emerald, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>✓</div>
              <span style={{ fontSize: 11, fontWeight: 800, color: C.textSub, textTransform: 'uppercase' }}>Zero Borrower Fees</span>
           </div>
-          <div style={{ width: 1, height: 16, background: C.border }} />
+          <div style={{ display: isMobile ? 'none' : 'block', width: 1, height: 16, background: C.border }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
              <div style={{ width: 24, height: 24, borderRadius: '50%', background: C.emeraldLight, color: C.emerald, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>✓</div>
              <span style={{ fontSize: 11, fontWeight: 800, color: C.textSub, textTransform: 'uppercase' }}>GH Card Verified</span>
           </div>
-          <div style={{ width: 1, height: 16, background: C.border }} />
+          <div style={{ display: isMobile ? 'none' : 'block', width: 1, height: 16, background: C.border }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
              <div style={{ width: 24, height: 24, borderRadius: '50%', background: C.emeraldLight, color: C.emerald, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>✓</div>
              <span style={{ fontSize: 11, fontWeight: 800, color: C.textSub, textTransform: 'uppercase' }}>Secure Process</span>
@@ -261,27 +271,27 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
             transition={{ duration: 0.3, ease: 'easeOut' }}
             style={{ 
               display: 'grid', 
-              gridTemplateColumns: isMobile ? '1fr' : '1fr 380px', 
-              gap: isMobile ? 32 : 48,
+              gridTemplateColumns: isMobile ? '1fr' : '380px 1fr', 
+              gap: isMobile ? 32 : 40,
               alignItems: 'start'
             }}>
               
-              {/* Left Column: Core Stats */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
+              {/* Left Column: Core Stats (Small) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 
-                <motion.div whileHover={{ y: -4 }} style={{ background: '#fff', borderRadius: 32, border: `1px solid ${C.border}`, padding: isMobile ? 24 : 40, boxShadow: '0 4px 30px rgba(0,0,0,0.03)', cursor: 'pointer' }}>
+                <motion.div whileHover={{ y: -4 }} style={{ background: '#fff', borderRadius: 32, border: `1px solid ${C.border}`, padding: 28, boxShadow: '0 4px 30px rgba(0,0,0,0.03)', cursor: 'pointer' }}>
                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
-                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                             <div style={{ width: 8, height: 8, borderRadius: '50%', background: C.emerald, boxShadow: `0 0 10px ${C.emerald}` }} />
                             <span style={{ fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Financial Health Index</span>
                          </div>
-                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-                            <span style={{ fontSize: isMobile ? 56 : 72, fontWeight: 400, color: C.text, fontFamily: F.heading, letterSpacing: '-0.04em' }}>{metrics?.healthIndex || 0}</span>
-                            <span style={{ fontSize: 24, color: C.textMuted }}>/ 100</span>
+                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                            <span style={{ fontSize: 48, fontWeight: 400, color: C.text, fontFamily: F.heading, letterSpacing: '-0.04em' }}>{metrics?.healthIndex || 0}</span>
+                            <span style={{ fontSize: 20, color: C.textMuted }}>/ 100</span>
                          </div>
                       </div>
-                      <div style={{ width: isMobile ? 100 : 160, height: isMobile ? 55 : 80 }}>
+                      <div style={{ width: 110, height: 55 }}>
                          <svg width="100%" height="100%" viewBox="0 0 100 55">
                             <path d="M10,50 A40,40 0 0,1 90,50" fill="none" stroke="#f1f5f9" strokeWidth="6" strokeLinecap="round" />
                             <motion.path 
@@ -294,56 +304,124 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
                          </svg>
                       </div>
                    </div>
-                   <div style={{ marginTop: 32, paddingTop: 32, borderTop: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <p style={{ margin: 0, fontSize: 13.5, color: C.textSub }}>{metrics?.healthIndexMessage || 'Finding institutional offers...'}</p>
-                      <button onClick={() => router.push('/portal/marketplace')} style={{ background: C.text, border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 12.5, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>Compare Real Offers</button>
+                   <div style={{ 
+                     marginTop: 24, 
+                     paddingTop: 24, 
+                     borderTop: `1px solid ${C.border}`, 
+                     display: 'flex', 
+                     flexDirection: 'column',
+                     gap: 16
+                   }}>
+                      <p style={{ margin: 0, fontSize: 13, color: C.textSub, lineHeight: 1.4 }}>{metrics?.healthIndexMessage || 'Finding institutional offers...'}</p>
+                      <button onClick={() => router.push('/portal/marketplace')} style={{ width: '100%', background: C.text, border: 'none', borderRadius: 10, padding: '12px 20px', fontSize: 12.5, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>Compare Real Offers</button>
                    </div>
                 </motion.div>
 
                 {/* Quick Stats */}
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 20 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                    {[
                      { l: 'Cash Flow', v: `GH₵ ${metrics?.cashFlow || '0.00'}`, d: 'Available now', action: 'cashflow' },
                      { l: 'Net Worth', v: `GH₵ ${metrics?.netWorth?.toLocaleString() || '0'}`, d: '+2.4% vs Mar' },
                      { l: 'Credit Score', v: metrics?.creditScore || '---', d: 'Secure Link' }
                    ].map((stat, idx) => (
                       <motion.div 
-                        key={stat.l} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 + idx * 0.05 }}
-                        whileHover={{ y: -4, boxShadow: '0 10px 25px rgba(0,0,0,0.05)' }}
+                        key={stat.l} initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 + idx * 0.05 }}
+                        whileHover={{ y: -2, boxShadow: '0 8px 20px rgba(0,0,0,0.03)' }}
                         onClick={() => stat.action === 'cashflow' && onCardClick('cashflow')} 
-                        style={{ background: '#fff', borderRadius: 24, border: `1px solid ${C.border}`, padding: 24, cursor: 'pointer', transition: '0.2s' }}
+                        style={{ background: '#fff', borderRadius: 20, border: `1px solid ${C.border}`, padding: 20, cursor: 'pointer', transition: '0.2s' }}
                       >
-                         <p style={{ margin: '0 0 16px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{stat.l}</p>
-                         <p style={{ margin: '0 0 4px', fontSize: 24, fontWeight: 400, color: C.text }}>{stat.v}</p>
+                         <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{stat.l}</p>
+                         <p style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 400, color: C.text }}>{stat.v}</p>
                          <span style={{ fontSize: 11, fontWeight: 700, color: C.emerald }}>{stat.d}</span>
                       </motion.div>
                    ))}
                 </div>
 
-                {/* Advisory Intelligence */}
-                <div>
-                    <h3 style={{ margin: '0 0 20px', fontSize: 13, fontWeight: 800, color: C.textSub, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Advisory Intelligence</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 20 }}>
-                       <motion.div whileHover={{ scale: 1.01 }} onClick={() => router.push('/portal/documents')} style={{ background: '#fff', borderRadius: 24, border: `2.5px dashed ${C.borderStrong}`, padding: 24, cursor: 'pointer' }}>
-                          <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 800, color: C.text, fontFamily: F.serif }}>Unlock a 5.2% better rate</p>
-                          <p style={{ margin: '0 0 16px', fontSize: 12, color: C.textSub, lineHeight: 1.4 }}>Complete **Employment Verification** to unlock specialist rates.</p>
-                          <button style={{ background: '#0d1b3e', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 11, fontWeight: 700 }}>Go to Vault</button>
-                       </motion.div>
-                       <motion.div whileHover={{ scale: 1.01 }} onClick={() => router.push('/portal/calculator')} style={{ background: '#fff', borderRadius: 24, border: `1px solid ${C.border}`, padding: 24, cursor: 'pointer' }}>
-                          <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 800, color: C.text, fontFamily: F.serif }}>Loan Calculator</p>
-                          <p style={{ margin: '0 0 16px', fontSize: 12, color: C.textSub, lineHeight: 1.4 }}>Estimate your monthly payments before you apply.</p>
-                          <button style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 11, fontWeight: 700 }}>Calculate Now</button>
-                       </motion.div>
-                       <motion.div whileHover={{ scale: 1.01 }} onClick={() => router.push('/portal/marketplace?type=insurance')} style={{ background: '#fff', borderRadius: 24, border: `1px solid ${C.border}`, padding: 24, cursor: 'pointer' }}>
-                          <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 800, color: C.text, fontFamily: F.serif }}>Insurance Savings</p>
-                          <p style={{ margin: 0, fontSize: 12, color: C.textSub }}>Save **GH₵ 120/mo** by switching to Resolve Health.</p>
-                       </motion.div>
-                    </div>
+                {/* Institutional Verification Badge */}
+                <div style={{ background: C.emeraldLight, padding: 20, borderRadius: 20, display: 'flex', alignItems: 'center', gap: 12, border: `1px solid ${C.emerald}22` }}>
+                   <div style={{ fontSize: 24 }}>🛡️</div>
+                   <div>
+                      <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: C.emerald }}>Grade A Security</p>
+                      <p style={{ margin: 0, fontSize: 11, color: C.textSub }}>Your data is protected by 256-bit encryption.</p>
+                   </div>
                 </div>
+
+              </div>
+
+              {/* Right Column: Promos & Advisory & Partners (Large) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
+                 
+                 {/* Promo Carousel */}
+                 <div style={{ position: 'relative' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                       <h3 style={{ margin: 0, fontSize: 12, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Featured Opportunities</h3>
+                       <div style={{ display: 'flex', gap: 4 }}>
+                          {PROMOS.map((_, i) => (
+                             <div key={i} style={{ width: 12, height: 4, borderRadius: 2, background: i === promoIdx ? C.blue : C.border, transition: '0.3s' }} />
+                          ))}
+                       </div>
+                    </div>
+                    
+                    <div style={{ height: 260, position: 'relative' }}>
+                       <AnimatePresence mode="wait">
+                          <motion.div 
+                            key={promoIdx}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.4, ease: 'circOut' }}
+                            whileHover={{ scale: 1.005 }}
+                            style={{ 
+                              position: 'absolute', inset: 0,
+                              background: PROMOS[promoIdx].color, 
+                              borderRadius: 32, padding: 40, color: '#fff', boxShadow: `0 20px 45px ${PROMOS[promoIdx].shadow}33`,
+                              overflow: 'hidden', cursor: 'pointer',
+                              display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start'
+                            }}
+                          >
+                             {/* Large floating watermark icon */}
+                             {PROMOS[promoIdx].icon}
+                             
+                             <span style={{ fontSize: 10, fontWeight: 900, background: 'rgba(255,255,255,0.2)', padding: '4px 12px', borderRadius: 20, marginBottom: 16, display: 'inline-block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{PROMOS[promoIdx].tag}</span>
+                             <h4 style={{ margin: '0 0 12px', fontSize: 26, fontWeight: 900, fontFamily: F.heading, lineHeight: 1.1, maxWidth: '65%' }}>{PROMOS[promoIdx].title}</h4>
+                             <p style={{ margin: '0 0 28px', fontSize: 14, opacity: 0.85, lineHeight: 1.5, maxWidth: '65%' }}>{PROMOS[promoIdx].desc}</p>
+                             <button style={{ background: '#fff', color: PROMOS[promoIdx].shadow, border: 'none', borderRadius: 12, padding: '12px 28px', fontSize: 13, fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>{PROMOS[promoIdx].btn}</button>
+                          </motion.div>
+                       </AnimatePresence>
+                    </div>
+                 </div>
+
+                 {/* Advisory Intelligence */}
+                 <div>
+                     <h3 style={{ margin: '0 0 20px', fontSize: 12, fontWeight: 900, color: C.textSub, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Advisory Intelligence</h3>
+                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 20 }}>
+                        <motion.div whileHover={{ y: -4, borderColor: C.blue }} onClick={() => router.push('/portal/documents')} style={{ background: '#fff', borderRadius: 24, border: `1px solid ${C.border}`, padding: 24, cursor: 'pointer', transition: '0.2s', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 180 }}>
+                           <div>
+                              <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 800, color: C.text, fontFamily: F.heading }}>Unlock a 5.2% better rate</p>
+                              <p style={{ margin: 0, fontSize: 12, color: C.textSub, lineHeight: 1.4 }}>Complete **Employment Verification** to unlock specialist rates.</p>
+                           </div>
+                           <button style={{ background: '#0d1b3e', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 11, fontWeight: 700, cursor: 'pointer', alignSelf: 'flex-start', marginTop: 16 }}>Go to Vault</button>
+                        </motion.div>
+                        <motion.div whileHover={{ y: -4, borderColor: C.blue }} onClick={() => router.push('/portal/calculator')} style={{ background: '#fff', borderRadius: 24, border: `1px solid ${C.border}`, padding: 24, cursor: 'pointer', transition: '0.2s', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 180 }}>
+                           <div>
+                              <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 800, color: C.text, fontFamily: F.heading }}>Loan Calculator</p>
+                              <p style={{ margin: 0, fontSize: 12, color: C.textSub, lineHeight: 1.4 }}>Estimate your monthly payments before you apply.</p>
+                           </div>
+                           <button style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 11, fontWeight: 700, cursor: 'pointer', alignSelf: 'flex-start', marginTop: 16 }}>Calculate Now</button>
+                        </motion.div>
+                        <motion.div whileHover={{ y: -4, borderColor: C.blue }} onClick={() => router.push('/portal/marketplace?type=insurance')} style={{ background: '#fff', borderRadius: 24, border: `1px solid ${C.border}`, padding: 24, cursor: 'pointer', transition: '0.2s', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 180 }}>
+                           <div>
+                              <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 800, color: C.text, fontFamily: F.heading }}>Insurance Savings</p>
+                              <p style={{ margin: 0, fontSize: 12, color: C.textSub, lineHeight: 1.4 }}>Save **GH₵ 120/mo** by switching to Resolve Health cover.</p>
+                           </div>
+                           <button style={{ background: C.emerald, color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 11, fontWeight: 700, cursor: 'pointer', alignSelf: 'flex-start', marginTop: 16 }}>Explore Protection</button>
+                        </motion.div>
+                     </div>
+                 </div>
 
                  {/* Approved Ecosystem Partners */}
                  <div>
-                     <h3 style={{ margin: '24px 0 20px', fontSize: 13, fontWeight: 800, color: C.textSub, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Approved Ecosystem Partners</h3>
+                     <h3 style={{ margin: '0 0 20px', fontSize: 12, fontWeight: 900, color: C.textSub, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Approved Ecosystem Partners</h3>
                      {instsLoading ? (
                        <div style={{ padding: '20px 0', fontSize: 12, color: C.textMuted }}>Synchronizing verified portal lenders...</div>
                      ) : institutions.length === 0 ? (
@@ -353,7 +431,7 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
                          {institutions.slice(0, 6).map((inst: any) => (
                            <motion.div 
                              key={inst._id}
-                             whileHover={{ y: -4, boxShadow: '0 10px 25px rgba(0,0,0,0.04)' }}
+                             whileHover={{ y: -4, boxShadow: '0 10px 25px rgba(0,0,0,0.04)', borderColor: C.blue }}
                              onClick={() => router.push(`/portal/marketplace?provider=${encodeURIComponent(inst.name)}`)}
                              style={{ 
                                background: '#fff', 
@@ -403,82 +481,40 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
                        </div>
                      )}
                  </div>
-              </div>
 
-              {/* Right Column: Promos & News */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-                 
-                 {/* Promo Carousel */}
-                 <div style={{ position: 'relative' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                       <h3 style={{ margin: 0, fontSize: 12, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Featured Opportunities</h3>
-                       <div style={{ display: 'flex', gap: 4 }}>
-                          {PROMOS.map((_, i) => (
-                             <div key={i} style={{ width: 12, height: 4, borderRadius: 2, background: i === promoIdx ? C.blue : C.border, transition: '0.3s' }} />
-                          ))}
-                       </div>
-                    </div>
-                    
-                    <div style={{ height: 220, position: 'relative' }}>
-                       <AnimatePresence mode="wait">
-                          <motion.div 
-                            key={promoIdx}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.4, ease: 'circOut' }}
-                            whileHover={{ scale: 1.01 }}
-                            style={{ 
-                              position: 'absolute', inset: 0,
-                              background: PROMOS[promoIdx].color, 
-                              borderRadius: 28, padding: 32, color: '#fff', boxShadow: `0 20px 40px ${PROMOS[promoIdx].shadow}44`,
-                              overflow: 'hidden', cursor: 'pointer'
-                            }}
-                          >
-                             <span style={{ fontSize: 10, fontWeight: 900, background: 'rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: 20, marginBottom: 16, display: 'inline-block', textTransform: 'uppercase' }}>{PROMOS[promoIdx].tag}</span>
-                             <h4 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 900, fontFamily: F.heading }}>{PROMOS[promoIdx].title}</h4>
-                             <p style={{ margin: '0 0 24px', fontSize: 13, opacity: 0.8, lineHeight: 1.4, maxWidth: '80%' }}>{PROMOS[promoIdx].desc}</p>
-                             <button style={{ background: '#fff', color: PROMOS[promoIdx].shadow, border: 'none', borderRadius: 12, padding: '10px 20px', fontSize: 12, fontWeight: 800 }}>{PROMOS[promoIdx].btn}</button>
-                          </motion.div>
-                       </AnimatePresence>
-                    </div>
-                    <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                 {/* Market Intelligence Grid */}
+                 <div>
+                    <h3 style={{ margin: '0 0 20px', fontSize: 12, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Market Intelligence & Reports</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 20 }}>
                        {articles && articles.length > 0 ? (
                          articles.slice(0, 3).map((blog: any) => (
                           <motion.div 
                             key={blog.id}
-                            whileHover={{ x: 6, background: '#fff', boxShadow: '0 10px 30px rgba(0,0,0,0.04)' }}
+                            whileHover={{ y: -4, background: '#fff', boxShadow: '0 10px 30px rgba(0,0,0,0.04)', borderColor: C.blue }}
                             onClick={() => setSelectedBlog(blog)}
                             style={{ 
-                              padding: 16, borderRadius: 20, border: `1px solid ${C.border}`, 
-                              display: 'flex', gap: 16, alignItems: 'center', cursor: 'pointer', transition: '0.2s',
+                              padding: 20, borderRadius: 24, border: `1px solid ${C.border}`, 
+                              display: 'flex', flexDirection: 'column', gap: 14, cursor: 'pointer', transition: '0.2s',
                               background: 'rgba(255,255,255,0.4)', backdropFilter: 'blur(10px)'
                             }}
                           >
-                             <div style={{ width: 44, height: 44, borderRadius: 12, background: '#fff', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                             <div style={{ width: 40, height: 40, borderRadius: 12, background: '#fff', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, alignSelf: 'flex-start' }}>
                                 {blog.icon || '🗞️'}
                              </div>
                              <div style={{ flex: 1 }}>
                                 <span style={{ fontSize: 9, fontWeight: 800, color: C.blue, textTransform: 'uppercase', letterSpacing: '0.02em' }}>{blog.tag}</span>
-                                <p style={{ margin: '2px 0 0', fontSize: 13, fontWeight: 800, color: C.text, lineHeight: 1.3 }}>{blog.title}</p>
+                                <p style={{ margin: '4px 0 0', fontSize: 13.5, fontWeight: 800, color: C.text, lineHeight: 1.4 }}>{blog.title}</p>
                              </div>
                           </motion.div>
                          ))
                        ) : (
-                          <div style={{ textAlign: 'start', padding: '20px 0' }}>
-                             <p style={{ fontSize: 13, color: C.textSub, fontWeight: 600 }}>Stay tuned for market intelligence.</p>
+                          <div style={{ textAlign: 'start', padding: '10px 0' }}>
+                             <p style={{ fontSize: 13, color: C.textMuted, fontWeight: 600 }}>Stay tuned for market intelligence reports.</p>
                           </div>
                        )}
                     </div>
-                  </div>
-                  {/* Institutional Verification Badge */}
-                  <div style={{ background: C.emeraldLight, padding: 24, borderRadius: 24, display: 'flex', alignItems: 'center', gap: 12, border: `1px solid ${C.emerald}22` }}>
-                     <div style={{ fontSize: 24 }}>🛡️</div>
-                     <div>
-                        <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: C.emerald }}>Grade A Security</p>
-                        <p style={{ margin: 0, fontSize: 11, color: C.textSub }}>Your data is protected by 256-bit encryption.</p>
-                     </div>
-                  </div>
+                 </div>
+
               </div>
           </motion.div>
         )}
@@ -605,7 +641,8 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
                   <p style={{ margin: '4px 0 0', fontSize: 12, color: C.textSub }}>All clear! You currently do not have any active loans, protection policies, or BNPL facilities.</p>
                 </div>
               ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <div style={{ overflowX: 'auto', width: '100%' }}>
+                  <table style={{ width: '100%', minWidth: 800, borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead>
                     <tr style={{ borderBottom: `1px solid ${C.border}`, background: 'rgba(0,0,0,0.01)' }}>
                       <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Contract Details</th>
@@ -636,7 +673,23 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
                               </div>
                             </td>
                             <td style={{ padding: '20px 24px' }}>
-                              <span style={{ fontSize: 13, color: C.textSub }}>{app.productId?.institutionId?.name || 'ResolveBridge Partner'}</span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span style={{ fontSize: 13, color: C.textSub }}>{app.productId?.institutionId?.name || 'ResolveBridge Partner'}</span>
+                                <IconButton 
+                                  size="small"
+                                  onClick={() => {
+                                    window.dispatchEvent(new CustomEvent('open-chat', { 
+                                      detail: { 
+                                        prefill: `Hello, I would like to make an enquiry about my active credit facility "${app.productId?.name || 'Resolve Credit Extension'}" with ${app.productId?.institutionId?.name || 'ResolveBridge Partner'}.` 
+                                      } 
+                                    }));
+                                  }}
+                                  sx={{ color: C.blue, padding: '4px', '&:hover': { background: `${C.blue}14` } }}
+                                  title="Chat with partner"
+                                >
+                                   <ChatBubbleOutlineRounded sx={{ fontSize: 15 }} />
+                                </IconButton>
+                              </div>
                             </td>
                             <td style={{ padding: '20px 24px' }}>
                               {isInsurance ? (
@@ -711,6 +764,7 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
                       })}
                   </tbody>
                 </table>
+              </div>
               )}
             </div>
 
@@ -730,7 +784,8 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
                   <p style={{ margin: '4px 0 0', fontSize: 12, color: C.textSub }}>No payment history exists under your wallet account.</p>
                 </div>
               ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <div style={{ overflowX: 'auto', width: '100%' }}>
+                  <table style={{ width: '100%', minWidth: 800, borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead>
                     <tr style={{ borderBottom: `1px solid ${C.border}`, background: 'rgba(0,0,0,0.01)' }}>
                       <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Reference</th>
@@ -773,6 +828,7 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
                       ))}
                   </tbody>
                 </table>
+              </div>
               )}
             </div>
 

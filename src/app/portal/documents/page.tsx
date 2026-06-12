@@ -122,8 +122,9 @@ export default function DocumentsPage() {
       return;
     }
     
-    if (file.size > 10 * 1024 * 1024) { // 10MB
-      setUploadError('File exceeds the 10MB size limit.');
+    const maxFileSizeMb = Number(process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB) || 10;
+    if (file.size > maxFileSizeMb * 1024 * 1024) {
+      setUploadError(`File exceeds the ${maxFileSizeMb}MB size limit.`);
       return;
     }
 
@@ -522,83 +523,80 @@ export default function DocumentsPage() {
                        actionLabel="Upload First Document"
                        onAction={() => setShowUploadModal(true)}
                     />
-                 )}
-              </AnimatePresence>
-           </div>
+                  )}
+               </AnimatePresence>
+            </div>
 
-           {/* Stats Sidebar */}
-           {!isMobile && (
-             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                {/* Vault Integrity Score */}
-                <div style={{ 
-                  background: C.sidebar, 
-                  borderRadius: 32, 
-                  padding: 32, 
-                  color: '#fff',
-                  position: 'relative', 
-                  overflow: 'hidden',
-                  boxShadow: '0 20px 40px rgba(11,22,48,0.2)'
-                }}>
-                   <div style={{ position: 'absolute', top: -35, right: -35, width: 150, height: 150, background: 'rgba(255,255,255,0.03)', borderRadius: '50%' }} />
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-                      <VerifiedUserRounded sx={{ fontSize: 18, color: C.emerald }} />
-                      <span style={{ fontSize: 12, fontWeight: 800, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: F.heading }}>Trust Index</span>
-                   </div>
-                   <h2 style={{ margin: '0 0 8px', fontSize: 44, fontWeight: 900, fontFamily: F.heading, letterSpacing: '-0.02em' }}>{completionPercentage}%</h2>
-                   <p style={{ margin: '0 0 24px', fontSize: 13, opacity: 0.7, lineHeight: 1.6 }}>
-                     {completionPercentage === 100 
-                       ? "Congratulations! Your credentials vault is fully complete and compliant."
-                       : "Complete remaining document modules to reach 100% eligibility for premium bank products."}
-                   </p>
-                   
-                   {/* Progress Tracker bar */}
-                   <div style={{ height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3, marginBottom: 20 }}>
-                      <motion.div 
-                        initial={{ width: 0 }} 
-                        animate={{ width: `${completionPercentage}%` }}
-                        transition={{ duration: 0.8, ease: 'easeOut' }}
-                        style={{ height: '100%', background: C.emerald, borderRadius: 3 }} 
-                      />
-                   </div>
-                   
-                   {/* Verification items Checklist */}
-                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 12, opacity: 0.9 }}>
-                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: hasIdentity ? '#fff' : 'rgba(255,255,255,0.45)' }}>
-                       <span style={{ width: 6, height: 6, borderRadius: '50%', background: hasIdentity ? C.emerald : 'rgba(255,255,255,0.25)' }} />
-                       <span>Identity Proof (Ghana Card / Passport)</span>
-                     </div>
-                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: hasFinance ? '#fff' : 'rgba(255,255,255,0.45)' }}>
-                       <span style={{ width: 6, height: 6, borderRadius: '50%', background: hasFinance ? C.emerald : 'rgba(255,255,255,0.25)' }} />
-                       <span>Financial Statement (Utility / Bank Statement)</span>
-                     </div>
-                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: hasAssets ? '#fff' : 'rgba(255,255,255,0.45)' }}>
-                       <span style={{ width: 6, height: 6, borderRadius: '50%', background: hasAssets ? C.emerald : 'rgba(255,255,255,0.25)' }} />
-                       <span>Assets Registration (Optional Portfolio)</span>
-                     </div>
-                   </div>
-                </div>
+            <div style={{ display: isMobile ? 'none' : 'flex', flexDirection: 'column', gap: 24 }}>
+               {/* Vault Integrity Score */}
+               <div style={{ 
+                 background: C.sidebar, 
+                 borderRadius: 32, 
+                 padding: 32, 
+                 color: '#fff',
+                 position: 'relative', 
+                 overflow: 'hidden',
+                 boxShadow: '0 20px 40px rgba(11,22,48,0.2)'
+               }}>
+                  <div style={{ position: 'absolute', top: -35, right: -35, width: 150, height: 150, background: 'rgba(255,255,255,0.03)', borderRadius: '50%' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+                     <VerifiedUserRounded sx={{ fontSize: 18, color: C.emerald }} />
+                     <span style={{ fontSize: 12, fontWeight: 800, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: F.heading }}>Trust Index</span>
+                  </div>
+                  <h2 style={{ margin: '0 0 8px', fontSize: 44, fontWeight: 900, fontFamily: F.heading, letterSpacing: '-0.02em' }}>{completionPercentage}%</h2>
+                  <p style={{ margin: '0 0 24px', fontSize: 13, opacity: 0.7, lineHeight: 1.6 }}>
+                    {completionPercentage === 100 
+                      ? "Congratulations! Your credentials vault is fully complete and compliant."
+                      : "Complete remaining document modules to reach 100% eligibility for premium bank products."}
+                  </p>
+                  
+                  {/* Progress Tracker bar */}
+                  <div style={{ height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3, marginBottom: 20 }}>
+                     <motion.div 
+                       initial={{ width: 0 }} 
+                       animate={{ width: `${completionPercentage}%` }}
+                       transition={{ duration: 0.8, ease: 'easeOut' }}
+                       style={{ height: '100%', background: C.emerald, borderRadius: 3 }} 
+                     />
+                  </div>
+                  
+                  {/* Verification items Checklist */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 12, opacity: 0.9 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: hasIdentity ? '#fff' : 'rgba(255,255,255,0.45)' }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: hasIdentity ? C.emerald : 'rgba(255,255,255,0.25)' }} />
+                      <span>Identity Proof (Ghana Card / Passport)</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: hasFinance ? '#fff' : 'rgba(255,255,255,0.45)' }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: hasFinance ? C.emerald : 'rgba(255,255,255,0.25)' }} />
+                      <span>Financial Statement (Utility / Bank Statement)</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: hasAssets ? '#fff' : 'rgba(255,255,255,0.45)' }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: hasAssets ? C.emerald : 'rgba(255,255,255,0.25)' }} />
+                      <span>Assets Registration (Optional Portfolio)</span>
+                    </div>
+                  </div>
+               </div>
 
-                {/* Connected Handshakes */}
-                <div style={{ background: '#fff', borderRadius: 32, border: `1px solid ${C.border}`, padding: 32, boxShadow: '0 4px 20px rgba(0,0,0,0.01)' }}>
-                   <h3 style={{ margin: '0 0 24px', fontSize: 16, fontWeight: 800, fontFamily: F.heading, color: C.text }}>Connected Handshakes</h3>
-                   <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                      {handshakes.map((bridge: any, index: number) => (
-                        <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                           <div>
-                              <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: C.text, fontFamily: F.heading }}>{bridge.label}</p>
-                              <p style={{ margin: 0, fontSize: 11, color: bridge.color, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                {bridge.status === 'Active Sync' && <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.emerald, display: 'inline-block', boxShadow: `0 0 8px ${C.emerald}` }} />}
-                                {bridge.status}
-                              </p>
-                           </div>
-                           <div style={{ width: 8, height: 8, borderRadius: '50%', background: bridge.color }} />
-                        </div>
-                      ))}
-                   </div>
-                </div>
-             </div>
-           )}
-        </div>
+               {/* Connected Handshakes */}
+               <div style={{ background: '#fff', borderRadius: 32, border: `1px solid ${C.border}`, padding: 32, boxShadow: '0 4px 20px rgba(0,0,0,0.01)' }}>
+                  <h3 style={{ margin: '0 0 24px', fontSize: 16, fontWeight: 800, fontFamily: F.heading, color: C.text }}>Connected Handshakes</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                     {handshakes.map((bridge: any, index: number) => (
+                       <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                             <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: C.text, fontFamily: F.heading }}>{bridge.label}</p>
+                             <p style={{ margin: 0, fontSize: 11, color: bridge.color, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 4 }}>
+                               {bridge.status === 'Active Sync' && <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.emerald, display: 'inline-block', boxShadow: `0 0 8px ${C.emerald}` }} />}
+                               {bridge.status}
+                             </p>
+                          </div>
+                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: bridge.color }} />
+                       </div>
+                     ))}
+                  </div>
+               </div>
+            </div>
+         </div>
 
         {/* Custom Deletion Confirmation Modal Overlay */}
         <AnimatePresence>
@@ -825,8 +823,8 @@ export default function DocumentsPage() {
                         </>
                       ) : (
                         <>
-                          <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 800, color: C.text }}>Select or drop document file</p>
-                          <p style={{ margin: 0, fontSize: 11, color: C.textMuted, fontWeight: 700 }}>PDF, PNG, JPG (Max 10MB limit)</p>
+                           <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 800, color: C.text }}>Select or drop document file</p>
+                           <p style={{ margin: 0, fontSize: 11, color: C.textMuted, fontWeight: 700 }}>PDF, PNG, JPG (Max {Number(process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB) || 10}MB limit)</p>
                         </>
                       )}
                    </div>

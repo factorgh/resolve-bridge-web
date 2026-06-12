@@ -31,6 +31,53 @@ import EmptyState from '../components/EmptyState';
 
 /* ─── Components ─────────────────────────────────────────────────────────── */
 
+const ProductLogo = ({ logoUrl, name, size = 64, borderRadius = 20 }: { logoUrl?: string, name: string, size?: number, borderRadius?: number }) => {
+  const [error, setError] = useState(!logoUrl);
+  
+  if (error || !logoUrl) {
+    const initials = name ? name.trim().charAt(0).toUpperCase() : '?';
+    const colors = ['#2051e5', '#10b981', '#7c3aed', '#ef4444', '#f59e0b', '#ec4899'];
+    const charCodeSum = name ? name.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) : 0;
+    const color = colors[charCodeSum % colors.length];
+    
+    return (
+      <div style={{
+        width: size,
+        height: size,
+        borderRadius: borderRadius,
+        background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
+        color: '#fff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: Math.round(size * 0.42),
+        fontWeight: 900,
+        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+        flexShrink: 0,
+        fontFamily: F.heading
+      }}>
+        {initials}
+      </div>
+    );
+  }
+  
+  return (
+    <div style={{ 
+      width: size, height: size, background: '#f8fafc', borderRadius: borderRadius, 
+      display: 'flex', alignItems: 'center', justifyContent: 'center', 
+      padding: Math.round(size * 0.18), border: `1px solid ${C.border}`, flexShrink: 0,
+      boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
+    }}>
+      <img 
+        src={logoUrl} 
+        alt={name} 
+        onError={() => setError(true)}
+        style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} 
+      />
+    </div>
+  );
+};
+
 const ProductCard = ({ prod, viewMode, onInstantApply }: { prod: any, viewMode: 'grid' | 'list', onInstantApply: (prod: any) => void }) => {
   const isList = viewMode === 'list';
   
@@ -68,14 +115,7 @@ const ProductCard = ({ prod, viewMode, onInstantApply }: { prod: any, viewMode: 
 
       {/* Identity Area */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-        <div style={{ 
-          width: 64, height: 64, background: '#f8fafc', borderRadius: 20, 
-          display: 'flex', alignItems: 'center', justifyContent: 'center', 
-          padding: 12, border: `1px solid ${C.border}`, flexShrink: 0,
-          boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
-        }}>
-          <img src={prod.logo} alt="" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-        </div>
+        <ProductLogo logoUrl={prod.logo} name={prod.provider || prod.name} size={64} borderRadius={20} />
         <div style={{ flex: 1 }}>
           <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 800, color: C.textSub, textTransform: 'uppercase' }}>{prod.provider}</p>
           <h4 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: C.text, fontFamily: F.heading }}>{prod.name}</h4>
@@ -419,78 +459,76 @@ function MarketplaceContent() {
           }}
         >
            {selectedProduct && (
-             <Box sx={{ p: 5, height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 6 }}>
-                   <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                      <Box sx={{ width: 80, height: 80, borderRadius: 24, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2 }}>
-                         <img src={selectedProduct.logo} style={{ maxWidth: '100%', maxHeight: '100%' }} />
-                      </Box>
-                      <Box>
-                         <Typography variant="overline" sx={{ fontWeight: 900, color: C.blue, letterSpacing: '0.1em' }}>{selectedProduct.provider}</Typography>
-                         <Typography variant="h4" sx={{ fontWeight: 900, fontFamily: F.heading }}>{selectedProduct.name}</Typography>
+             <Box sx={{ p: { xs: 3, sm: 5 }, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: { xs: 4, sm: 6 } }}>
+                   <Box sx={{ display: 'flex', gap: { xs: 2, sm: 3 }, alignItems: 'center', flex: 1, mr: 2 }}>
+                      <ProductLogo logoUrl={selectedProduct.logo} name={selectedProduct.provider || selectedProduct.name} size={isMobile ? 56 : 72} borderRadius={16} />
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                         <Typography variant="overline" sx={{ fontWeight: 900, color: C.blue, letterSpacing: '0.1em', display: 'block', mb: 0.5, fontSize: { xs: 10, sm: 12 } }}>{selectedProduct.provider}</Typography>
+                         <Typography variant="h4" sx={{ fontWeight: 900, fontFamily: F.heading, fontSize: { xs: '20px', sm: '28px' }, lineHeight: 1.25, overflowWrap: 'break-word', wordBreak: 'break-word' }}>{selectedProduct.name}</Typography>
                       </Box>
                    </Box>
-                   <IconButton onClick={() => setSelectedProduct(null)} sx={{ background: '#f1f5f9' }}><CloseRounded /></IconButton>
+                   <IconButton onClick={() => setSelectedProduct(null)} sx={{ background: '#f1f5f9', flexShrink: 0 }}><CloseRounded /></IconButton>
                 </Box>
 
                 <Box sx={{ flex: 1, overflowY: 'auto', pr: 1 }}>
-                   <Box sx={{ mb: 6, pb: 4, borderBottom: `1px solid ${C.border}` }}>
-                      <Typography sx={{ fontSize: 13, fontWeight: 900, color: C.textMuted, mb: 1, letterSpacing: '0.05em' }}>OFFERING OVERVIEW</Typography>
-                      <Box sx={{ display: 'flex', gap: 6 }}>
+                   <Box sx={{ mb: { xs: 4, sm: 6 }, pb: { xs: 3, sm: 4 }, borderBottom: `1px solid ${C.border}` }}>
+                      <Typography sx={{ fontSize: 11, fontWeight: 900, color: C.textMuted, mb: 1.5, letterSpacing: '0.05em' }}>OFFERING OVERVIEW</Typography>
+                      <Box sx={{ display: 'flex', gap: { xs: 4, sm: 6 }, alignItems: 'center' }}>
                          <Box>
-                            <Typography sx={{ fontSize: 24, fontWeight: 900, color: C.text }}>{selectedProduct.rate}{selectedProduct.rateSuffix || '%'}</Typography>
-                            <Typography variant="caption" sx={{ fontWeight: 800, color: C.textSub }}>Interest Rate</Typography>
+                            <Typography sx={{ fontSize: { xs: '20px', sm: '24px' }, fontWeight: 900, color: C.text }}>{selectedProduct.rate}{selectedProduct.rateSuffix || '%'}</Typography>
+                            <Typography variant="caption" sx={{ fontWeight: 800, color: C.textSub, fontSize: { xs: '11px', sm: '12px' } }}>Interest Rate</Typography>
                          </Box>
-                         <Box sx={{ width: 1, height: 40, background: C.border, alignSelf: 'center' }} />
+                         <Box sx={{ width: '1px', height: 32, background: C.border }} />
                          <Box>
-                            <Typography sx={{ fontSize: 24, fontWeight: 900, color: C.emerald }}>{selectedProduct.match}%</Typography>
-                            <Typography variant="caption" sx={{ fontWeight: 800, color: C.textSub }}>Trust Match</Typography>
+                            <Typography sx={{ fontSize: { xs: '20px', sm: '24px' }, fontWeight: 900, color: C.emerald }}>{selectedProduct.match}%</Typography>
+                            <Typography variant="caption" sx={{ fontWeight: 800, color: C.textSub, fontSize: { xs: '11px', sm: '12px' } }}>Trust Match</Typography>
                          </Box>
                       </Box>
                    </Box>
 
-                   <Typography variant="h6" sx={{ fontWeight: 900, mb: 3 }}>Institutional Features</Typography>
-                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mb: 6 }}>
+                   <Typography variant="h6" sx={{ fontWeight: 900, mb: { xs: 2, sm: 3 }, fontSize: { xs: '16px', sm: '20px' } }}>Institutional Features</Typography>
+                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 2, sm: 3 }, mb: { xs: 4, sm: 6 } }}>
                       {[
                         { label: 'Instant Eligibility', val: 'Verified via Vault Hub', icon: <VerifiedRounded sx={{ color: C.emerald, fontSize: 20 }} /> },
                         { label: 'Processing Time', val: '< 24 Institutional Hours', icon: <HistoryRounded sx={{ color: C.blue, fontSize: 20 }} /> },
                         { label: 'Transparency', val: 'No hidden origination fees', icon: <ShieldRounded sx={{ color: C.purple, fontSize: 20 }} /> },
                       ].map(item => (
-                        <Box key={item.label} sx={{ display: 'flex', gap: 2.5 }}>
-                           <Box sx={{ mt: 0.5 }}>{item.icon}</Box>
+                        <Box key={item.label} sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                           <Box sx={{ mt: 0.5, display: 'flex' }}>{item.icon}</Box>
                            <Box>
-                              <Typography sx={{ fontSize: 14, fontWeight: 900, color: C.text }}>{item.label}</Typography>
-                              <Typography sx={{ fontSize: 13, color: C.textSub }}>{item.val}</Typography>
+                              <Typography sx={{ fontSize: { xs: 13, sm: 14 }, fontWeight: 900, color: C.text }}>{item.label}</Typography>
+                              <Typography sx={{ fontSize: { xs: 12, sm: 13 }, color: C.textSub }}>{item.val}</Typography>
                            </Box>
                         </Box>
                       ))}
                    </Box>
 
-                   <Typography sx={{ color: C.textSub, lineHeight: 1.8, fontSize: 14 }}>
+                   <Typography sx={{ color: C.textSub, lineHeight: 1.8, fontSize: { xs: 13, sm: 14 } }}>
                       {selectedProduct.desc}. This premium offering from {selectedProduct.provider} is specifically optimized for ResolveBridge users with a verified financial history. Terms are subject to final institutional review.
                    </Typography>
                 </Box>
 
-                <Box sx={{ pt: 4, borderTop: `1px solid ${C.border}`, display: 'flex', gap: 2, flexDirection: isMobile ? 'column' : 'row' }}>
+                <Box sx={{ pt: { xs: 3, sm: 4 }, borderTop: `1px solid ${C.border}`, display: 'flex', gap: 2, flexDirection: isMobile ? 'column' : 'row' }}>
                    <button 
                       onClick={() => {
                         handleInstantApplyStart(selectedProduct);
                         setSelectedProduct(null);
                       }}
                       style={{ 
-                        flex: 1, padding: '20px', borderRadius: 20, border: 'none', 
-                        background: C.text, color: '#fff', fontWeight: 900, fontSize: 15, cursor: 'pointer' 
+                        flex: 1, padding: isMobile ? '16px' : '20px', borderRadius: 16, border: 'none', 
+                        background: C.text, color: '#fff', fontWeight: 900, fontSize: isMobile ? 14 : 15, cursor: 'pointer' 
                       }}
                     >
                       Instant Apply
                     </button>
-                    <Link href={`/portal/apply-${selectedProduct.cat?.toLowerCase()}?productId={selectedProduct.id}&lender=${encodeURIComponent(selectedProduct.provider)}`} style={{ flex: 1, textDecoration: 'none' }}>
-                       <button style={{ width: '100%', padding: '20px', borderRadius: 20, border: `2px solid ${C.border}`, background: '#fff', color: C.textSub, fontWeight: 900, fontSize: 15, cursor: 'pointer' }}>Standard Application</button>
+                    <Link href={`/portal/apply-${selectedProduct.cat?.toLowerCase()}?productId=${selectedProduct.id}&lender=${encodeURIComponent(selectedProduct.provider)}`} style={{ flex: 1, textDecoration: 'none' }}>
+                       <button style={{ width: '100%', padding: isMobile ? '16px' : '20px', borderRadius: 16, border: `2px solid ${C.border}`, background: '#fff', color: C.textSub, fontWeight: 900, fontSize: isMobile ? 14 : 15, cursor: 'pointer' }}>Standard Application</button>
                     </Link>
                 </Box>
              </Box>
-           )}
-        </Drawer>
+            )}
+         </Drawer>
  
         {/* Filter Settings Drawer */}
         <Drawer 
@@ -1055,7 +1093,7 @@ function MarketplaceContent() {
           )}
         </AnimatePresence>
 
-        {isMobile && <div style={{ height: 100 }} />}
+        <div style={{ display: isMobile ? 'block' : 'none', height: 100 }} />
       </div>
     </PortalShell>
   );

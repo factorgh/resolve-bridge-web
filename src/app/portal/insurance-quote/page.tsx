@@ -149,11 +149,11 @@ export default function InsuranceQuotePage() {
               <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 22, padding: '32px', display: 'flex', flexDirection: 'column', gap: 22 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <label style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.09em', fontFamily: F.body }}>Cover Amount (GH₵)</label>
-                  <input type="range" min={50000} max={1000000} step={25000} value={form.coverAmount} onChange={e => set('coverAmount')(e.target.value)} style={{ width: '100%', accentColor: C.blue }} />
+                  <input type="range" min={50000} max={500000} step={25000} value={form.coverAmount} onChange={e => set('coverAmount')(e.target.value)} style={{ width: '100%', accentColor: C.blue }} />
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: 12, color: C.textMuted }}>GH₵ 50,000</span>
                     <span style={{ fontSize: 18, fontWeight: 900, color: C.blue, fontFamily: F.heading, letterSpacing: '-0.03em' }}>GH₵ {Number(form.coverAmount).toLocaleString()}</span>
-                    <span style={{ fontSize: 12, color: C.textMuted }}>GH₵ 1,000,000</span>
+                    <span style={{ fontSize: 12, color: C.textMuted }}>GH₵ 500,000</span>
                   </div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>

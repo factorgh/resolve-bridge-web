@@ -11,12 +11,12 @@ import {
   HistoryRounded, 
   BoltRounded, 
   AssignmentLateRounded, 
-  AssessmentRounded, 
   VerifiedRounded,
   AccountCircleRounded,
   SecurityRounded,
   SupportAgentRounded,
-  ExitToAppRounded
+  ExitToAppRounded,
+  MenuRounded
 } from '@mui/icons-material';
 import FloatingChat from './FloatingChat';
 import { useGetNotificationsQuery, useMarkNotificationReadMutation } from '@/lib/redux/api/notificationApi';
@@ -107,6 +107,7 @@ export default function PortalShell({
   const [ready, setReady] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState<any>(null);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -365,83 +366,114 @@ export default function PortalShell({
        </AnimatePresence>
 
        {/* Desktop Sidebar */}
-       {!isMobile && (
-         <aside style={{
-           width: sidebarW, height: '100vh', background: C.sidebar, position: 'fixed', left: 0, top: 0, zIndex: 100,
-           display: 'flex', flexDirection: 'column', transition: '0.2s cubic-bezier(0.2, 0, 0, 1)', overflow: 'hidden'
-         }}>
-            <div style={{ padding: '24px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-               <div style={{ background: '#fff', padding: 6, borderRadius: 8 }}><img src="/images/resolve_logo.png" style={{ height: 20 }} /></div>
-               {!collapsed && <span style={{ fontWeight: 800, color: '#fff', fontSize: 16 }}>ResolveBridge</span>}
-            </div>
-            
-            <div style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
-               {NAV.map(n => {
-                 const active = activeNavItem?.id === n.id;
-                 return (
-                   <button key={n.id} onClick={() => router.push(n.href)} style={{
-                     width: '100%', padding: '12px', borderRadius: 10, border: 'none', background: active ? C.sidebarActive : 'transparent',
-                     color: active ? '#fff' : C.sidebarText, display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: '0.2s',
-                     marginBottom: 4
-                   }}>
-                      {n.icon}
-                      {!collapsed && <span style={{ fontWeight: 600, fontSize: 13.5 }}>{n.label}</span>}
-                   </button>
-                 );
-               })}
-            </div>
+       <aside style={{
+         display: isMobile ? 'none' : 'flex',
+         width: sidebarW, height: '100vh', background: C.sidebar, position: 'fixed', left: 0, top: 0, zIndex: 100,
+         flexDirection: 'column', transition: '0.2s cubic-bezier(0.2, 0, 0, 1)', overflow: 'hidden'
+       }}>
+          <div style={{ padding: '24px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+             <div style={{ background: '#fff', padding: 6, borderRadius: 8 }}><img src="/images/resolve_logo.png" style={{ height: 20 }} /></div>
+             {!collapsed && <span style={{ fontWeight: 800, color: '#fff', fontSize: 16 }}>ResolveBridge</span>}
+          </div>
+          
+          <div style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
+             {NAV.map(n => {
+               const active = activeNavItem?.id === n.id;
+               return (
+                 <button key={n.id} onClick={() => router.push(n.href)} style={{
+                   width: '100%', padding: '12px', borderRadius: 10, border: 'none', background: active ? C.sidebarActive : 'transparent',
+                   color: active ? '#fff' : C.sidebarText, display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: '0.2s',
+                   marginBottom: 4
+                 }}>
+                    {n.icon}
+                    {!collapsed && <span style={{ fontWeight: 600, fontSize: 13.5 }}>{n.label}</span>}
+                 </button>
+               );
+             })}
+          </div>
 
-            {!collapsed && (
-              <div style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 14, border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <p style={{ margin: '0 0 8px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trust & Security</p>
-                  <div style={{ display: 'flex', gap: 10 }}>
-                    <div title="Verified by Ghana Card" style={{ width: 24, height: 24, borderRadius: 6, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>🇬🇭</div>
-                    <div title="SSL Secure" style={{ width: 24, height: 24, borderRadius: 6, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.emerald }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    </div>
-                    <div title="No Hidden Fees" style={{ width: 24, height: 24, borderRadius: 6, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.amber }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    </div>
+          {!collapsed && (
+            <div style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 14, border: '1px solid rgba(255,255,255,0.05)' }}>
+                <p style={{ margin: '0 0 8px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trust & Security</p>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <div title="Verified by Ghana Card" style={{ width: 24, height: 24, borderRadius: 6, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>🇬🇭</div>
+                  <div title="SSL Secure" style={{ width: 24, height: 24, borderRadius: 6, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.emerald }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                  <div title="No Hidden Fees" style={{ width: 24, height: 24, borderRadius: 6, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.amber }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                   </div>
                 </div>
               </div>
-            )}
-
-            <div style={{ padding: 20, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-               <button onClick={logout} style={{ width: '100%', padding: 10, background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>Sign Out</button>
             </div>
-         </aside>
-       )}
+          )}
 
-       {/* Mobile Bottom Tab Bar */}
-       {isMobile && (
-         <nav style={{
-           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, height: 80,
-           background: 'rgba(255, 255, 255, 0.98)', backdropFilter: 'blur(20px)',
-           borderTop: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-around', alignItems: 'center',
-           boxShadow: '0 -4px 30px rgba(0,0,0,0.04)'
-         }}>
-            {NAV.map(n => {
-              const active = activeNavItem?.id === n.id;
-              return (
-                <button key={n.id} onClick={() => router.push(n.href)} style={{
-                  background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center',
-                  width: `${100 / NAV.length}%`, padding: '10px 0', cursor: 'pointer'
-                }}>
-                   <div style={{
-                     width: 50, height: 32, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                     background: active ? C.bluePale : 'transparent', color: active ? C.blue : C.textSub,
-                     transition: '0.25s cubic-bezier(0.4, 0, 0.2, 1)', marginBottom: 4
-                   }}>
-                      {n.icon}
-                   </div>
-                   <span style={{ fontSize: 10, fontWeight: active ? 800 : 500, color: active ? C.text : C.textMuted }}>{n.label}</span>
-                </button>
-              );
-            })}
-         </nav>
-       )}
+          <div style={{ padding: 20, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+             <button onClick={logout} style={{ width: '100%', padding: 10, background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>Sign Out</button>
+          </div>
+       </aside>
+
+       {/* Mobile Side Menu Drawer (Hamburger Menu) */}
+       <Drawer
+         anchor="left"
+         open={mobileMenuOpen}
+         onClose={() => setMobileMenuOpen(false)}
+         PaperProps={{
+           sx: {
+             width: 280,
+             background: C.sidebar,
+             color: '#fff',
+             display: 'flex',
+             flexDirection: 'column',
+           }
+         }}
+       >
+          <div style={{ padding: '24px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ background: '#fff', padding: 6, borderRadius: 8 }}><img src="/images/resolve_logo.png" style={{ height: 20 }} /></div>
+                <span style={{ fontWeight: 800, color: '#fff', fontSize: 16 }}>ResolveBridge</span>
+             </div>
+             <IconButton onClick={() => setMobileMenuOpen(false)} sx={{ color: 'rgba(255,255,255,0.5)', p: 0.5 }}>
+               <CloseRounded sx={{ fontSize: 20 }} />
+             </IconButton>
+          </div>
+          
+          <div style={{ flex: 1, padding: '20px 10px', overflowY: 'auto' }}>
+             {NAV.map(n => {
+               const active = activeNavItem?.id === n.id;
+               return (
+                 <button key={n.id} onClick={() => { router.push(n.href); setMobileMenuOpen(false); }} style={{
+                   width: '100%', padding: '12px', borderRadius: 10, border: 'none', background: active ? C.sidebarActive : 'transparent',
+                   color: active ? '#fff' : C.sidebarText, display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: '0.2s',
+                   marginBottom: 4, textAlign: 'left'
+                 }}>
+                    {n.icon}
+                    <span style={{ fontWeight: 600, fontSize: 13.5 }}>{n.label}</span>
+                 </button>
+               );
+             })}
+          </div>
+
+          <div style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 14, border: '1px solid rgba(255,255,255,0.05)' }}>
+              <p style={{ margin: '0 0 8px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trust & Security</p>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <div title="Verified by Ghana Card" style={{ width: 24, height: 24, borderRadius: 6, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>🇬🇭</div>
+                <div title="SSL Secure" style={{ width: 24, height: 24, borderRadius: 6, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.emerald }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </div>
+                <div title="No Hidden Fees" style={{ width: 24, height: 24, borderRadius: 6, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.amber }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ padding: 20, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+             <button onClick={() => { logout(); setMobileMenuOpen(false); }} style={{ width: '100%', padding: 10, background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>Sign Out</button>
+          </div>
+       </Drawer>
 
        {/* Main Content Area */}
        <main style={{ flex: 1, marginLeft: sidebarW, minHeight: '100vh', transition: '0.2s' }}>
@@ -451,6 +483,22 @@ export default function PortalShell({
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '0 20px' : '0 32px', borderBottom: `1px solid ${C.border}`
           }}>
              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <IconButton 
+                   onClick={() => setMobileMenuOpen(true)}
+                   style={{
+                     display: (isMobile && !backHref) ? 'inline-flex' : 'none'
+                   }}
+                   sx={{ 
+                     color: C.text, 
+                     border: `1px solid ${C.border}`,
+                     borderRadius: 3, 
+                     background: '#fff',
+                     p: '6px',
+                     mr: 0.5
+                   }}
+                 >
+                   <MenuRounded sx={{ fontSize: 18 }} />
+                 </IconButton>
                 {backHref ? (
                    <Link href={backHref} style={{ color: C.textSub, textDecoration: 'none', fontSize: 13, fontWeight: 700 }}>← {backLabel || 'Back'}</Link>
                 ) : (
@@ -483,12 +531,10 @@ export default function PortalShell({
                     background: '#fff', cursor: 'pointer', transition: '0.2s'
                   }}
                 >
-                   {!isMobile && (
-                     <div style={{ textAlign: 'right' }}>
-                        <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: C.text }}>{user?.firstName || 'User'}</p>
-                        <p style={{ margin: 0, fontSize: 10, color: C.textMuted, fontWeight: 700 }}>Personal Account</p>
-                     </div>
-                   )}
+                   <div style={{ display: isMobile ? 'none' : 'block', textAlign: 'right' }}>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: C.text }}>{user?.firstName || 'User'}</p>
+                      <p style={{ margin: 0, fontSize: 10, color: C.textMuted, fontWeight: 700 }}>Personal Account</p>
+                   </div>
                    <div style={{ 
                      width: 32, height: 32, borderRadius: 10, 
                      background: 'linear-gradient(135deg, #2051e5, #7c3aed)', 
@@ -662,12 +708,12 @@ export default function PortalShell({
                        style={{ flex: 1, height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}
                      >
                         <Box sx={{ p: 3, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 2 }}>
-                           {isMobile && <IconButton onClick={() => setSelectedNotif(null)}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg></IconButton>}
+                           <IconButton onClick={() => setSelectedNotif(null)} style={{ display: isMobile ? 'inline-flex' : 'none' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg></IconButton>
                            <Box>
                               <Typography sx={{ fontSize: 14, fontWeight: 800, color: C.text }}>Signal Details</Typography>
                               <Typography sx={{ fontSize: 9, color: C.textMuted, fontWeight: 900, letterSpacing: '0.1em' }}>INSTITUTIONAL METADATA</Typography>
                            </Box>
-                           {!isMobile && <IconButton onClick={() => setSelectedNotif(null)} sx={{ ml: 'auto', width: 36, height: 36 }}><CloseRounded sx={{ fontSize: 18 }} /></IconButton>}
+                           <IconButton onClick={() => setSelectedNotif(null)} style={{ display: isMobile ? 'none' : 'inline-flex' }} sx={{ ml: 'auto', width: 36, height: 36 }}><CloseRounded sx={{ fontSize: 18 }} /></IconButton>
                         </Box>
 
                         <Box sx={{ p: isMobile ? 4 : 6, flex: 1, overflowY: 'auto' }}>
@@ -724,7 +770,7 @@ export default function PortalShell({
              </Box>
           </Drawer>
 
-          <div style={{ padding: isMobile ? '24px 20px 100px' : '40px 32px' }}>
+          <div style={{ padding: isMobile ? '24px 20px' : '40px 32px' }}>
              {children}
           </div>
           <FloatingChat />
