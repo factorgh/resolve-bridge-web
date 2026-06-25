@@ -330,7 +330,60 @@ export default function StatementPage() {
                   <SearchRounded sx={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.textMuted, fontSize: 20 }} />
                </div>
 
-               {filteredApps.map((app: any, idx: number) => (
+                {isLoading ? (
+                  Array.from({ length: 3 }).map((_, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        background: '#fff',
+                        border: `1px solid ${C.border}`,
+                        borderRadius: 20,
+                        padding: '16px 24px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 24,
+                        marginBottom: 12,
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      <motion.div
+                        animate={{ opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                        style={{ width: 48, height: 48, borderRadius: 14, background: '#f1f5f9' }}
+                      />
+                      <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <motion.div
+                          animate={{ opacity: [0.5, 1, 0.5] }}
+                          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.1 }}
+                          style={{ width: '40%', height: 14, borderRadius: 4, background: '#f1f5f9' }}
+                        />
+                        <motion.div
+                          animate={{ opacity: [0.5, 1, 0.5] }}
+                          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }}
+                          style={{ width: '60%', height: 10, borderRadius: 3, background: '#f1f5f9' }}
+                        />
+                      </div>
+                      <div style={{ flex: 1.5, display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <motion.div
+                          animate={{ opacity: [0.5, 1, 0.5] }}
+                          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+                          style={{ flex: 1, height: 6, borderRadius: 3, background: '#f1f5f9' }}
+                        />
+                        <motion.div
+                          animate={{ opacity: [0.5, 1, 0.5] }}
+                          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
+                          style={{ width: 30, height: 10, borderRadius: 3, background: '#f1f5f9' }}
+                        />
+                      </div>
+                      <motion.div
+                        animate={{ opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+                        style={{ width: 80, height: 24, borderRadius: 10, background: '#f1f5f9' }}
+                      />
+                      <div style={{ width: 44, height: 32 }} />
+                    </div>
+                  ))
+                ) : filteredApps.map((app: any, idx: number) => (
                  <motion.div 
                    key={app.id} 
                    initial={{ opacity: 0, y: 10 }}
@@ -407,11 +460,15 @@ export default function StatementPage() {
                       size="small"
                       onClick={(e) => {
                         e.stopPropagation(); // Prevent opening details modal
-                        window.dispatchEvent(new CustomEvent('open-chat', { 
-                          detail: { 
-                            prefill: `Hello, I would like to make an enquiry about my application for the product "${app.product}" with ${app.provider}.` 
-                          } 
-                        }));
+                        if (app.providerId) {
+                          router.push(`/portal/chat?institutionId=${app.providerId}&institutionName=${encodeURIComponent(app.provider || 'Partner')}&institutionLogo=${encodeURIComponent(app.logo || '/resolve_icon.png')}&prefill=${encodeURIComponent(`Hello, I would like to make an enquiry about my application for the product "${app.product}" with ${app.provider}.`)}`);
+                        } else {
+                          window.dispatchEvent(new CustomEvent('open-chat', { 
+                            detail: { 
+                              prefill: `Hello, I would like to make an enquiry about my application for the product "${app.product}" with ${app.provider}.` 
+                            } 
+                          }));
+                        }
                       }}
                       sx={{ color: C.blue, '&:hover': { background: `${C.blue}14` } }}
                       title="Enquire from Partner"
@@ -437,7 +494,48 @@ export default function StatementPage() {
             <motion.div 
               key="txs" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
             >
-               {filteredTxs.length > 0 ? (
+               {txLoading ? (
+                 <div style={{ 
+                   background: '#fff', border: `1px solid ${C.border}`, borderRadius: 32, overflow: 'hidden',
+                   boxShadow: '0 4px 24px rgba(0,0,0,0.02)'
+                 }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                       <thead>
+                          <tr style={{ borderBottom: `1px solid ${C.border}`, background: '#f8fafc' }}>
+                             <th style={{ padding: '20px 24px', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Date</th>
+                             <th style={{ padding: '20px 24px', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Description</th>
+                             <th style={{ padding: '20px 24px', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Category</th>
+                             <th style={{ padding: '20px 24px', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Status</th>
+                             <th style={{ padding: '20px 24px', fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em', textAlign: 'right' }}>Amount</th>
+                          </tr>
+                       </thead>
+                       <tbody>
+                          {Array.from({ length: 5 }).map((_, idx) => (
+                            <tr key={idx} style={{ borderBottom: `1px solid ${C.border}` }}>
+                              <td style={{ padding: '20px 24px' }}>
+                                <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }} style={{ height: 13, width: 80, background: '#f1f5f9', borderRadius: 4 }} />
+                              </td>
+                              <td style={{ padding: '20px 24px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                  <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.1 }} style={{ height: 14, width: 220, background: '#f1f5f9', borderRadius: 4 }} />
+                                  <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }} style={{ height: 10, width: 140, background: '#f1f5f9', borderRadius: 3 }} />
+                                </div>
+                              </td>
+                              <td style={{ padding: '20px 24px' }}>
+                                <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }} style={{ height: 13, width: 70, background: '#f1f5f9', borderRadius: 4 }} />
+                              </td>
+                              <td style={{ padding: '20px 24px' }}>
+                                <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }} style={{ height: 24, width: 70, background: '#f1f5f9', borderRadius: 8 }} />
+                              </td>
+                              <td style={{ padding: '20px 24px', textAlign: 'right' }}>
+                                <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }} style={{ height: 14, width: 80, background: '#f1f5f9', borderRadius: 4, marginLeft: 'auto' }} />
+                              </td>
+                            </tr>
+                          ))}
+                       </tbody>
+                    </table>
+                 </div>
+               ) : filteredTxs.length > 0 ? (
                  <div style={{ 
                    background: '#fff', border: `1px solid ${C.border}`, borderRadius: 32, overflow: 'hidden',
                    boxShadow: '0 4px 24px rgba(0,0,0,0.02)'

@@ -24,7 +24,8 @@ import {
   CloseRounded,
   VerifiedRounded,
   HistoryRounded,
-  ErrorOutlineRounded
+  ErrorOutlineRounded,
+  ChatBubbleOutlineRounded
 } from '@mui/icons-material';
 import { Drawer, Box, Typography, IconButton } from '@mui/material';
 import EmptyState from '../components/EmptyState';
@@ -80,6 +81,7 @@ const ProductLogo = ({ logoUrl, name, size = 64, borderRadius = 20 }: { logoUrl?
 
 const ProductCard = ({ prod, viewMode, onInstantApply }: { prod: any, viewMode: 'grid' | 'list', onInstantApply: (prod: any) => void }) => {
   const isList = viewMode === 'list';
+  const router = useRouter();
   
   return (
     <motion.div
@@ -165,16 +167,146 @@ const ProductCard = ({ prod, viewMode, onInstantApply }: { prod: any, viewMode: 
         >
           Details
         </button>
+        <button 
+          onClick={() => {
+            if (prod.providerId) {
+              router.push(`/portal/chat?institutionId=${prod.providerId}&institutionName=${encodeURIComponent(prod.provider || 'Partner')}&institutionLogo=${encodeURIComponent(prod.logo || '/resolve_icon.png')}&prefill=${encodeURIComponent(`Hello, I'd like to chat about the product "${prod.name}" offered by ${prod.provider || 'your institution'}.`)}`);
+            } else {
+              window.dispatchEvent(new CustomEvent('open-chat', { 
+                detail: { 
+                  prefill: `Hello, I'd like to chat about the product "${prod.name}" offered by ${prod.provider || 'your institution'}.`
+                } 
+              }));
+            }
+          }}
+          style={{ 
+            background: 'rgba(32, 81, 229, 0.08)', border: 'none', 
+            color: C.blue, padding: '16px', borderRadius: 16, 
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', transition: '0.2s',
+            minWidth: '52px'
+          }}
+          title="Chat with partner"
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'rgba(32, 81, 229, 0.15)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'rgba(32, 81, 229, 0.08)';
+          }}
+        >
+          <ChatBubbleOutlineRounded sx={{ fontSize: 20 }} />
+        </button>
       </div>
     </motion.div>
   );
 };
 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense } from 'react';
+
+const ProductCardSkeleton = ({ viewMode }: { viewMode: 'grid' | 'list' }) => {
+  const isList = viewMode === 'list';
+  return (
+    <div
+      style={{
+        background: '#fff',
+        borderRadius: 32,
+        border: `1px solid ${C.border}`,
+        padding: isList ? '24px 32px' : '32px',
+        display: 'flex',
+        flexDirection: isList ? 'row' : 'column',
+        alignItems: isList ? 'center' : 'stretch',
+        gap: isList ? 32 : 24,
+        boxSizing: 'border-box',
+        minHeight: isList ? 'auto' : 320
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20, width: '100%' }}>
+        <motion.div
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+          style={{ width: 64, height: 64, borderRadius: 20, background: '#f1f5f9' }}
+        />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <motion.div
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.1 }}
+            style={{ width: '40%', height: 12, borderRadius: 6, background: '#f1f5f9' }}
+          />
+          <motion.div
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }}
+            style={{ width: '80%', height: 18, borderRadius: 6, background: '#f1f5f9' }}
+          />
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, width: '100%' }}>
+        <div style={{ background: '#f8fafc', padding: '16px', borderRadius: 20, border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <motion.div
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+            style={{ width: '50%', height: 10, borderRadius: 4, background: '#f1f5f9' }}
+          />
+          <motion.div
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
+            style={{ width: '70%', height: 20, borderRadius: 6, background: '#f1f5f9' }}
+          />
+        </div>
+        <div style={{ background: '#f8fafc', padding: '16px', borderRadius: 20, border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <motion.div
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+            style={{ width: '50%', height: 10, borderRadius: 4, background: '#f1f5f9' }}
+          />
+          <motion.div
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
+            style={{ width: '75%', height: 20, borderRadius: 6, background: '#f1f5f9' }}
+          />
+        </div>
+      </div>
+
+      {!isList && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%' }}>
+          <motion.div
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+            style={{ width: '100%', height: 12, borderRadius: 4, background: '#f1f5f9' }}
+          />
+          <motion.div
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
+            style={{ width: '90%', height: 12, borderRadius: 4, background: '#f1f5f9' }}
+          />
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: 12, marginTop: isList ? 0 : 'auto', width: isList ? 'auto' : '100%', minWidth: isList ? 200 : 'auto' }}>
+        <motion.div
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.7 }}
+          style={{ flex: 2, height: 48, borderRadius: 16, background: '#f1f5f9' }}
+        />
+        <motion.div
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
+          style={{ flex: 1, height: 48, borderRadius: 16, background: '#f1f5f9' }}
+        />
+        <motion.div
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.9 }}
+          style={{ width: 52, height: 48, borderRadius: 16, background: '#f1f5f9' }}
+        />
+      </div>
+    </div>
+  );
+};
 
 function MarketplaceContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const providerParam = searchParams.get('provider');
   
   const [activeCat, setActiveCat] = useState('loan');
@@ -401,14 +533,20 @@ function MarketplaceContent() {
                 gridTemplateColumns: viewMode === 'grid' ? `repeat(auto-fill, minmax(${isMobile ? '100%' : '320px'}, 1fr))` : '1fr', 
                 gap: 24 
               }}>
-                 {filteredProducts.map(prod => (
-                   <ProductCard 
-                     key={prod.id} 
-                     prod={prod} 
-                     viewMode={viewMode} 
-                     onInstantApply={handleInstantApplyStart} 
-                   />
-                 ))}
+                  {isLoading ? (
+                    Array.from({ length: 6 }).map((_, idx) => (
+                      <ProductCardSkeleton key={idx} viewMode={viewMode} />
+                    ))
+                  ) : (
+                    filteredProducts.map(prod => (
+                      <ProductCard 
+                        key={prod.id} 
+                        prod={prod} 
+                        viewMode={viewMode} 
+                        onInstantApply={handleInstantApplyStart} 
+                      />
+                    ))
+                  )}
               </div>
 
               {filteredProducts.length === 0 && !isLoading && (
@@ -464,7 +602,27 @@ function MarketplaceContent() {
                    <Box sx={{ display: 'flex', gap: { xs: 2, sm: 3 }, alignItems: 'center', flex: 1, mr: 2 }}>
                       <ProductLogo logoUrl={selectedProduct.logo} name={selectedProduct.provider || selectedProduct.name} size={isMobile ? 56 : 72} borderRadius={16} />
                       <Box sx={{ flex: 1, minWidth: 0 }}>
-                         <Typography variant="overline" sx={{ fontWeight: 900, color: C.blue, letterSpacing: '0.1em', display: 'block', mb: 0.5, fontSize: { xs: 10, sm: 12 } }}>{selectedProduct.provider}</Typography>
+                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography variant="overline" sx={{ fontWeight: 900, color: C.blue, letterSpacing: '0.1em', display: 'block', mb: 0.5, fontSize: { xs: 10, sm: 12 } }}>{selectedProduct.provider}</Typography>
+                            <IconButton 
+                               size="small"
+                               onClick={() => {
+                                 if (selectedProduct.providerId) {
+                                   router.push(`/portal/chat?institutionId=${selectedProduct.providerId}&institutionName=${encodeURIComponent(selectedProduct.provider || 'Partner')}&institutionLogo=${encodeURIComponent(selectedProduct.logo || '/resolve_icon.png')}&prefill=${encodeURIComponent(`Hello, I have some questions regarding "${selectedProduct.name}" by ${selectedProduct.provider}.`)}`);
+                                 } else {
+                                   window.dispatchEvent(new CustomEvent('open-chat', { 
+                                     detail: { 
+                                       prefill: `Hello, I have some questions regarding "${selectedProduct.name}" by ${selectedProduct.provider}.`
+                                     } 
+                                   }));
+                                 }
+                               }}
+                               sx={{ color: C.blue, padding: '2px', '&:hover': { background: `${C.blue}14` } }}
+                               title="Chat with partner"
+                             >
+                               <ChatBubbleOutlineRounded sx={{ fontSize: 14 }} />
+                             </IconButton>
+                          </Box>
                          <Typography variant="h4" sx={{ fontWeight: 900, fontFamily: F.heading, fontSize: { xs: '20px', sm: '28px' }, lineHeight: 1.25, overflowWrap: 'break-word', wordBreak: 'break-word' }}>{selectedProduct.name}</Typography>
                       </Box>
                    </Box>
@@ -516,15 +674,43 @@ function MarketplaceContent() {
                         setSelectedProduct(null);
                       }}
                       style={{ 
-                        flex: 1, padding: isMobile ? '16px' : '20px', borderRadius: 16, border: 'none', 
+                        flex: 1.5, padding: isMobile ? '16px' : '20px', borderRadius: 16, border: 'none', 
                         background: C.text, color: '#fff', fontWeight: 900, fontSize: isMobile ? 14 : 15, cursor: 'pointer' 
                       }}
                     >
                       Instant Apply
                     </button>
-                    <Link href={`/portal/apply-${selectedProduct.cat?.toLowerCase()}?productId=${selectedProduct.id}&lender=${encodeURIComponent(selectedProduct.provider)}`} style={{ flex: 1, textDecoration: 'none' }}>
+                    <Link href={`/portal/apply-${selectedProduct.cat?.toLowerCase()}?productId=${selectedProduct.id}&lender=${encodeURIComponent(selectedProduct.provider)}`} style={{ flex: 1.5, textDecoration: 'none' }}>
                        <button style={{ width: '100%', padding: isMobile ? '16px' : '20px', borderRadius: 16, border: `2px solid ${C.border}`, background: '#fff', color: C.textSub, fontWeight: 900, fontSize: isMobile ? 14 : 15, cursor: 'pointer' }}>Standard Application</button>
                     </Link>
+                    <button 
+                       onClick={() => {
+                         if (selectedProduct.providerId) {
+                           router.push(`/portal/chat?institutionId=${selectedProduct.providerId}&institutionName=${encodeURIComponent(selectedProduct.provider || 'Partner')}&institutionLogo=${encodeURIComponent(selectedProduct.logo || '/resolve_icon.png')}&prefill=${encodeURIComponent(`Hello, I'd like to ask a few questions about "${selectedProduct.name}" by ${selectedProduct.provider}.`)}`);
+                         } else {
+                           window.dispatchEvent(new CustomEvent('open-chat', { 
+                             detail: { 
+                               prefill: `Hello, I'd like to ask a few questions about "${selectedProduct.name}" by ${selectedProduct.provider}.`
+                             } 
+                           }));
+                         }
+                       }}
+                       style={{ 
+                         padding: isMobile ? '16px' : '20px', borderRadius: 16, border: 'none', 
+                         background: 'rgba(32, 81, 229, 0.08)', color: C.blue, fontWeight: 900, fontSize: isMobile ? 14 : 15, cursor: 'pointer',
+                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                         flex: isMobile ? 'none' : '1'
+                       }}
+                       onMouseEnter={e => {
+                         e.currentTarget.style.background = 'rgba(32, 81, 229, 0.15)';
+                       }}
+                       onMouseLeave={e => {
+                         e.currentTarget.style.background = 'rgba(32, 81, 229, 0.08)';
+                       }}
+                     >
+                       <ChatBubbleOutlineRounded sx={{ fontSize: 20 }} />
+                       <span>Chat</span>
+                     </button>
                 </Box>
              </Box>
             )}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import PortalShell, { C, F } from '../components/PortalShell';
@@ -109,16 +109,63 @@ function Input({ value, onChange, placeholder, type = 'text', prefix }: { value:
   );
 }
 
-function Select({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
+function Select({ value, onChange, options, disabled }: { value: string; onChange: (v: string) => void; options: string[]; disabled?: boolean }) {
   return (
-    <select value={value} onChange={e => onChange(e.target.value)}
-      style={{ width: '100%', padding: '12px 14px', border: `1.5px solid ${C.border}`, borderRadius: 12, fontSize: 14, fontFamily: F.body, background: '#fff', color: value ? C.text : C.textMuted, outline: 'none', cursor: 'pointer', appearance: 'none' }}
+    <select value={value} onChange={e => onChange(e.target.value)} disabled={disabled}
+      style={{ width: '100%', padding: '12px 14px', border: `1.5px solid ${C.border}`, borderRadius: 12, fontSize: 14, fontFamily: F.body, background: disabled ? '#f1f5f9' : '#fff', color: value ? C.text : C.textMuted, outline: 'none', cursor: disabled ? 'not-allowed' : 'pointer', appearance: 'none' }}
     >
       <option value="">Select…</option>
       {options.map(o => <option key={o} value={o}>{o}</option>)}
     </select>
   );
 }
+
+const ProductLogo = ({ logoUrl, name, size = 64, borderRadius = 20 }: { logoUrl?: string, name: string, size?: number, borderRadius?: number }) => {
+  const [error, setError] = useState(!logoUrl);
+  
+  if (error || !logoUrl) {
+    const initials = name ? name.trim().charAt(0).toUpperCase() : '?';
+    const colors = ['#2051e5', '#10b981', '#7c3aed', '#ef4444', '#f59e0b', '#ec4899'];
+    const charCodeSum = name ? name.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) : 0;
+    const color = colors[charCodeSum % colors.length];
+    
+    return (
+      <div style={{
+        width: size,
+        height: size,
+        borderRadius: borderRadius,
+        background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
+        color: '#fff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: Math.round(size * 0.42),
+        fontWeight: 900,
+        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+        flexShrink: 0,
+        fontFamily: F.heading
+      }}>
+        {initials}
+      </div>
+    );
+  }
+  
+  return (
+    <div style={{ 
+      width: size, height: size, background: '#f8fafc', borderRadius: borderRadius, 
+      display: 'flex', alignItems: 'center', justifyContent: 'center', 
+      padding: Math.round(size * 0.18), border: `1px solid ${C.border}`, flexShrink: 0,
+      boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
+    }}>
+      <img 
+        src={logoUrl} 
+        alt={name} 
+        onError={() => setError(true)}
+        style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} 
+      />
+    </div>
+  );
+};
 
 /* ─── Main Page ──────────────────────────────────────────────────────────── */
 export default function ApplyLoanPage() {
@@ -208,12 +255,39 @@ export default function ApplyLoanPage() {
     }
   }, [form.lender, productsData]);
 
+  const selectedLoanType = form.loanType;
+  const matchingProducts = useMemo(() => {
+    if (!productsData?.success || !productsData?.data) return [];
+    
+    return productsData.data.filter((prod: any) => {
+      const name = (prod.name || '').toLowerCase();
+      const desc = (prod.desc || prod.description || '').toLowerCase();
+      
+      if (selectedLoanType === 'personal') {
+        return name.includes('personal') || desc.includes('personal') || name.includes('salary') || desc.includes('salary');
+      }
+      if (selectedLoanType === 'business') {
+        return name.includes('business') || desc.includes('business') || name.includes('sme') || desc.includes('sme') || name.includes('capital') || desc.includes('capital');
+      }
+      if (selectedLoanType === 'auto') {
+        return name.includes('auto') || desc.includes('auto') || name.includes('car') || desc.includes('car') || name.includes('vehicle') || desc.includes('vehicle');
+      }
+      if (selectedLoanType === 'mortgage') {
+        return name.includes('mortgage') || desc.includes('mortgage') || name.includes('home') || desc.includes('home') || name.includes('house') || desc.includes('house') || name.includes('land') || desc.includes('land');
+      }
+      return false;
+    });
+  }, [productsData, selectedLoanType]);
+
   const set = (key: keyof FormData) => (v: string | undefined) => setForm(f => ({ ...f, [key]: v || '' }));
 
   const steps = ['Product', 'Personal', 'Financials', 'Employment', 'Referees', 'Vault', 'Review'];
 
   const canNext = () => {
-    if (step === 0) return !!form.loanType;
+    if (step === 0) {
+      if (!form.loanType) return false;
+      return !!productId;
+    }
     if (step === 1) return !!form.firstName && !!form.lastName && !!form.phone;
     if (step === 2) return !!form.lender && !!form.amount;
     if (step === 3) return !!form.employment && !!form.monthlyIncome;
@@ -383,7 +457,11 @@ export default function ApplyLoanPage() {
                 <p style={{ margin: '0 0 20px', fontSize: 15, fontWeight: 700, color: C.text, fontFamily: F.heading }}>What type of loan are you looking for?</p>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 14 }}>
                   {LOAN_TYPES.map(lt => (
-                    <button key={lt.id} onClick={() => set('loanType')(lt.id)}
+                    <button key={lt.id} onClick={() => {
+                      set('loanType')(lt.id);
+                      setProductId(null);
+                      setForm(f => ({ ...f, lender: '' }));
+                    }}
                       style={{ background: form.loanType === lt.id ? lt.pale : '#fff', border: `2px solid ${form.loanType === lt.id ? lt.color : C.border}`, borderRadius: 18, padding: isMobile ? '18px' : '22px 24px', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', boxShadow: form.loanType === lt.id ? `0 4px 20px ${lt.color}22` : 'none' }}
                     >
                       <div style={{ width: 48, height: 48, borderRadius: 14, background: lt.pale, display: 'flex', alignItems: 'center', justifyContent: 'center', color: lt.color, marginBottom: 14 }}>{lt.icon}</div>
@@ -397,6 +475,86 @@ export default function ApplyLoanPage() {
                     </button>
                   ))}
                 </div>
+
+                {form.loanType && (
+                  <div style={{ marginTop: 32 }}>
+                    <p style={{ margin: '0 0 20px', fontSize: 15, fontWeight: 700, color: C.text, fontFamily: F.heading }}>
+                      {matchingProducts.length > 0 
+                        ? `Select an available ${LOAN_TYPES.find(lt => lt.id === form.loanType)?.label} product` 
+                        : `No products currently available for ${LOAN_TYPES.find(lt => lt.id === form.loanType)?.label}.`
+                      }
+                    </p>
+                    
+                    {matchingProducts.length > 0 ? (
+                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
+                        {matchingProducts.map((prod: any) => {
+                          const isSelected = productId === (prod.id || prod._id);
+                          return (
+                            <button
+                              key={prod.id || prod._id}
+                              onClick={() => {
+                                setProductId(prod.id || prod._id);
+                                setForm(f => ({ ...f, lender: prod.provider }));
+                              }}
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'stretch',
+                                background: '#fff',
+                                border: `2.5px solid ${isSelected ? C.blue : C.border}`,
+                                borderRadius: 20,
+                                padding: 20,
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                                transition: 'all 0.2s',
+                                boxShadow: isSelected ? `0 4px 20px ${C.blue}15` : 'none',
+                                position: 'relative'
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                                <ProductLogo logoUrl={prod.logo} name={prod.provider || prod.name} size={40} borderRadius={10} />
+                                <div style={{ minWidth: 0, flex: 1 }}>
+                                  <p style={{ margin: '0 0 2px', fontSize: 10, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>{prod.provider}</p>
+                                  <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: C.text, fontFamily: F.heading, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{prod.name}</p>
+                                </div>
+                              </div>
+                              
+                              <p style={{ margin: '0 0 12px', fontSize: 12, color: C.textSub, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: 36 }}>
+                                {prod.desc || prod.description}
+                              </p>
+                              
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: 10, borderTop: `1px solid ${C.border}` }}>
+                                <span style={{ fontSize: 12, fontWeight: 700, color: C.blue }}>
+                                  Rate: {prod.rate}{prod.rateSuffix || '%'}
+                                </span>
+                                {isSelected && (
+                                  <span style={{ fontSize: 11, fontWeight: 800, background: C.blue, color: '#fff', padding: '3px 8px', borderRadius: 6 }}>
+                                    Selected ✓
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div style={{ 
+                        padding: '16px 20px', 
+                        borderRadius: 16, 
+                        background: C.amberPale, 
+                        border: `1px solid ${C.amber}33`, 
+                        display: 'flex', 
+                        gap: 12, 
+                        alignItems: 'center' 
+                      }}>
+                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.amber} strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                         <p style={{ margin: 0, fontSize: 13, color: C.textSub, fontWeight: 600 }}>
+                           We couldn't find any active loan products for this category. Please select another loan type to continue.
+                         </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
             {step === 1 && (
@@ -481,8 +639,8 @@ export default function ApplyLoanPage() {
             {step === 2 && (
               <div style={{ background: '#fff', borderRadius: 22, padding: isMobile ? '24px' : '32px', border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 28 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.5fr 1fr', gap: 20 }}>
-                   <Field label="Preferred Lender">
-                      <Select value={form.lender} onChange={set('lender')} options={LENDERS} />
+                   <Field label="Preferred Lender" hint={productId ? "Locked: Chosen via selected product" : undefined}>
+                      <Select value={form.lender} onChange={set('lender')} options={LENDERS} disabled={!!productId} />
                    </Field>
                    <Field label="Account with Lender?">
                       <Select value={form.hasAccountWithLender} onChange={set('hasAccountWithLender')} options={['Yes', 'No']} />

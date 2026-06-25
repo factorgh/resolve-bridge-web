@@ -633,7 +633,46 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
               </div>
 
               {appsLoading ? (
-                <div style={{ padding: 60, textAlign: 'center', color: C.textSub }}>Loading facilities...</div>
+                <div style={{ overflowX: 'auto', width: '100%' }}>
+                  <table style={{ width: '100%', minWidth: 800, borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <thead>
+                      <tr style={{ borderBottom: `1px solid ${C.border}`, background: 'rgba(0,0,0,0.01)' }}>
+                        <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Contract Details</th>
+                        <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Lender Partner</th>
+                        <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Outstanding Repayment</th>
+                        <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Settle Rate Progress</th>
+                        <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Array.from({ length: 3 }).map((_, idx) => (
+                        <tr key={idx} style={{ borderBottom: `1px solid ${C.border}` }}>
+                          <td style={{ padding: '20px 24px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                              <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }} style={{ height: 14, width: 180, background: '#f1f5f9', borderRadius: 4 }} />
+                              <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.1 }} style={{ height: 10, width: 120, background: '#f1f5f9', borderRadius: 3 }} />
+                            </div>
+                          </td>
+                          <td style={{ padding: '20px 24px' }}>
+                            <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }} style={{ height: 13, width: 140, background: '#f1f5f9', borderRadius: 4 }} />
+                          </td>
+                          <td style={{ padding: '20px 24px' }}>
+                            <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }} style={{ height: 14, width: 100, background: '#f1f5f9', borderRadius: 4 }} />
+                          </td>
+                          <td style={{ padding: '20px 24px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }} style={{ height: 6, width: 80, background: '#f1f5f9', borderRadius: 3 }} />
+                              <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }} style={{ height: 10, width: 30, background: '#f1f5f9', borderRadius: 3 }} />
+                            </div>
+                          </td>
+                          <td style={{ padding: '20px 24px', textAlign: 'right' }}>
+                            <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }} style={{ height: 36, width: 80, background: '#f1f5f9', borderRadius: 12, marginLeft: 'auto' }} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               ) : (appsResponse?.data || []).filter((a: any) => a.status === 'Disbursed' || a.status === 'Completed').length === 0 ? (
                 <div style={{ padding: 80, textAlign: 'center' }}>
                   <CloudDoneRounded sx={{ fontSize: 48, color: C.textMuted, marginBottom: 2 }} />
@@ -678,11 +717,15 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
                                 <IconButton 
                                   size="small"
                                   onClick={() => {
-                                    window.dispatchEvent(new CustomEvent('open-chat', { 
-                                      detail: { 
-                                        prefill: `Hello, I would like to make an enquiry about my active credit facility "${app.productId?.name || 'Resolve Credit Extension'}" with ${app.productId?.institutionId?.name || 'ResolveBridge Partner'}.` 
-                                      } 
-                                    }));
+                                    if (app.providerId) {
+                                      router.push(`/portal/chat?institutionId=${app.providerId}&institutionName=${encodeURIComponent(app.provider || app.productId?.institutionId?.name || 'Partner')}&institutionLogo=${encodeURIComponent(app.logo || '/resolve_icon.png')}&prefill=${encodeURIComponent(`Hello, I would like to make an enquiry about my active credit facility "${app.productId?.name || 'Resolve Credit Extension'}" with ${app.provider || app.productId?.institutionId?.name || 'ResolveBridge Partner'}.`)}`);
+                                    } else {
+                                      window.dispatchEvent(new CustomEvent('open-chat', { 
+                                        detail: { 
+                                          prefill: `Hello, I would like to make an enquiry about my active credit facility "${app.productId?.name || 'Resolve Credit Extension'}" with ${app.productId?.institutionId?.name || 'ResolveBridge Partner'}.` 
+                                        } 
+                                      }));
+                                    }
                                   }}
                                   sx={{ color: C.blue, padding: '4px', '&:hover': { background: `${C.blue}14` } }}
                                   title="Chat with partner"
@@ -776,7 +819,39 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
               </div>
 
               {txLoading ? (
-                <div style={{ padding: 60, textAlign: 'center', color: C.textSub }}>Fetching statements...</div>
+                <div style={{ overflowX: 'auto', width: '100%' }}>
+                  <table style={{ width: '100%', minWidth: 800, borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <thead>
+                      <tr style={{ borderBottom: `1px solid ${C.border}`, background: 'rgba(0,0,0,0.01)' }}>
+                        <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Reference</th>
+                        <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Description</th>
+                        <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Amount Settled</th>
+                        <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Ledger Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Array.from({ length: 3 }).map((_, idx) => (
+                        <tr key={idx} style={{ borderBottom: `1px solid ${C.border}` }}>
+                          <td style={{ padding: '16px 24px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                              <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }} style={{ height: 14, width: 140, background: '#f1f5f9', borderRadius: 4 }} />
+                              <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.1 }} style={{ height: 10, width: 90, background: '#f1f5f9', borderRadius: 3 }} />
+                            </div>
+                          </td>
+                          <td style={{ padding: '16px 24px' }}>
+                            <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }} style={{ height: 13, width: 220, background: '#f1f5f9', borderRadius: 4 }} />
+                          </td>
+                          <td style={{ padding: '16px 24px' }}>
+                            <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }} style={{ height: 14, width: 80, background: '#f1f5f9', borderRadius: 4 }} />
+                          </td>
+                          <td style={{ padding: '16px 24px' }}>
+                            <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }} style={{ height: 24, width: 70, background: '#f1f5f9', borderRadius: 8 }} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               ) : (txResponse?.data || []).length === 0 ? (
                 <div style={{ padding: 80, textAlign: 'center' }}>
                   <HistoryRounded sx={{ fontSize: 48, color: C.textMuted, marginBottom: 2 }} />
