@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import NewsSlider from './components/NewsSlider';
+import PartnerPromoBanner from './components/PartnerPromoBanner';
 import {
   Box,
   Container,
@@ -92,6 +93,17 @@ const HERO_TABS = [
   },
 ];
 
+
+const PRODUCTS = [
+                { label: 'Personal Loans', desc: 'Consolidate debt or fund purchases.', href: '/loans/personal', icon: <MoneyIcon sx={{ fontSize: 24, color: '#1e293b' }} /> },
+                { label: 'Business Credit', desc: 'Growth capital for African SMEs.', href: '/loans/business', icon: <BusinessIcon sx={{ fontSize: 24, color: '#1e293b' }} /> },
+                { label: 'Insurance', desc: 'Cover for health, life, and property.', href: '/insurance', icon: <SecurityRounded sx={{ fontSize: 24, color: '#1e293b' }} /> },
+                { label: 'Vehicle Finance', desc: 'Financing from bank partners.', href: '/loans/auto', icon: <CarIcon sx={{ fontSize: 24, color: '#1e293b' }} /> },
+                { label: 'Home Equity', desc: "Unlock your property's value.", href: '/mortgages', icon: <HomeIcon sx={{ fontSize: 24, color: '#1e293b' }} /> },
+                { label: 'Credit Score', desc: 'Free institutional-grade insights.', href: '/credit', icon: <ScoreIcon sx={{ fontSize: 24, color: '#1e293b' }} /> },
+                { label: 'Investments', desc: 'High-yield fixed deposits.', href: '/savings', icon: <SavingsIcon sx={{ fontSize: 24, color: '#1e293b' }} /> },
+                { label: 'BNPL Plans', desc: `Flexible installment payments.`, href: '/bnpl', icon: <AccountBalanceWalletRounded sx={{ fontSize: 24, color: '#1e293b' }} /> },
+              ]
 const RATES = [
   {
     label: 'Mortgage',
@@ -145,13 +157,24 @@ const RATES = [
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
+  const [isBannerVisible, setIsBannerVisible] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [heroSearchText, setHeroSearchText] = useState('');
   const isMobile = useMediaQuery('(max-width:900px)');
 
+  const handleBannerDismiss = () => {
+    setIsBannerVisible(false);
+  };
+
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    const dismissed = sessionStorage.getItem('rb_partner_banner_dismissed');
+    if (dismissed === 'true') {
+      const timeoutId = setTimeout(handleBannerDismiss, 0);
+      return () => clearTimeout(timeoutId);
+    }
   }, []);
 
   const [calcAmount, setCalcAmount] = useState(10000);
@@ -556,14 +579,24 @@ export default function Home() {
         </Container>
       </Box>
 
-              <Box sx={{ 
-            position: 'relative', zIndex: 10, 
-            mx: 'auto', maxWidth: 1100, px: { xs: 2, md: 3 }, py: { xs: 3, md: 4 },
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            boxShadow: '0 40px 100px -20px rgba(0,0,0,0.15)',
-            borderRadius: '24px',
-            mt: { xs: -5, md: -14 }
+      {/* ══ FLOATING PARTNER ADVERT BANNER ═══════════════════════ */}
+      <AnimatePresence>
+        {isBannerVisible && (
+          <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 10, mt: { xs: -5, md: -14 }, mb: { xs: 4, md: 6 } }}>
+            <PartnerPromoBanner onDismiss={() => setIsBannerVisible(false)} />
+          </Container>
+        )}
+      </AnimatePresence>
+
+      {/* ══ PRODUCT CARDS SECTION ═══════════════════════ */}
+      <Container maxWidth="lg" sx={{ mb: { xs: 4, md: 6 }, mt: isBannerVisible ? 0 : { xs: -5, md: -14 }, position: 'relative', zIndex: 10, transition: 'margin-top 0.4s ease-in-out' }}>
+        <Box sx={{ 
+          position: 'relative', zIndex: 10, 
+          mx: 'auto', px: { xs: 2, md: 3 }, py: { xs: 3, md: 4 },
+          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          boxShadow: '0 40px 100px -20px rgba(0,0,0,0.15)',
+          borderRadius: '24px',
           }}>
             <Grid container spacing={{ xs: 1.5, md: 1.5 }}>
               {[
@@ -606,6 +639,7 @@ export default function Home() {
               ))}
             </Grid>
           </Box>
+        </Container>
 
 
       {/* ── INSTANT CALCULATOR SECTION ──────────────────────────── */}
