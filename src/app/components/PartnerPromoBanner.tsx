@@ -211,7 +211,7 @@ export default function PartnerPromoBanner({ onDismiss }: { onDismiss?: () => vo
           </Box>
 
           {/* Main content slider row */}
-          <Box sx={{ position: 'relative', minHeight: { xs: 'auto', md: '140px' }, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <Box sx={{ position: 'relative', minHeight: { xs: 'auto', md: '160px' }, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <AnimatePresence mode="wait" custom={direction}>
               <motion.div
                 key={index}
@@ -269,7 +269,8 @@ export default function PartnerPromoBanner({ onDismiss }: { onDismiss?: () => vo
                       fontSize: { xs: '0.8rem', md: '0.875rem' },
                       lineHeight: 1.5,
                       mb: 2,
-                      maxWidth: '650px'
+                      maxWidth: '650px',
+                      minHeight: { xs: 'auto', md: '64px' }
                     }}
                   >
                     {currentAd.description}

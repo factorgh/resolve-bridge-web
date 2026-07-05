@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { 
@@ -33,19 +33,53 @@ import PageTemplate from '../components/PageTemplate';
 
 export default function LoanCalculatorPage() {
   const [loanAmount, setLoanAmount] = useState(211000); 
-  const [interestRate, setInterestRate] = useState(18.5); 
+  const [interestRate, setInterestRate] = useState(2); 
+  const [rateType, setRateType] = useState('monthly'); // 'monthly' or 'yearly'
   const [loanTerm, setLoanTerm] = useState(33); 
   const [mounted, setMounted] = useState(false);
 
   const [amountStr, setAmountStr] = useState("211000");
-  const [rateStr, setRateStr] = useState("18.5");
+  const [rateStr, setRateStr] = useState("2");
   const [termStr, setTermStr] = useState("33");
+
+  const [isCalculating, setIsCalculating] = useState(false);
+  const calcTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setIsCalculating(true);
+    if (calcTimeoutRef.current) {
+      clearTimeout(calcTimeoutRef.current);
+    }
+    calcTimeoutRef.current = setTimeout(() => {
+      setIsCalculating(false);
+    }, 250);
+
+    return () => {
+      if (calcTimeoutRef.current) {
+        clearTimeout(calcTimeoutRef.current);
+      }
+    };
+  }, [loanAmount, interestRate, loanTerm, rateType]);
+
+  const logMin = 1000;
+  const logMax = 1000000000; // 1 Billion limit (effectively Infinity for sliders)
+  const amountToPos = (amt: number) => {
+    if (amt <= logMin) return 0;
+    return (Math.log(amt / logMin) / Math.log(logMax / logMin)) * 100;
+  };
+  const posToAmount = (pos: number) => {
+    const val = logMin * Math.pow(logMax / logMin, pos / 100);
+    if (val < 10000) return Math.round(val / 1000) * 1000;
+    if (val < 100000) return Math.round(val / 5000) * 5000;
+    if (val < 1000000) return Math.round(val / 50000) * 50000;
+    return Math.round(val / 1000000) * 1000000;
+  };
 
   const handleAmountChange = (valStr: string) => {
     setAmountStr(valStr);
     const parsed = parseFloat(valStr);
     if (!isNaN(parsed)) {
-      const clamped = Math.max(0, Math.min(500000, parsed));
+      const clamped = Math.max(0, parsed);
       setLoanAmount(clamped);
     }
   };
@@ -55,7 +89,7 @@ export default function LoanCalculatorPage() {
     if (isNaN(parsed)) {
       parsed = 1000;
     }
-    const clamped = Math.max(1000, Math.min(500000, parsed));
+    const clamped = Math.max(1000, parsed);
     setLoanAmount(clamped);
     setAmountStr(clamped.toString());
   };
@@ -64,16 +98,19 @@ export default function LoanCalculatorPage() {
     setRateStr(valStr);
     const parsed = parseFloat(valStr);
     if (!isNaN(parsed)) {
-      setInterestRate(parsed);
+      const isYearly = rateType === 'yearly';
+      const clamped = Math.max(0, Math.min(isYearly ? 48 : 15, parsed));
+      setInterestRate(clamped);
     }
   };
 
   const handleRateBlur = () => {
     let parsed = parseFloat(rateStr);
+    const isYearly = rateType === 'yearly';
     if (isNaN(parsed)) {
-      parsed = 1;
+      parsed = isYearly ? 18 : 2;
     }
-    const clamped = Math.max(1, Math.min(45, parsed));
+    const clamped = Math.max(isYearly ? 5 : 0.5, Math.min(isYearly ? 48 : 15, parsed));
     setInterestRate(clamped);
     setRateStr(clamped.toString());
   };
@@ -101,20 +138,14 @@ export default function LoanCalculatorPage() {
   }, []);
 
   const { monthlyPayment, weeklyPayment, dailyPayment, totalPayment, totalInterest } = useMemo(() => {
-    const r = interestRate / 100 / 12;
+    const isYearly = rateType === 'yearly';
+    const r = isYearly ? (interestRate / 100 / 12) : (interestRate / 100);
     const n = loanTerm;
     const p = loanAmount;
     
     if (n === 0) return { monthlyPayment: 0, weeklyPayment: 0, dailyPayment: 0, totalPayment: 0, totalInterest: 0 };
     
-    let monthly = 0;
-    if (r === 0) {
-      monthly = p / n;
-    } else {
-      const x = Math.pow(1 + r, n);
-      monthly = (p * x * r) / (x - 1);
-    }
-    
+    const monthly = (p / n) + (p * r);
     const annual = monthly * 12;
     
     return {
@@ -124,7 +155,7 @@ export default function LoanCalculatorPage() {
       totalPayment: monthly * n,
       totalInterest: (monthly * n) - p
     };
-  }, [loanAmount, interestRate, loanTerm]);
+  }, [loanAmount, interestRate, loanTerm, rateType]);
 
   if (!mounted) return null;
 
@@ -135,6 +166,19 @@ export default function LoanCalculatorPage() {
       subtitle="Calculate your repayment profile with precision. Africa's most transparent loan planning engine."
       noCard={true}
     >
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        .shimmer-bg {
+          background: linear-gradient(90deg, rgba(255,255,255,0.08) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.08) 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite linear;
+          display: inline-block;
+          border-radius: 4px;
+        }
+      `}</style>
       <Box className="pb-32 flex flex-col gap-12 md:gap-24">
         
         <Grid container spacing={{ xs: 6, md: 8 }} alignItems="stretch">
@@ -187,13 +231,14 @@ export default function LoanCalculatorPage() {
                       />
                     </Stack>
                     <Slider 
-                      value={loanAmount}
-                      min={1000}
-                      max={500000}
-                      step={1000}
+                      value={amountToPos(loanAmount)}
+                      min={0}
+                      max={100}
+                      step={0.01}
                       onChange={(_, v) => {
-                        setLoanAmount(v as number);
-                        setAmountStr((v as number).toString());
+                        const amt = posToAmount(v as number);
+                        setLoanAmount(amt);
+                        setAmountStr(amt.toString());
                       }}
                       className="text-blue-600"
                       sx={{ '& .MuiSlider-thumb': { width: { xs: 20, md: 28 }, height: { xs: 20, md: 28 }, backgroundColor: '#fff', border: '6px solid currentColor' } }}
@@ -203,33 +248,60 @@ export default function LoanCalculatorPage() {
                   {/* Interest Slider */}
                   <Box>
                     <Stack direction="row" justifyContent="space-between" alignItems="center" className="mb-4">
-                      <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-400">Annual Interest Rate (%)</Typography>
-                      <input 
-                        type="number"
-                        step="0.1"
-                        value={rateStr}
-                        onChange={(e) => handleRateChange(e.target.value)}
-                        onBlur={handleRateBlur}
-                        style={{
-                          width: '80px',
-                          border: 'none',
-                          borderBottom: '2px solid #2563eb',
-                          background: 'none',
-                          fontSize: '18px',
-                          fontWeight: 900,
-                          color: '#2563eb',
-                          textAlign: 'right',
-                          outline: 'none',
-                          padding: '2px',
-                          fontFamily: 'inherit'
-                        }}
-                      />
+                      <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-400">Interest Rate (Flat)</Typography>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <input 
+                          type="number"
+                          step="0.1"
+                          value={rateStr}
+                          onChange={(e) => handleRateChange(e.target.value)}
+                          onBlur={handleRateBlur}
+                          style={{
+                            width: '60px',
+                            border: 'none',
+                            borderBottom: '2px solid #2563eb',
+                            background: 'none',
+                            fontSize: '18px',
+                            fontWeight: 900,
+                            color: '#2563eb',
+                            textAlign: 'right',
+                            outline: 'none',
+                            padding: '2px',
+                            fontFamily: 'inherit'
+                          }}
+                        />
+                        <select
+                          value={rateType}
+                          onChange={e => {
+                            const nextType = e.target.value;
+                            setRateType(nextType);
+                            const nextRate = nextType === 'yearly' 
+                              ? Math.min(36, Math.max(10, interestRate)) 
+                              : Math.min(10, Math.max(1, interestRate));
+                            setInterestRate(nextRate);
+                            setRateStr(nextRate.toString());
+                          }}
+                          style={{
+                            border: 'none',
+                            background: 'none',
+                            fontSize: '14px',
+                            fontWeight: 700,
+                            color: '#475569',
+                            outline: 'none',
+                            cursor: 'pointer',
+                            fontFamily: 'inherit'
+                          }}
+                        >
+                          <option value="monthly">% / Month</option>
+                          <option value="yearly">% p.a. (Yearly)</option>
+                        </select>
+                      </Stack>
                     </Stack>
                     <Slider 
                       value={interestRate}
-                      min={1}
-                      max={45}
-                      step={0.5}
+                      min={rateType === 'yearly' ? 10 : 1}
+                      max={rateType === 'yearly' ? 36 : 10}
+                      step={rateType === 'yearly' ? 0.5 : 0.1}
                       onChange={(_, v) => {
                         setInterestRate(v as number);
                         setRateStr((v as number).toString());
@@ -316,23 +388,41 @@ export default function LoanCalculatorPage() {
                 
                 <Box className="relative z-10 text-center">
                   <Typography variant="caption" className="font-black uppercase tracking-widest text-blue-500 block mb-6 px-4">Estimated Monthly Payment</Typography>
-                  <Typography variant="h1" sx={{ color: 'white' }} className="font-black tracking-tighter mb-10 flex items-baseline justify-center text-5xl md:text-6xl lg:text-8xl">
-                    <span style={{ fontSize: '0.45em', opacity: 0.5, marginRight: '8px' }}>GH₵</span>
-                    {monthlyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                    <span style={{ fontSize: '0.25em', opacity: 0.3, marginLeft: '8px' }}>/mo</span>
+                  <Typography variant="h1" sx={{ color: 'white', minHeight: { xs: 56, md: 72 }, display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="font-black tracking-tighter mb-10 text-5xl md:text-6xl lg:text-8xl">
+                    {isCalculating ? (
+                      <span className="shimmer-bg" style={{ width: '180px', height: '48px' }} />
+                    ) : (
+                      <>
+                        <span style={{ fontSize: '0.45em', opacity: 0.5, marginRight: '8px' }}>GH₵</span>
+                        {monthlyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                        <span style={{ fontSize: '0.25em', opacity: 0.3, marginLeft: '8px' }}>/mo</span>
+                      </>
+                    )}
                   </Typography>
                   
                   <Grid container spacing={{ xs: 2, md: 4 }} sx={{ mb: { xs: 4, md: 6 } }}>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <Box className="p-6 md:p-8 rounded-2xl md:rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md">
                         <Typography variant="caption" className="text-slate-500 font-bold uppercase tracking-widest block mb-1">Weekly Payment</Typography>
-                        <Typography variant="h6" className="text-white font-black text-xl md:text-2xl">GH₵ {weeklyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Typography>
+                        <Typography variant="h6" className="text-white font-black text-xl md:text-2xl minHeight: 32 flex items-center justify-center">
+                          {isCalculating ? (
+                            <span className="shimmer-bg" style={{ width: '80px', height: '20px' }} />
+                          ) : (
+                            <>GH₵ {weeklyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</>
+                          )}
+                        </Typography>
                       </Box>
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <Box className="p-6 md:p-8 rounded-2xl md:rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md">
                         <Typography variant="caption" className="text-slate-500 font-bold uppercase tracking-widest block mb-1">Daily Breakdown</Typography>
-                        <Typography variant="h6" className="text-white font-black text-xl md:text-2xl">GH₵ {dailyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Typography>
+                        <Typography variant="h6" className="text-white font-black text-xl md:text-2xl minHeight: 32 flex items-center justify-center">
+                          {isCalculating ? (
+                            <span className="shimmer-bg" style={{ width: '80px', height: '20px' }} />
+                          ) : (
+                            <>GH₵ {dailyPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</>
+                          )}
+                        </Typography>
                       </Box>
                     </Grid>
                   </Grid>
@@ -347,7 +437,13 @@ export default function LoanCalculatorPage() {
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <Box className="p-6 md:p-8 rounded-2xl md:rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md">
                         <Typography variant="caption" className="text-slate-500 font-bold uppercase tracking-widest block mb-1">Cost of Borrowing</Typography>
-                        <Typography variant="h6" className="text-white font-black text-xl md:text-2xl">GH₵ {totalInterest.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Typography>
+                        <Typography variant="h6" className="text-white font-black text-xl md:text-2xl minHeight: 32 flex items-center justify-center">
+                          {isCalculating ? (
+                            <span className="shimmer-bg" style={{ width: '80px', height: '20px' }} />
+                          ) : (
+                            <>GH₵ {totalInterest.toLocaleString(undefined, { maximumFractionDigits: 0 })}</>
+                          )}
+                        </Typography>
                       </Box>
                     </Grid>
                   </Grid>
@@ -355,7 +451,14 @@ export default function LoanCalculatorPage() {
                   <Divider sx={{ borderColor: 'rgba(255,255,255,0.05)', my: { xs: 6, md: 10 } }} />
 
                   <Typography className="text-slate-400 font-bold text-sm md:text-lg">
-                    Total Estimated Repayment: <span className="text-white font-black ml-2">GH₵ {totalPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                    Total Estimated Repayment:{" "}
+                    <span className="text-white font-black ml-2 inline-flex items-center">
+                      {isCalculating ? (
+                        <span className="shimmer-bg" style={{ width: '100px', height: '20px' }} />
+                      ) : (
+                        <>GH₵ {totalPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}</>
+                      )}
+                    </span>
                   </Typography>
                 </Box>
               </Paper>

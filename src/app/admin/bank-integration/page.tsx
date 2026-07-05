@@ -113,7 +113,7 @@ export default function BankIntegrationPage() {
   if (!mounted) return null;
 
   const rawApplications = appsResponse?.data || [];
-  const rawTransactions = txResponse?.data || [];
+  const rawTransactions = txResponse?.data?.items || [];
   const rawAuditLogs = auditResponse?.data || [];
 
   // Multi-tenant check: Filter records owned by this partner institution

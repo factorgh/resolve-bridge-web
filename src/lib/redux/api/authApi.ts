@@ -39,8 +39,28 @@ export const authApi = baseApi.injectEndpoints({
       query: () => '/Auth/me',
       providesTags: ['User'],
     }),
+    sendOtp: builder.mutation({
+      query: (payload) => ({
+        url: '/Auth/otp/send',
+        method: 'POST',
+        body: payload,
+      }),
+    }),
+    verifyOtp: builder.mutation({
+      query: (payload) => ({
+        url: '/Auth/otp/verify',
+        method: 'POST',
+        body: payload,
+      }),
+    }),
   }),
   overrideExisting: true,
 });
 
-export const { useRegisterMutation, useLoginMutation, useGetMeQuery } = authApi;
+export const { 
+  useRegisterMutation, 
+  useLoginMutation, 
+  useGetMeQuery,
+  useSendOtpMutation,
+  useVerifyOtpMutation
+} = authApi;

@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useRegisterMutation } from '@/lib/redux/api/authApi';
+import { useRegisterMutation, useSendOtpMutation, useVerifyOtpMutation } from '@/lib/redux/api/authApi';
 import { setOnboardingStep } from '@/lib/redux/slices/uiSlice';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-hot-toast';
@@ -480,7 +480,7 @@ function AccountStep({
   );
 }
 
-function PhoneStep({
+function OtpStep({
   data,
   onChange,
   onBack,
@@ -495,6 +495,9 @@ function PhoneStep({
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const refs = Array.from({ length: 6 }, () => useRef<HTMLInputElement>(null));
 
+  const [sendOtp, { isLoading: isSendingOtp }] = useSendOtpMutation();
+  const [verifyOtp, { isLoading: isVerifyingOtp }] = useVerifyOtpMutation();
+
   const isPhoneValid = data.phone && isValidPhoneNumber(data.phone);
 
   const handleOtpChange = (i: number, val: string) => {
@@ -507,6 +510,35 @@ function PhoneStep({
 
   const handleOtpKey = (i: number, e: React.KeyboardEvent) => {
     if (e.key === 'Backspace' && !otp[i] && i > 0) refs[i - 1].current?.focus();
+  };
+
+  const handleSendCode = async () => {
+    try {
+      const response = await sendOtp({ phoneNumber: data.phone }).unwrap();
+      if (response.success) {
+        setOtpSent(true);
+        toast.success("Verification code sent!");
+      } else {
+        toast.error(response.message || "Failed to send code");
+      }
+    } catch (err: any) {
+      toast.error(err.data?.message || "Failed to send code. Please try again.");
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    const code = otp.join('');
+    try {
+      const response = await verifyOtp({ phoneNumber: data.phone, code }).unwrap();
+      if (response.success) {
+        toast.success("Phone verified!");
+        onNext();
+      } else {
+        toast.error(response.message || "Invalid code");
+      }
+    } catch (err: any) {
+      toast.error(err.data?.message || "Invalid or expired verification code");
+    }
   };
 
   return (
@@ -553,9 +585,9 @@ function PhoneStep({
           </div>
           <BtnRow 
             onBack={onBack} 
-            onNext={() => setOtpSent(true)} 
-            nextLabel="Send code" 
-            nextDisabled={!isPhoneValid}
+            onNext={handleSendCode} 
+            nextLabel={isSendingOtp ? "Sending..." : "Send code"} 
+            nextDisabled={!isPhoneValid || isSendingOtp}
           />
         </>
       ) : (
@@ -594,9 +626,9 @@ function PhoneStep({
           </div>
           <BtnRow
             onBack={() => setOtpSent(false)}
-            onNext={onNext}
-            nextLabel="Verify & continue"
-            nextDisabled={otp.join('').length < 6}
+            onNext={handleVerifyCode}
+            nextLabel={isVerifyingOtp ? "Verifying..." : "Verify & continue"}
+            nextDisabled={otp.join('').length < 6 || isVerifyingOtp}
           />
         </>
       )}
@@ -772,7 +804,7 @@ function KycStep({
         </div>
       </div>
 
-      <BtnRow onBack={onBack} onNext={onNext} nextLabel="Finish setup" />
+      <BtnRow onNext={onNext} nextLabel="Finish setup" />
     </>
   );
 }
@@ -1221,7 +1253,6 @@ function PartnerProfileStep({
       </div>
 
       <BtnRow 
-        onBack={onBack} 
         onNext={onNext} 
         nextLabel="Activate Account" 
         nextDisabled={!data.legalName || !data.registrationNumber || !data.taxId || !data.streetAddress || !data.city}
@@ -1514,7 +1545,7 @@ export default function OnboardingFlow() {
                   />
                 )}
                 {step === 'phone' && (
-                  <PhoneStep
+                  <OtpStep
                     data={data}
                     onChange={set}
                     onBack={() => goTo('account')}

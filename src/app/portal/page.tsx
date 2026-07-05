@@ -204,32 +204,56 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
             <h1 style={{ margin: 0, fontSize: isMobile ? 28 : 42, fontWeight: 400, color: C.text, fontFamily: F.serif }}>
                {user ? `Good afternoon, ${firstName}` : 'Welcome back'}
             </h1>
-            <div style={{ display: 'flex', gap: 24, marginTop: 16 }}>
-                {['Overview', 'Performance', 'Repayments'].map((t) => {
-                  const active = activeTab === t.toLowerCase();
-                  return (
-                    <button 
-                      key={t} 
-                      onClick={() => setActiveTab(t.toLowerCase())}
-                      style={{ 
-                        background: 'none', border: 'none', padding: '0 0 8px 0', fontSize: 13, fontWeight: 700, 
-                        color: active ? C.emerald : C.textMuted, 
-                        borderBottom: active ? `2px solid ${C.emerald}` : 'none',
-                        cursor: 'pointer', transition: '0.2s'
-                      }}
-                    >
-                      {t === 'repayments' ? 'My Credit & Repayments' : t}
-                    </button>
-                  );
-                })}
-            </div>
          </div>
-         <button 
-           onClick={() => router.push('/portal/apply-loan')}
-           style={{ minWidth: isMobile ? '100%' : 180, height: 48, background: C.text, border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer', boxShadow: '0 4px 14px rgba(13,27,62,0.1)' }}
-         >
-           Apply for Loan
-         </button>
+         <div style={{ display: 'flex', gap: 12, alignItems: 'center', width: isMobile ? '100%' : 'auto', alignSelf: isMobile ? 'stretch' : 'auto' }}>
+            <div style={{ position: 'relative', flex: isMobile ? 1 : 'none' }}>
+               <select
+                 value={activeTab}
+                 onChange={(e) => setActiveTab(e.target.value)}
+                 style={{
+                   width: '100%',
+                   minWidth: isMobile ? 'auto' : 200,
+                   height: 48,
+                   padding: '0 40px 0 16px',
+                   background: '#fff',
+                   border: `1px solid ${C.borderStrong}`,
+                   borderRadius: 12,
+                   fontSize: 13,
+                   fontWeight: 700,
+                   color: C.text,
+                   cursor: 'pointer',
+                   appearance: 'none',
+                   outline: 'none',
+                   boxShadow: '0 2px 8px rgba(13,27,62,0.04)',
+                   transition: '0.2s',
+                   fontFamily: F.heading
+                 }}
+               >
+                 <option value="overview">Overview</option>
+                 <option value="performance">Performance</option>
+                 <option value="repayments">My Credit & Repayments</option>
+               </select>
+               <div style={{
+                 position: 'absolute',
+                 right: 16,
+                 top: '50%',
+                 transform: 'translateY(-50%)',
+                 pointerEvents: 'none',
+                 color: C.textMuted,
+                 fontSize: 10,
+                 display: 'flex',
+                 alignItems: 'center'
+               }}>
+                 ▼
+               </div>
+            </div>
+            <button 
+              onClick={() => router.push('/portal/apply-loan')}
+              style={{ flex: isMobile ? 1 : 'none', minWidth: isMobile ? 'auto' : 180, height: 48, background: C.text, border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer', boxShadow: '0 4px 14px rgba(13,27,62,0.1)' }}
+            >
+              Apply for Loan
+            </button>
+         </div>
       </div>
 
        {/* Trust & Simplicity Banner */}
@@ -614,7 +638,7 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
               <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 24, padding: 24 }}>
                 <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Total Repayments</p>
                 <p style={{ margin: 0, fontSize: 24, fontWeight: 405, color: C.emerald }}>
-                  GH₵ {txLoading ? '0' : (txResponse?.data || [])
+                  GH₵ {txLoading ? '0' : (txResponse?.data?.items || [])
                     .filter((t: any) => t.category === 'Loan' || t.category === 'BNPL' || t.category === 'Insurance')
                     .reduce((sum: number, t: any) => sum + Math.abs(t.amount || 0), 0).toLocaleString()}
                 </p>
@@ -696,7 +720,7 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
                       .filter((a: any) => a.status === 'Disbursed' || a.status === 'Completed')
                       .map((app: any) => {
                         const expectedPayable = app.amount * (1 + (app.productId?.interestRate || 0.1));
-                        const paidToDate = (txResponse?.data || [])
+                        const paidToDate = (txResponse?.data?.items || [])
                           .filter((t: any) => t.applicationId === app._id && t.type === 'debit')
                           .reduce((sum: number, t: any) => sum + Math.abs(t.amount || 0), 0);
                         const outstanding = Math.max(0, expectedPayable - paidToDate);
@@ -852,7 +876,7 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
                     </tbody>
                   </table>
                 </div>
-              ) : (txResponse?.data || []).length === 0 ? (
+              ) : (txResponse?.data?.items || []).length === 0 ? (
                 <div style={{ padding: 80, textAlign: 'center' }}>
                   <HistoryRounded sx={{ fontSize: 48, color: C.textMuted, marginBottom: 2 }} />
                   <h4 style={{ margin: 0, fontSize: 15, color: C.text, fontWeight: 700 }}>Statements Clean</h4>
@@ -870,7 +894,7 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
                     </tr>
                   </thead>
                   <tbody>
-                    {(txResponse?.data || [])
+                    {(txResponse?.data?.items || [])
                       .map((tx: any) => (
                         <tr key={tx._id} style={{ borderBottom: `1px solid ${C.border}` }}>
                           <td style={{ padding: '16px 24px' }}>

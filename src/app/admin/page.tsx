@@ -107,7 +107,7 @@ export default function AdminConsolePage() {
     .filter((a: any) => a.status === 'Disbursed' || a.status === 'Approved')
     .reduce((sum: number, a: any) => sum + (a.amount || 0), 0);
 
-  const kycPendingCount = (docResponse?.data || []).filter((d: any) => !d.isVerified).length;
+  const kycPendingCount = (docResponse?.data?.items || []).filter((d: any) => !d.isVerified).length;
   const totalUsersCount = (usersResponse?.data || []).length;
   const totalRevenue = (invoicesResponse?.data || [])
     .filter((inv: any) => inv.status === 'Paid')

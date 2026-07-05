@@ -27,7 +27,7 @@ export default function CustomerBillingPage() {
   const [paySubscription, { isLoading: isPaying }] = usePaySubscriptionMutation();
 
   const user = userData?.data;
-  const transactions = txData?.data || [];
+  const transactions = txData?.data?.items || [];
 
   // Base subscription-specific transactions
   const subscriptionTxs = useMemo(() => {

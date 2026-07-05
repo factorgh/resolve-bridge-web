@@ -39,7 +39,7 @@ export default function AdminKycPage() {
 
   if (!mounted) return null;
 
-  const documents = docResponse?.data || [];
+  const documents = docResponse?.data?.items || [];
 
   // Filter counters
   const totalCount = documents.length;

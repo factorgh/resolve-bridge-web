@@ -75,7 +75,7 @@ export default function StatementPage() {
   }, [apiData]);
 
   const transactions = useMemo(() => {
-    return txData?.success ? txData.data : [];
+    return txData?.success ? (txData.data?.items || []) : [];
   }, [txData]);
 
   useEffect(() => {

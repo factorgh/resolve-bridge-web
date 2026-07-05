@@ -40,8 +40,7 @@ import {
   HelpOutlineRounded
 } from '@mui/icons-material';
 import Link from 'next/link';
-import { useEffect, useState, useMemo } from 'react';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { C, F } from './portal/components/PortalShell';
 import AiSearchModal from './components/AiSearchModal';
 
@@ -178,19 +177,53 @@ export default function Home() {
   }, []);
 
   const [calcAmount, setCalcAmount] = useState(10000);
-  const [calcRate, setCalcRate] = useState(18);
+  const [calcRate, setCalcRate] = useState(2);
+  const [rateType, setRateType] = useState('monthly'); // 'monthly' or 'yearly'
   const [calcTerm, setCalcTerm] = useState(24);
 
   const [amountStr, setAmountStr] = useState("10000");
-  const [rateStr, setRateStr] = useState("18");
+  const [rateStr, setRateStr] = useState("2");
   const [termStr, setTermStr] = useState("24");
+
+  const [isCalculating, setIsCalculating] = useState(false);
+  const calcTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setIsCalculating(true);
+    if (calcTimeoutRef.current) {
+      clearTimeout(calcTimeoutRef.current);
+    }
+    calcTimeoutRef.current = setTimeout(() => {
+      setIsCalculating(false);
+    }, 250);
+
+    return () => {
+      if (calcTimeoutRef.current) {
+        clearTimeout(calcTimeoutRef.current);
+      }
+    };
+  }, [calcAmount, calcRate, calcTerm, rateType]);
+
+  const logMin = 1000;
+  const logMax = 1000000000; // 1 Billion limit (effectively Infinity for sliders)
+  const amountToPos = (amt: number) => {
+    if (amt <= logMin) return 0;
+    return (Math.log(amt / logMin) / Math.log(logMax / logMin)) * 100;
+  };
+  const posToAmount = (pos: number) => {
+    const val = logMin * Math.pow(logMax / logMin, pos / 100);
+    if (val < 10000) return Math.round(val / 1000) * 1000;
+    if (val < 100000) return Math.round(val / 5000) * 5000;
+    if (val < 1000000) return Math.round(val / 50000) * 50000;
+    return Math.round(val / 1000000) * 1000000;
+  };
 
   const handleAmountChange = (valStr: string) => {
     setAmountStr(valStr);
     const parsed = parseFloat(valStr);
     if (!isNaN(parsed)) {
       // Clamp calcAmount instantly to bounds to prevent astronomical UI numbers
-      const clamped = Math.max(0, Math.min(500000, parsed));
+      const clamped = Math.max(0, parsed);
       setCalcAmount(clamped);
     }
   };
@@ -200,7 +233,7 @@ export default function Home() {
     if (isNaN(parsed)) {
       parsed = 1000;
     }
-    const clamped = Math.max(1000, Math.min(500000, parsed));
+    const clamped = Math.max(1000, parsed);
     setCalcAmount(clamped);
     setAmountStr(clamped.toString());
   };
@@ -209,18 +242,19 @@ export default function Home() {
     setRateStr(valStr);
     const parsed = parseFloat(valStr);
     if (!isNaN(parsed)) {
-      // Clamp calcRate instantly to bounds to prevent astronomical UI numbers
-      const clamped = Math.max(0, Math.min(36, parsed));
+      const isYearly = rateType === 'yearly';
+      const clamped = Math.max(0, Math.min(isYearly ? 48 : 15, parsed));
       setCalcRate(clamped);
     }
   };
 
   const handleRateBlur = () => {
     let parsed = parseFloat(rateStr);
+    const isYearly = rateType === 'yearly';
     if (isNaN(parsed)) {
-      parsed = 10;
+      parsed = isYearly ? 18 : 2;
     }
-    const clamped = Math.max(10, Math.min(36, parsed));
+    const clamped = Math.max(isYearly ? 5 : 0.5, Math.min(isYearly ? 48 : 15, parsed));
     setCalcRate(clamped);
     setRateStr(clamped.toString());
   };
@@ -246,13 +280,14 @@ export default function Home() {
   };
 
   const { monthly, weekly, daily } = useMemo(() => {
-    const r = calcRate / 100 / 12;
+    const isYearly = rateType === 'yearly';
+    const r = isYearly ? (calcRate / 100 / 12) : (calcRate / 100);
     const n = calcTerm;
     const p = calcAmount;
-    const m = (p * r) / (1 - Math.pow(1 + r, -n));
+    const m = n > 0 ? (p / n) + (p * r) : 0;
     const annual = m * 12;
     return { monthly: m, weekly: annual / 52, daily: annual / 365 };
-  }, [calcAmount, calcRate, calcTerm]);
+  }, [calcAmount, calcRate, calcTerm, rateType]);
 
   if (!mounted) return null;
 
@@ -282,40 +317,71 @@ export default function Home() {
           />
         </Stack>
         <Slider 
-          value={calcAmount} min={1000} max={500000} step={1000} 
+          value={amountToPos(calcAmount)} min={0} max={100} step={0.01} 
           onChange={(_, v) => {
-            setCalcAmount(v as number);
-            setAmountStr((v as number).toString());
+            const amt = posToAmount(v as number);
+            setCalcAmount(amt);
+            setAmountStr(amt.toString());
           }}
           sx={{ color: '#10b981', '& .MuiSlider-thumb': { backgroundColor: '#fff', border: '4px solid currentColor' } }}
         />
       </Box>
       <Box>
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography sx={{ fontSize: '11px', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Interest Rate (% p.a)</Typography>
-          <input 
-            type="number"
-            step="0.5"
-            value={rateStr}
-            onChange={(e) => handleRateChange(e.target.value)}
-            onBlur={handleRateBlur}
-            style={{
-              width: '80px',
-              border: 'none',
-              borderBottom: '2px solid #10b981',
-              background: 'none',
-              fontSize: '16px',
-              fontWeight: 900,
-              color: '#10b981',
-              textAlign: 'right',
-              outline: 'none',
-              padding: '2px',
-              fontFamily: 'inherit'
-            }}
-          />
+          <Typography sx={{ fontSize: '11px', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Interest Rate (Flat)</Typography>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <input 
+              type="number"
+              step="0.1"
+              value={rateStr}
+              onChange={(e) => handleRateChange(e.target.value)}
+              onBlur={handleRateBlur}
+              style={{
+                width: '60px',
+                border: 'none',
+                borderBottom: '2px solid #10b981',
+                background: 'none',
+                fontSize: '16px',
+                fontWeight: 900,
+                color: '#10b981',
+                textAlign: 'right',
+                outline: 'none',
+                padding: '2px',
+                fontFamily: 'inherit'
+              }}
+            />
+            <select
+              value={rateType}
+              onChange={e => {
+                const nextType = e.target.value;
+                setRateType(nextType);
+                const nextRate = nextType === 'yearly' 
+                  ? Math.min(36, Math.max(10, calcRate)) 
+                  : Math.min(10, Math.max(1, calcRate));
+                setCalcRate(nextRate);
+                setRateStr(nextRate.toString());
+              }}
+              style={{
+                border: 'none',
+                background: 'none',
+                fontSize: '13px',
+                fontWeight: 700,
+                color: '#475569',
+                outline: 'none',
+                cursor: 'pointer',
+                fontFamily: 'inherit'
+              }}
+            >
+              <option value="monthly">% / Month</option>
+              <option value="yearly">% p.a. (Yearly)</option>
+            </select>
+          </Stack>
         </Stack>
         <Slider 
-          value={calcRate} min={10} max={36} step={0.5} 
+          value={calcRate} 
+          min={rateType === 'yearly' ? 10 : 1} 
+          max={rateType === 'yearly' ? 36 : 10} 
+          step={rateType === 'yearly' ? 0.5 : 0.1} 
           onChange={(_, v) => {
             setCalcRate(v as number);
             setRateStr((v as number).toString());
@@ -360,19 +426,50 @@ export default function Home() {
 
   const CalculatorResults = () => (
     <Box sx={{ position: 'relative', zIndex: 1 }}>
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        .shimmer-bg {
+          background: linear-gradient(90deg, rgba(255,255,255,0.08) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.08) 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite linear;
+          display: inline-block;
+          border-radius: 4px;
+        }
+      `}</style>
       <Typography sx={{ fontSize: '11px', fontWeight: 900, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.15em', mb: 1 }}>Estimated Monthly</Typography>
-      <Typography sx={{ fontSize: { xs: '32px', sm: '38px', md: '42px' }, fontWeight: 900, color: '#fff', mb: 4, letterSpacing: '-0.04em', wordBreak: 'break-word' }}>GH₵ {Math.round(monthly).toLocaleString()}</Typography>
+      <Typography sx={{ fontSize: { xs: '32px', sm: '38px', md: '42px' }, fontWeight: 900, color: '#fff', mb: 4, letterSpacing: '-0.04em', wordBreak: 'break-word', minHeight: 48, display: 'flex', alignItems: 'center' }}>
+        {isCalculating ? (
+          <span className="shimmer-bg" style={{ width: 150, height: 36 }} />
+        ) : (
+          <>GH₵ {Math.round(monthly).toLocaleString()}</>
+        )}
+      </Typography>
       
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', mb: 4 }} />
       
       <Stack spacing={3}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
           <Typography sx={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}>Weekly Breakdown</Typography>
-          <Typography sx={{ fontSize: { xs: '15px', md: '18px' }, fontWeight: 900, color: '#10b981', textAlign: 'right', wordBreak: 'break-word' }}>GH₵ {Math.round(weekly).toLocaleString()}</Typography>
+          <Typography sx={{ fontSize: { xs: '15px', md: '18px' }, fontWeight: 900, color: '#10b981', textAlign: 'right', wordBreak: 'break-word', minHeight: 24, display: 'flex', alignItems: 'center' }}>
+            {isCalculating ? (
+              <span className="shimmer-bg" style={{ width: 80, height: 18 }} />
+            ) : (
+              <>GH₵ {Math.round(weekly).toLocaleString()}</>
+            )}
+          </Typography>
         </Stack>
         <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
           <Typography sx={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}>Daily Commitment</Typography>
-          <Typography sx={{ fontSize: { xs: '15px', md: '18px' }, fontWeight: 900, color: '#fff', textAlign: 'right', wordBreak: 'break-word' }}>GH₵ {Math.round(daily).toLocaleString()}</Typography>
+          <Typography sx={{ fontSize: { xs: '15px', md: '18px' }, fontWeight: 900, color: '#fff', textAlign: 'right', wordBreak: 'break-word', minHeight: 24, display: 'flex', alignItems: 'center' }}>
+            {isCalculating ? (
+              <span className="shimmer-bg" style={{ width: 80, height: 18 }} />
+            ) : (
+              <>GH₵ {Math.round(daily).toLocaleString()}</>
+            )}
+          </Typography>
         </Stack>
       </Stack>
       
@@ -407,8 +504,8 @@ export default function Home() {
       <Box component="section" sx={{
         position: 'relative',
         background: '#04080f',
-        pt: { xs: '120px', sm: '140px', md: '170px', lg: '200px' },
-        pb: { xs: '80px', sm: '100px', md: '160px', lg: '180px' },
+        pt: { xs: '80px', sm: '100px', md: '120px', lg: '130px' },
+        pb: { xs: '60px', sm: '80px', md: '120px', lg: '130px' },
         overflow: 'hidden',
         borderBottom: '1px solid rgba(0,0,0,0.05)'
       }}>
@@ -548,8 +645,8 @@ export default function Home() {
               </Box>
             </Grid>
 
-            {/* Right Side: Lottie Animation (Hidden on Mobile for Performance) */}
-            <Grid size={{ xs: 12, md: 6 }} sx={{ display: { xs: 'none', md: 'block' } }}>
+            {/* Right Side: Featured Advertisement */}
+            <Grid size={{ xs: 12, md: 6 }}>
               <motion.div
                 initial={{ opacity: 0, x: 30, scale: 0.9 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -557,21 +654,16 @@ export default function Home() {
               >
                 <Box sx={{ 
                   position: 'relative',
-                  display: 'flex', justifyContent: 'center', alignItems: 'center',
+                  width: '100%',
                   '&::after': {
                     content: '""',
                     position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
                     width: '120%', height: '120%',
-                    background: 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)',
+                    background: 'radial-gradient(circle, rgba(16,185,129,0.04) 0%, transparent 70%)',
                     filter: 'blur(40px)', zIndex: -1
                   }
                 }}>
-                  <DotLottieReact
-                    src="/Revenue.json"
-                    loop
-                    autoplay
-                    style={{ width: '85%', height: 'auto', maxWidth: isMobile ? '280px' : '450px' }}
-                  />
+                  <PartnerPromoBanner onDismiss={() => setIsBannerVisible(false)} />
                 </Box>
               </motion.div>
             </Grid>
@@ -579,17 +671,8 @@ export default function Home() {
         </Container>
       </Box>
 
-      {/* ══ FLOATING PARTNER ADVERT BANNER ═══════════════════════ */}
-      <AnimatePresence>
-        {isBannerVisible && (
-          <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 10, mt: { xs: -5, md: -14 }, mb: { xs: 4, md: 6 } }}>
-            <PartnerPromoBanner onDismiss={() => setIsBannerVisible(false)} />
-          </Container>
-        )}
-      </AnimatePresence>
-
       {/* ══ PRODUCT CARDS SECTION ═══════════════════════ */}
-      <Container maxWidth="lg" sx={{ mb: { xs: 4, md: 6 }, mt: isBannerVisible ? 0 : { xs: -5, md: -14 }, position: 'relative', zIndex: 10, transition: 'margin-top 0.4s ease-in-out' }}>
+      <Container maxWidth="lg" sx={{ mb: { xs: 4, md: 6 }, mt: { xs: -5, md: -14 }, position: 'relative', zIndex: 10 }}>
         <Box sx={{ 
           position: 'relative', zIndex: 10, 
           mx: 'auto', px: { xs: 2, md: 3 }, py: { xs: 3, md: 4 },

@@ -54,6 +54,16 @@ function ChatContent() {
   const [msgText, setMsgText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
+  const [isMobile, setIsMobile] = useState(false);
+  const [showWorkspace, setShowWorkspace] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   const searchParams = useSearchParams();
   const queryInstId = searchParams.get('institutionId');
   const queryInstName = searchParams.get('institutionName');
@@ -120,6 +130,7 @@ function ChatContent() {
       } else if (queryInstLogo) {
         setSelectedInstLogo(decodeURIComponent(queryInstLogo));
       }
+      setShowWorkspace(true);
     } else if (institutions.length > 0 && !selectedInstId) {
       // Default to first institution
       setSelectedInstId(institutions[0].id);
@@ -191,10 +202,10 @@ function ChatContent() {
   return (
     <PortalShell title="Direct Messages" subtitle="Chat directly with your facility providers">
       <div style={{
-        height: 'calc(100vh - 180px)',
+        height: isMobile ? 'calc(100vh - 150px)' : 'calc(100vh - 180px)',
         display: 'grid',
-        gridTemplateColumns: '320px 1fr',
-        gap: 24,
+        gridTemplateColumns: isMobile ? '1fr' : '320px 1fr',
+        gap: isMobile ? 0 : 24,
         background: '#fff',
         border: `1px solid ${C.border}`,
         borderRadius: 24,
@@ -202,131 +213,156 @@ function ChatContent() {
       }}
       >
         {/* Left Pane: Partner Queue */}
-        <div style={{
-          borderRight: `1px solid ${C.border}`,
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          background: 'rgba(240, 242, 248, 0.15)'
-        }}
-        >
-          {/* Header */}
-          <div style={{ padding: '24px 20px', borderBottom: `1px solid ${C.border}` }}>
-            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 900, color: C.text, display: 'flex', alignItems: 'center', gap: 8, fontFamily: F.heading }}>
-              <ChatBubbleOutlineRounded sx={{ fontSize: 18, color: C.blue }} />
-              Partner Channels
-            </h3>
-            <p style={{ margin: '4px 0 0', fontSize: 11, color: C.textSub }}>Direct interactions with lenders & insurers</p>
-          </div>
+        {(!isMobile || !showWorkspace) && (
+          <div style={{
+            borderRight: isMobile ? 'none' : `1px solid ${C.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            background: 'rgba(240, 242, 248, 0.15)'
+          }}
+          >
+            {/* Header */}
+            <div style={{ padding: '24px 20px', borderBottom: `1px solid ${C.border}` }}>
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 900, color: C.text, display: 'flex', alignItems: 'center', gap: 8, fontFamily: F.heading }}>
+                <ChatBubbleOutlineRounded sx={{ fontSize: 18, color: C.blue }} />
+                Partner Channels
+              </h3>
+              <p style={{ margin: '4px 0 0', fontSize: 11, color: C.textSub }}>Direct interactions with lenders & insurers</p>
+            </div>
 
-          {/* List */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {appsLoading ? (
-              <p style={{ margin: 0, padding: 20, fontSize: 12, color: C.textSub, textAlign: 'center' }}>Syncing channels...</p>
-            ) : institutions.length === 0 ? (
-              <div style={{ padding: '40px 20px', textAlign: 'center', opacity: 0.6 }}>
-                <ChatBubbleOutlineRounded sx={{ fontSize: 24, color: C.textMuted, marginBottom: 1 }} />
-                <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: C.text }}>No partner channels</p>
-                <p style={{ margin: '2px 0 0', fontSize: 10, color: C.textSub }}>Channels open automatically when you apply for products.</p>
-              </div>
-            ) : (
-              institutions.map((inst) => {
-                const isActive = selectedInstId === inst.id;
-                return (
-                  <button
-                    key={inst.id}
-                    onClick={() => {
-                      setSelectedInstId(inst.id);
-                      setSelectedInstName(inst.name);
-                      setSelectedInstLogo(inst.logo);
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '16px 12px',
-                      borderRadius: 16,
-                      border: 'none',
-                      background: isActive ? C.bluePale : 'transparent',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 12,
-                      transition: '0.2s',
-                      outline: 'none'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) e.currentTarget.style.background = 'rgba(0,0,0,0.02)';
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) e.currentTarget.style.background = 'transparent';
-                    }}
-                  >
-                    <div style={{ 
-                      width: 40, 
-                      height: 40, 
-                      borderRadius: 12, 
-                      background: '#fff',
-                      border: `1.5px solid ${C.border}`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: 6,
-                      flexShrink: 0
-                    }}>
-                      <img src={inst.logo} alt="" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {inst.name}
-                      </p>
-                      <p style={{ margin: '2px 0 0', fontSize: 10.5, color: C.textSub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        Secure direct channel
-                      </p>
-                    </div>
-                  </button>
-                );
-              })
-            )}
+            {/* List */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {appsLoading ? (
+                <p style={{ margin: 0, padding: 20, fontSize: 12, color: C.textSub, textAlign: 'center' }}>Syncing channels...</p>
+              ) : institutions.length === 0 ? (
+                <div style={{ padding: '40px 20px', textAlign: 'center', opacity: 0.6 }}>
+                  <ChatBubbleOutlineRounded sx={{ fontSize: 24, color: C.textMuted, marginBottom: 1 }} />
+                  <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: C.text }}>No partner channels</p>
+                  <p style={{ margin: '2px 0 0', fontSize: 10, color: C.textSub }}>Channels open automatically when you apply for products.</p>
+                </div>
+              ) : (
+                institutions.map((inst) => {
+                  const isActive = selectedInstId === inst.id;
+                  return (
+                    <button
+                      key={inst.id}
+                      onClick={() => {
+                        setSelectedInstId(inst.id);
+                        setSelectedInstName(inst.name);
+                        setSelectedInstLogo(inst.logo);
+                        if (isMobile) {
+                          setShowWorkspace(true);
+                        }
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '16px 12px',
+                        borderRadius: 16,
+                        border: 'none',
+                        background: isActive ? C.bluePale : 'transparent',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        transition: '0.2s',
+                        outline: 'none'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) e.currentTarget.style.background = 'rgba(0,0,0,0.02)';
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <div style={{ 
+                        width: 40, 
+                        height: 40, 
+                        borderRadius: 12, 
+                        background: '#fff',
+                        border: `1.5px solid ${C.border}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: 6,
+                        flexShrink: 0
+                      }}>
+                        <img src={inst.logo} alt="" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {inst.name}
+                        </p>
+                        <p style={{ margin: '2px 0 0', fontSize: 10.5, color: C.textSub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          Secure direct channel
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Right Pane: Conversation Workspace */}
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          {selectedInstId ? (
-            <>
-              {/* Workspace Header */}
-              <div style={{
-                padding: '20px 24px',
-                borderBottom: `1px solid ${C.border}`,
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                background: 'rgba(255,255,255,0.01)'
-              }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ 
-                    width: 42, 
-                    height: 42, 
-                    borderRadius: 12, 
-                    background: '#fff', 
-                    border: `1.5px solid ${C.border}`, 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    padding: 6
-                  }}>
-                    <img src={selectedInstLogo} alt="" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-                  </div>
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: C.text }}>{selectedInstName}</h4>
-                    <p style={{ margin: 0, fontSize: 10.5, color: C.emerald, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.emerald, display: 'inline-block' }} />
-                      Direct Connection Active
-                    </p>
+        {(!isMobile || showWorkspace) && (
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            {selectedInstId ? (
+              <>
+                {/* Workspace Header */}
+                <div style={{
+                  padding: isMobile ? '12px 16px' : '20px 24px',
+                  borderBottom: `1px solid ${C.border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 16,
+                  background: 'rgba(255,255,255,0.01)'
+                }}
+                >
+                  {isMobile && (
+                    <button 
+                      onClick={() => setShowWorkspace(false)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: C.blue,
+                        cursor: 'pointer',
+                        padding: '8px 0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        outline: 'none'
+                      }}
+                    >
+                      <ArrowBackIosNewRounded sx={{ fontSize: 16 }} />
+                      <span style={{ fontSize: 13, fontWeight: 800 }}>Back</span>
+                    </button>
+                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
+                    <div style={{ 
+                      width: 42, 
+                      height: 42, 
+                      borderRadius: 12, 
+                      background: '#fff', 
+                      border: `1.5px solid ${C.border}`, 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      padding: 6
+                    }}>
+                      <img src={selectedInstLogo} alt="" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                    </div>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: C.text }}>{selectedInstName}</h4>
+                      <p style={{ margin: 0, fontSize: 10.5, color: C.emerald, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.emerald, display: 'inline-block' }} />
+                        Direct Connection Active
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
               {/* Message Timeline */}
               <div style={{ flex: 1, padding: 24, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, background: '#f8fafc' }}>
@@ -380,7 +416,7 @@ function ChatContent() {
               <form 
                 onSubmit={handleSend}
                 style={{
-                  padding: '20px 24px',
+                  padding: isMobile ? '12px 16px' : '20px 24px',
                   borderTop: `1px solid ${C.border}`,
                   background: '#fff',
                   display: 'flex',
@@ -439,6 +475,7 @@ function ChatContent() {
             </div>
           )}
         </div>
+      )}
       </div>
     </PortalShell>
   );

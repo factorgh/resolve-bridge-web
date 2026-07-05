@@ -777,7 +777,7 @@ export default function PortalShell({
           <div style={{ padding: isMobile ? '24px 20px' : '40px 32px' }}>
              {children}
           </div>
-          <FloatingChat />
+          {pathname !== '/portal/chat' && <FloatingChat />}
        </main>
     </div>
   );

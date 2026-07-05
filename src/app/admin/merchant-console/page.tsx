@@ -59,7 +59,7 @@ export default function MerchantConsolePage() {
   if (!mounted) return null;
 
   const rawApplications = appsResponse?.data || [];
-  const rawTransactions = txResponse?.data || [];
+  const rawTransactions = txResponse?.data?.items || [];
 
   // Scoped Tenant filter
   const myInstitutionId = user?.institutionId;

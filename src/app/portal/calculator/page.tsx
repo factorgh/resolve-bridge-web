@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import PortalShell, { C, F } from '../components/PortalShell';
@@ -9,18 +9,52 @@ export default function CalculatorPage() {
   const router = useRouter();
   const [amount, setAmount] = useState(10000);
   const [term, setTerm] = useState(24);
-  const [rate, setRate] = useState(18);
+  const [rate, setRate] = useState(2);
+  const [rateType, setRateType] = useState('monthly'); // 'monthly' or 'yearly'
   const [isMobile, setIsMobile] = useState(false);
   
   const [amountStr, setAmountStr] = useState("10000");
   const [termStr, setTermStr] = useState("24");
-  const [rateStr, setRateStr] = useState("18");
+  const [rateStr, setRateStr] = useState("2");
+
+  const [isCalculating, setIsCalculating] = useState(false);
+  const calcTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setIsCalculating(true);
+    if (calcTimeoutRef.current) {
+      clearTimeout(calcTimeoutRef.current);
+    }
+    calcTimeoutRef.current = setTimeout(() => {
+      setIsCalculating(false);
+    }, 250);
+
+    return () => {
+      if (calcTimeoutRef.current) {
+        clearTimeout(calcTimeoutRef.current);
+      }
+    };
+  }, [amount, term, rate, rateType]);
+
+  const logMin = 1000;
+  const logMax = 1000000000; // 1 Billion limit (effectively Infinity for sliders)
+  const amountToPos = (amt: number) => {
+    if (amt <= logMin) return 0;
+    return (Math.log(amt / logMin) / Math.log(logMax / logMin)) * 100;
+  };
+  const posToAmount = (pos: number) => {
+    const val = logMin * Math.pow(logMax / logMin, pos / 100);
+    if (val < 10000) return Math.round(val / 1000) * 1000;
+    if (val < 100000) return Math.round(val / 5000) * 5000;
+    if (val < 1000000) return Math.round(val / 50000) * 50000;
+    return Math.round(val / 1000000) * 1000000;
+  };
 
   const handleAmountChange = (valStr: string) => {
     setAmountStr(valStr);
     const parsed = parseFloat(valStr);
     if (!isNaN(parsed)) {
-      const clamped = Math.max(0, Math.min(500000, parsed));
+      const clamped = Math.max(0, parsed);
       setAmount(clamped);
     }
   };
@@ -30,7 +64,7 @@ export default function CalculatorPage() {
     if (isNaN(parsed)) {
       parsed = 1000;
     }
-    const clamped = Math.max(1000, Math.min(500000, parsed));
+    const clamped = Math.max(1000, parsed);
     setAmount(clamped);
     setAmountStr(clamped.toString());
   };
@@ -58,17 +92,19 @@ export default function CalculatorPage() {
     setRateStr(valStr);
     const parsed = parseFloat(valStr);
     if (!isNaN(parsed)) {
-      const clamped = Math.max(0, Math.min(36, parsed));
+      const isYearly = rateType === 'yearly';
+      const clamped = Math.max(0, Math.min(isYearly ? 48 : 15, parsed));
       setRate(clamped);
     }
   };
 
   const handleRateBlur = () => {
     let parsed = parseFloat(rateStr);
+    const isYearly = rateType === 'yearly';
     if (isNaN(parsed)) {
-      parsed = 18;
+      parsed = isYearly ? 18 : 2;
     }
-    const clamped = Math.max(10, Math.min(36, parsed));
+    const clamped = Math.max(isYearly ? 5 : 0.5, Math.min(isYearly ? 48 : 15, parsed));
     setRate(clamped);
     setRateStr(clamped.toString());
   };
@@ -80,9 +116,9 @@ export default function CalculatorPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Simple PMT calculation
-  const monthlyRate = rate / 100 / 12;
-  const monthlyPayment = (amount * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -term));
+  // Flat Rate Calculation
+  const monthlyRate = rateType === 'yearly' ? (rate / 100 / 12) : (rate / 100);
+  const monthlyPayment = term > 0 ? (amount / term) + (amount * monthlyRate) : 0;
   const totalRepayable = monthlyPayment * term;
   const totalInterest = totalRepayable - amount;
 
@@ -95,6 +131,26 @@ export default function CalculatorPage() {
       title="Loan Calculator" 
       subtitle="Estimate your monthly payments and find the best terms for your budget."
     >
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        .shimmer-bg {
+          background: linear-gradient(90deg, rgba(255,255,255,0.08) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.08) 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite linear;
+          display: inline-block;
+          border-radius: 4px;
+        }
+        .shimmer-bg-dark {
+          background: linear-gradient(90deg, rgba(15,23,42,0.08) 25%, rgba(15,23,42,0.15) 50%, rgba(15,23,42,0.08) 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite linear;
+          display: inline-block;
+          border-radius: 4px;
+        }
+      `}</style>
       <div style={{ maxWidth: 1000, margin: '0 auto', paddingBottom: 100 }}>
         <div style={{ 
           display: 'grid', 
@@ -135,19 +191,23 @@ export default function CalculatorPage() {
                     }}
                   />
                </div>
-               <input 
-                 type="range" min="1000" max="500000" step="1000" value={amount} 
-                 onChange={e => {
-                   const val = Number(e.target.value);
-                   setAmount(val);
-                   setAmountStr(val.toString());
-                 }}
-                 style={{ width: '100%', accentColor: C.blue, height: 6, borderRadius: 3, cursor: 'pointer' }}
-               />
-               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, fontWeight: 700, color: C.textMuted }}>
-                  <span>GH₵ 1,000</span>
-                  <span>GH₵ 500,000</span>
-               </div>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  step="0.01" 
+                  value={amountToPos(amount)} 
+                  onChange={e => {
+                    const amt = posToAmount(parseFloat(e.target.value));
+                    setAmount(amt);
+                    setAmountStr(amt.toString());
+                  }}
+                  style={{ width: '100%', accentColor: C.blue, height: 6, borderRadius: 3, cursor: 'pointer' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, fontWeight: 700, color: C.textMuted }}>
+                   <span>GH₵ 1,000</span>
+                   <span>Infinity</span>
+                </div>
             </div>
 
             <div style={{ marginBottom: 32 }}>
@@ -189,48 +249,76 @@ export default function CalculatorPage() {
                </div>
             </div>
 
-            <div style={{ marginBottom: 0 }}>
-               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <label style={{ fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Expected Interest Rate</label>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: C.emerald, background: C.emeraldPale, padding: '3px 8px', borderRadius: 6 }}>Market Avg</span>
-               </div>
-               <div style={{ 
-                 display: 'flex', 
-                 alignItems: 'center', 
-                 gap: 12, 
-                 background: '#f8fafc', 
-                 border: `1px solid ${C.borderStrong}`, 
-                 borderRadius: 16, 
-                 padding: '12px 20px', 
-                 marginBottom: 16 
-               }}>
-                  <input 
-                    type="number" 
-                    step="0.5"
-                    value={rateStr} 
-                    onChange={e => handleRateChange(e.target.value)}
-                    onBlur={handleRateBlur}
-                    style={{ 
-                      flex: 1, border: 'none', background: 'none', fontSize: 24, fontWeight: 900, 
-                      color: C.blue, outline: 'none', fontFamily: F.heading, width: '100%' 
-                    }}
-                  />
-                  <span style={{ fontSize: 18, fontWeight: 900, color: C.textSub, fontFamily: F.heading }}>% p.a</span>
-               </div>
-               <input 
-                 type="range" min="10" max="36" step="0.5" value={rate} 
-                 onChange={e => {
-                   const val = Number(e.target.value);
-                   setRate(val);
-                   setRateStr(val.toString());
-                 }}
-                 style={{ width: '100%', accentColor: C.blue, height: 6, borderRadius: 3, cursor: 'pointer' }}
-               />
-               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, fontWeight: 700, color: C.textMuted }}>
-                  <span>10%</span>
-                  <span>36%</span>
-               </div>
-            </div>
+             <div style={{ marginBottom: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                   <label style={{ fontSize: 11, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Expected Interest Rate (Flat)</label>
+                   <span style={{ fontSize: 12, fontWeight: 700, color: C.emerald, background: C.emeraldPale, padding: '3px 8px', borderRadius: 6 }}>Market Avg</span>
+                </div>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 12, 
+                  background: '#f8fafc', 
+                  border: `1px solid ${C.borderStrong}`, 
+                  borderRadius: 16, 
+                  padding: '12px 20px', 
+                  marginBottom: 16 
+                }}>
+                   <input 
+                     type="number" 
+                     step="0.1"
+                     value={rateStr} 
+                     onChange={e => handleRateChange(e.target.value)}
+                     onBlur={handleRateBlur}
+                     style={{ 
+                       flex: 1, border: 'none', background: 'none', fontSize: 24, fontWeight: 900, 
+                       color: C.blue, outline: 'none', fontFamily: F.heading, width: '100%' 
+                     }}
+                   />
+                   <select
+                     value={rateType}
+                     onChange={e => {
+                       const nextType = e.target.value;
+                       setRateType(nextType);
+                       const nextRate = nextType === 'yearly' 
+                         ? Math.min(36, Math.max(10, rate)) 
+                         : Math.min(10, Math.max(1, rate));
+                       setRate(nextRate);
+                       setRateStr(nextRate.toString());
+                     }}
+                     style={{
+                       border: 'none',
+                       background: 'none',
+                       fontSize: 16,
+                       fontWeight: 900,
+                       color: C.textSub,
+                       outline: 'none',
+                       cursor: 'pointer',
+                       fontFamily: F.heading
+                     }}
+                   >
+                     <option value="monthly">% / Month</option>
+                     <option value="yearly">% p.a. (Yearly)</option>
+                   </select>
+                </div>
+                <input 
+                  type="range" 
+                  min={rateType === 'yearly' ? 10 : 1} 
+                  max={rateType === 'yearly' ? 36 : 10} 
+                  step={rateType === 'yearly' ? 0.5 : 0.1} 
+                  value={rate} 
+                  onChange={e => {
+                    const val = Number(e.target.value);
+                    setRate(val);
+                    setRateStr(val.toString());
+                  }}
+                  style={{ width: '100%', accentColor: C.blue, height: 6, borderRadius: 3, cursor: 'pointer' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12, fontWeight: 700, color: C.textMuted }}>
+                   <span>{rateType === 'yearly' ? '10%' : '1%'}</span>
+                   <span>{rateType === 'yearly' ? '36%' : '10%'}</span>
+                </div>
+             </div>
           </div>
 
           {/* Results Summary */}
@@ -247,47 +335,87 @@ export default function CalculatorPage() {
                <div style={{ position: 'absolute', top: -40, right: -40, width: 220, height: 220, background: 'rgba(255,255,255,0.08)', borderRadius: '50%' }} />
                <div style={{ position: 'relative', zIndex: 1 }}>
                   <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 900, opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Estimated Monthly Payment</p>
-                  <h2 style={{ margin: '0 0 40px', fontSize: 56, fontWeight: 900, fontFamily: F.heading, letterSpacing: '-0.03em' }}>GH₵ {Math.round(monthlyPayment).toLocaleString()}</h2>
+                  <h2 style={{ margin: '0 0 40px', fontSize: 56, fontWeight: 900, fontFamily: F.heading, letterSpacing: '-0.03em', minHeight: 68, display: 'flex', alignItems: 'center' }}>
+                     {isCalculating ? (
+                       <span className="shimmer-bg" style={{ width: 180, height: 48 }} />
+                     ) : (
+                       <>GH₵ {Math.round(monthlyPayment).toLocaleString()}</>
+                     )}
+                  </h2>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, padding: '32px 0', borderTop: '1.5px solid rgba(255,255,255,0.1)' }}>
                      <div>
                         <p style={{ margin: '0 0 8px', fontSize: 10, fontWeight: 900, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Weekly Repayment</p>
-                        <p style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#fff' }}>GH₵ {Math.round(weeklyPayment).toLocaleString()}</p>
+                        <p style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#fff', minHeight: 28, display: 'flex', alignItems: 'center' }}>
+                          {isCalculating ? (
+                            <span className="shimmer-bg" style={{ width: 100, height: 20 }} />
+                          ) : (
+                            <>GH₵ {Math.round(weeklyPayment).toLocaleString()}</>
+                          )}
+                        </p>
                      </div>
                      <div>
                         <p style={{ margin: '0 0 8px', fontSize: 10, fontWeight: 900, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Daily Repayment</p>
-                        <p style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#fff' }}>GH₵ {Math.round(dailyPayment).toLocaleString()}</p>
+                        <p style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#fff', minHeight: 28, display: 'flex', alignItems: 'center' }}>
+                          {isCalculating ? (
+                            <span className="shimmer-bg" style={{ width: 80, height: 20 }} />
+                          ) : (
+                            <>GH₵ {Math.round(dailyPayment).toLocaleString()}</>
+                          )}
+                        </p>
                      </div>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, padding: '32px 0', borderTop: '1.5px solid rgba(255,255,255,0.1)' }}>
                      <div>
                         <p style={{ margin: '0 0 8px', fontSize: 10, fontWeight: 900, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Interest</p>
-                        <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'rgba(255,255,255,0.9)' }}>GH₵ {Math.round(totalInterest).toLocaleString()}</p>
+                        <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'rgba(255,255,255,0.9)', minHeight: 24, display: 'flex', alignItems: 'center' }}>
+                          {isCalculating ? (
+                            <span className="shimmer-bg" style={{ width: 110, height: 16 }} />
+                          ) : (
+                            <>GH₵ {Math.round(totalInterest).toLocaleString()}</>
+                          )}
+                        </p>
                      </div>
                      <div>
                         <p style={{ margin: '0 0 8px', fontSize: 10, fontWeight: 900, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Repayable</p>
-                        <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'rgba(255,255,255,0.9)' }}>GH₵ {Math.round(totalRepayable).toLocaleString()}</p>
+                        <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'rgba(255,255,255,0.9)', minHeight: 24, display: 'flex', alignItems: 'center' }}>
+                          {isCalculating ? (
+                            <span className="shimmer-bg" style={{ width: 110, height: 16 }} />
+                          ) : (
+                            <>GH₵ {Math.round(totalRepayable).toLocaleString()}</>
+                          )}
+                        </p>
                      </div>
                   </div>
                </div>
             </div>
 
-            <div style={{ 
-              background: '#fff', 
-              borderRadius: 24, 
-              padding: 24, 
-              border: `1px solid ${C.border}`,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 16
-            }}>
-               <div style={{ width: 44, height: 44, borderRadius: 12, background: C.emeraldPale, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>💡</div>
-               <div style={{ flex: 1 }}>
-                  <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 800, color: C.text }}>Pro Tip</p>
-                  <p style={{ margin: 0, fontSize: 12, color: C.textSub }}>By shortening your term to **12 months**, you could save **GH₵ {Math.round(totalInterest - ((amount * (rate/100/12)) / (1 - Math.pow(1 + (rate/100/12), -12))) * 12).toLocaleString()}** in interest.</p>
+             {term > 12 && (
+               <div style={{ 
+                 background: '#fff', 
+                 borderRadius: 24, 
+                 padding: 24, 
+                 border: `1px solid ${C.border}`,
+                 display: 'flex',
+                 alignItems: 'center',
+                 gap: 16
+               }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: C.emeraldPale, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>💡</div>
+                  <div style={{ flex: 1 }}>
+                     <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 800, color: C.text }}>Pro Tip</p>
+                     <p style={{ margin: 0, fontSize: 12, color: C.textSub, minHeight: 18, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px' }}>
+                        By shortening your term to **12 months**, you could save{" "}
+                        {isCalculating ? (
+                          <span className="shimmer-bg-dark" style={{ width: 70, height: 14 }} />
+                        ) : (
+                          <strong>GH₵ {Math.round(totalInterest - (12 * amount * monthlyRate)).toLocaleString()}</strong>
+                        )}{" "}
+                        in interest.
+                     </p>
+                  </div>
                </div>
-            </div>
+             )}
 
             <button 
               onClick={() => router.push(`/portal/marketplace?cat=loan`)}
