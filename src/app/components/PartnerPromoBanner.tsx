@@ -22,54 +22,88 @@ interface PromoAd {
 const PROMO_ADS: PromoAd[] = [
   {
     id: 1,
-    tag: 'SPONSORED INVESTMENT',
-    title: 'Lekki Heights Real Estate Fund',
-    highlight: 'Historical 11.4% Annualized Yield',
-    description: 'The Lekki Heights Real Estate Fund is built for investors seeking steady USD-hedged cash flow and capital growth. This fund invests in a diversified portfolio of premium commercial and residential properties across Lagos\'s high-brow Lekki peninsula.',
-    buttonText: 'EXPLORE FUND',
-    buttonHref: '/savings',
-    image: '/images/home_loans.png',
+    tag: '⚡ FULL ELECTRIC',
+    title: 'BYD Seagull',
+    highlight: '405 km Range • Blade Battery',
+    description: 'Incredible agility in rush hour traffic, completely maintenance-free powertrain, and next-to-zero operational fuel costs.',
+    buttonText: 'GET FINANCED',
+    buttonHref: '/get-started?vehicle=BYD%20Seagull',
+    image: '/cars/byd-seagull.png',
     stats: [
-      { label: 'Total Net Assets', value: '$45.2M' },
-      { label: 'Projected IRR', value: '14.2%' },
-      { label: 'Minimum Ticket', value: '$5,000' },
-      { label: 'Active Investors', value: '3,800+' }
+      { label: 'Battery', value: '38 kWh' },
+      { label: 'Transmission', value: 'Single-Speed' },
+      { label: 'Drivetrain', value: 'Full EV (2WD)' },
+      { label: 'Capacity', value: '4 Seats' }
     ],
     gradient: 'linear-gradient(135deg, #020617 0%, #0f172a 40%, #0d9488 100%)' // Slate to teal
   },
   {
     id: 2,
-    tag: 'PARTNER OFFER',
-    title: 'Stanbic IBTC SME Growth Bond',
-    highlight: 'Up to ₦50M Collateral-Free Credit',
-    description: 'Empower your agribusiness or retail enterprise with quick expansion capital. Stanbic IBTC Bank offers pre-approved credit lines to verified business users on the Resolve Bridge platform with flexible 12-month repayments.',
-    buttonText: 'APPLY NOW',
-    buttonHref: '/loans/business',
-    image: '/images/business_loans.png',
+    tag: '🔌 PLUG-IN HYBRID',
+    title: 'Li Auto L9',
+    highlight: '1,360 km Combined Range',
+    description: 'The ultimate family and VIP transport solution. Uncompromised luxury space matching or beating full-sized luxury continental imports.',
+    buttonText: 'GET FINANCED',
+    buttonHref: '/get-started?vehicle=Li%20Auto%20L9',
+    image: '/cars/li-auto-real.jpg',
     stats: [
-      { label: 'Max Loan Amount', value: '₦50,000,000' },
-      { label: 'Interest Rate', value: '16.5% p.a.' },
-      { label: 'Approval Speed', value: '24 Hours' },
-      { label: 'Repayment Term', value: '12 Months' }
+      { label: 'Powertrain', value: '1.5L Turbo Ext' },
+      { label: 'Transmission', value: 'Automatic' },
+      { label: 'Drivetrain', value: 'Intelligent AWD' },
+      { label: 'Capacity', value: '6 Seats' }
     ],
     gradient: 'linear-gradient(135deg, #020617 0%, #0f172a 40%, #1d4ed8 100%)' // Slate to blue
   },
   {
     id: 3,
-    tag: 'PARTNER SPOTLIGHT',
-    title: 'Leadway Agriculture Shield Plan',
-    highlight: '100% Crop & Equipment Insurance',
-    description: 'Protect your farming investments from unpredictable weather and climate disruption. Get comprehensive agricultural insurance with instant claims payout on the Resolve Bridge network.',
-    buttonText: 'GET A QUOTE',
-    buttonHref: '/insurance',
-    image: '/images/resolve_insurance_group.png',
+    tag: '🔄 SMART HYBRID',
+    title: 'Changan UNI-K',
+    highlight: '2.0L Turbo • Concept Styling',
+    description: 'Breathtaking concept-car looks that turn heads everywhere, paired with a rock-solid, highly reliable powertrain.',
+    buttonText: 'GET FINANCED',
+    buttonHref: '/get-started?vehicle=Changan%20UNI-K',
+    image: '/cars/changan-real.jpg',
     stats: [
-      { label: 'Premium Rate', value: '1.8% of Asset' },
-      { label: 'Coverage Limit', value: '₦100M+' },
-      { label: 'Claims Payout', value: 'Within 7 Days' },
-      { label: 'Farmers Shielded', value: '12K+' }
+      { label: 'Engine', value: '2.0L Turbo' },
+      { label: 'Transmission', value: 'AISIN 8-Speed' },
+      { label: 'Clearance', value: '190 mm' },
+      { label: 'Capacity', value: '5 Seats' }
+    ],
+    gradient: 'linear-gradient(135deg, #020617 0%, #0f172a 40%, #c026d3 100%)' // Slate to magenta
+  },
+  {
+    id: 4,
+    tag: '⛽ DIESEL 4X4',
+    title: 'Toyota Land Cruiser Prado',
+    highlight: '2.8L Turbo • 500 Nm Torque',
+    description: 'The ultimate status symbol of executive off-road authority. Completely unbothered by seasonal flooding, muddy tracks, or heavy potholes.',
+    buttonText: 'GET FINANCED',
+    buttonHref: '/get-started?vehicle=Toyota%20Land%20Cruiser%20Prado',
+    image: '/cars/toyota-prado.jpg',
+    stats: [
+      { label: 'Engine', value: '2.8L Diesel' },
+      { label: 'Transmission', value: 'Heavy Duty 8-Speed' },
+      { label: 'Clearance', value: '225 mm' },
+      { label: 'Capacity', value: '7 Seats' }
     ],
     gradient: 'linear-gradient(135deg, #020617 0%, #0f172a 40%, #15803d 100%)' // Slate to green
+  },
+  {
+    id: 5,
+    tag: '⚡ SMART ELECTRIC',
+    title: 'Xpeng G9',
+    highlight: '702 km Range • 800V Silicon',
+    description: 'Impeccable executive status, ultra-fast charging capabilities, smart self-parking functionality, and absolute premium suspension comfort.',
+    buttonText: 'GET FINANCED',
+    buttonHref: '/get-started?vehicle=Xpeng%20G9',
+    image: '/cars/xpeng-g9.png',
+    stats: [
+      { label: 'Battery', value: '98 kWh' },
+      { label: 'Transmission', value: 'Dual-Motor Auto' },
+      { label: 'Drivetrain', value: 'Intelligent AWD' },
+      { label: 'Capacity', value: '5 VIP Seats' }
+    ],
+    gradient: 'linear-gradient(135deg, #020617 0%, #0f172a 40%, #0284c7 100%)' // Slate to sky blue
   }
 ];
 
