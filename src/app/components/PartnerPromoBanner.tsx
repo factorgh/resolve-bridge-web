@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, IconButton, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Typography, Button, IconButton } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeftRounded, ChevronRightRounded, CloseRounded } from '@mui/icons-material';
 import Link from 'next/link';
@@ -112,10 +112,6 @@ export default function PartnerPromoBanner({ onDismiss }: { onDismiss?: () => vo
   const [direction, setDirection] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isXs = useMediaQuery(theme.breakpoints.down('sm'));
-
   const prevStep = () => {
     setDirection(-1);
     setIndex((prev) => (prev === 0 ? PROMO_ADS.length - 1 : prev - 1));
@@ -258,33 +254,36 @@ export default function PartnerPromoBanner({ onDismiss }: { onDismiss?: () => vo
                   x: { type: "tween", duration: 0.35, ease: "easeInOut" },
                   opacity: { duration: 0.25 }
                 }}
-                style={{
-                  display: 'flex',
-                  flexDirection: isMobile ? 'column' : 'row',
-                  alignItems: isMobile ? 'stretch' : 'center',
-                  gap: isMobile ? '16px' : '32px',
-                  width: '100%'
-                }}
+                style={{ width: '100%' }}
               >
-                <Box sx={{ flex: 1.3, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
-                  <Typography
-                    variant="h3"
-                    sx={{
-                      color: '#fff',
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      fontWeight: 800,
-                      fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.65rem' },
-                      lineHeight: 1.2,
-                      letterSpacing: '-0.02em',
-                      mb: { xs: 1.5, md: 1 }
-                    }}
-                  >
-                    {currentAd.title}
-                  </Typography>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: { xs: 'column', md: 'row' },
+                    alignItems: { xs: 'stretch', md: 'center' },
+                    gap: { xs: 2, md: 4 },
+                    width: '100%',
+                  }}
+                >
+                  <Box sx={{ flex: 1.3, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
+                    <Typography
+                      variant="h3"
+                      sx={{
+                        color: '#fff',
+                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                        fontWeight: 800,
+                        fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.65rem' },
+                        lineHeight: 1.2,
+                        letterSpacing: '-0.02em',
+                        mb: { xs: 1.5, md: 1 }
+                      }}
+                    >
+                      {currentAd.title}
+                    </Typography>
 
-                  {isMobile && (
                     <Box
                       sx={{
+                        display: { xs: 'block', md: 'none' },
                         position: 'relative',
                         width: '100%',
                         aspectRatio: '16/10',
@@ -299,74 +298,70 @@ export default function PartnerPromoBanner({ onDismiss }: { onDismiss?: () => vo
                         component="img"
                         src={currentAd.image}
                         alt={currentAd.title}
-                        sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                       />
                     </Box>
-                  )}
 
-                  {!isMobile && (
-                    <>
-                      <Typography
-                        sx={{
-                          background: 'linear-gradient(90deg, #34d399 0%, #059669 100%)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                          backgroundClip: 'text',
-                          fontFamily: "'Plus Jakarta Sans', sans-serif",
-                          fontWeight: 800,
-                          fontSize: { xs: '0.95rem', sm: '1.05rem', md: '1.15rem' },
-                          mb: 1.5,
-                        }}
-                      >
-                        {currentAd.highlight}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          color: '#94a3b8',
-                          fontFamily: "'Inter', sans-serif",
-                          fontSize: { xs: '0.8rem', md: '0.875rem' },
-                          lineHeight: 1.5,
-                          mb: 2,
-                          maxWidth: '650px',
-                          minHeight: { xs: 'auto', md: '64px' }
-                        }}
-                      >
-                        {currentAd.description}
-                      </Typography>
-                    </>
-                  )}
-                  <Button
-                    component={Link}
-                    href={currentAd.buttonHref}
-                    variant="outlined"
-                    sx={{
-                      borderColor: 'rgba(16, 185, 129, 0.4)',
-                      color: '#10b981',
-                      borderRadius: '10px',
-                      px: 3,
-                      py: 1,
-                      fontSize: '12px',
-                      fontWeight: 800,
-                      textTransform: 'none',
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      width: { xs: '100%', md: 'auto' },
-                      '&:hover': {
-                        borderColor: '#10b981',
-                        background: 'rgba(16, 185, 129, 0.08)',
-                        color: '#34d399'
-                      },
-                      transition: 'all 0.3s'
-                    }}
-                  >
-                    {currentAd.buttonText}
-                  </Button>
-                </Box>
+                    <Typography
+                      sx={{
+                        display: { xs: 'none', md: 'block' },
+                        background: 'linear-gradient(90deg, #34d399 0%, #059669 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                        fontWeight: 800,
+                        fontSize: { xs: '0.95rem', sm: '1.05rem', md: '1.15rem' },
+                        mb: 1.5,
+                      }}
+                    >
+                      {currentAd.highlight}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        display: { xs: 'none', md: 'block' },
+                        color: '#94a3b8',
+                        fontFamily: "'Inter', sans-serif",
+                        fontSize: { xs: '0.8rem', md: '0.875rem' },
+                        lineHeight: 1.5,
+                        mb: 2,
+                        maxWidth: '650px',
+                        minHeight: { xs: 'auto', md: '64px' }
+                      }}
+                    >
+                      {currentAd.description}
+                    </Typography>
+                    <Button
+                      component={Link}
+                      href={currentAd.buttonHref}
+                      variant="outlined"
+                      sx={{
+                        borderColor: 'rgba(16, 185, 129, 0.4)',
+                        color: '#10b981',
+                        borderRadius: '10px',
+                        px: 3,
+                        py: 1,
+                        fontSize: '12px',
+                        fontWeight: 800,
+                        textTransform: 'none',
+                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                        width: { xs: '100%', md: 'auto' },
+                        '&:hover': {
+                          borderColor: '#10b981',
+                          background: 'rgba(16, 185, 129, 0.08)',
+                          color: '#34d399'
+                        },
+                        transition: 'all 0.3s'
+                      }}
+                    >
+                      {currentAd.buttonText}
+                    </Button>
+                  </Box>
 
-                {!isMobile && (
                   <Box
                     sx={{
                       flex: 0.7,
-                      display: 'flex',
+                      display: { xs: 'none', md: 'flex' },
                       justifyContent: 'center',
                       position: 'relative',
                       width: '100%'
@@ -396,7 +391,8 @@ export default function PartnerPromoBanner({ onDismiss }: { onDismiss?: () => vo
                         sx={{
                           width: '100%',
                           height: '100%',
-                          objectFit: 'cover'
+                          objectFit: 'cover',
+                          display: 'block',
                         }}
                       />
                       <Box
@@ -411,7 +407,7 @@ export default function PartnerPromoBanner({ onDismiss }: { onDismiss?: () => vo
                       />
                     </Box>
                   </Box>
-                )}
+                </Box>
               </motion.div>
             </AnimatePresence>
           </Box>
@@ -420,12 +416,12 @@ export default function PartnerPromoBanner({ onDismiss }: { onDismiss?: () => vo
           <Box
             sx={{
               display: 'flex',
-              flexDirection: isXs ? 'column' : 'row',
+              flexDirection: { xs: 'column', sm: 'row' },
               justifyContent: 'space-between',
-              alignItems: isXs ? 'flex-start' : 'center',
+              alignItems: { xs: 'flex-start', sm: 'center' },
               gap: 2,
-              borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-              pt: 2,
+              borderTop: { xs: 'none', md: '1px solid rgba(255, 255, 255, 0.08)' },
+              pt: { xs: 0, md: 2 },
               zIndex: 2
             }}
           >
@@ -448,7 +444,7 @@ export default function PartnerPromoBanner({ onDismiss }: { onDismiss?: () => vo
                   style={{
                     display: 'flex',
                     flexWrap: 'wrap',
-                    gap: isXs ? '14px' : '24px'
+                    gap: '24px'
                   }}
                 >
                   {currentAd.stats.map((stat, i) => (

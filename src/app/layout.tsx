@@ -58,18 +58,42 @@ export default function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                  // Unregister service worker in development to avoid 404 errors on reload
                   navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    for(let registration of registrations) {
-                      registration.unregister();
+                    for (var i = 0; i < registrations.length; i++) {
+                      registrations[i].unregister();
                     }
                   });
+                  if (window.caches) {
+                    caches.keys().then(function(keys) {
+                      keys.forEach(function(key) { caches.delete(key); });
+                    });
+                  }
                 } else {
                   window.addEventListener('load', function() {
                     navigator.serviceWorker.register('/sw.js').then(function(registration) {
-                      console.log('SW registered: ', registration);
-                    }, function(err) {
-                      console.log('SW registration failed: ', err);
+                      function checkForUpdate() {
+                        registration.update();
+                      }
+                      checkForUpdate();
+                      setInterval(checkForUpdate, 60 * 60 * 1000);
+                      document.addEventListener('visibilitychange', function() {
+                        if (document.visibilityState === 'visible') checkForUpdate();
+                      });
+                      registration.addEventListener('updatefound', function() {
+                        var worker = registration.installing;
+                        if (!worker) return;
+                        worker.addEventListener('statechange', function() {
+                          if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                            worker.postMessage('SKIP_WAITING');
+                          }
+                        });
+                      });
+                    });
+                    var refreshing = false;
+                    navigator.serviceWorker.addEventListener('controllerchange', function() {
+                      if (refreshing) return;
+                      refreshing = true;
+                      window.location.reload();
                     });
                   });
                 }
