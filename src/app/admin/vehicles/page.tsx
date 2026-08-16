@@ -126,11 +126,65 @@ export default function AdminVehiclesPage() {
             <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Issue dealer upload link</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
-            <input required placeholder="Contact name" value={linkForm.dealerName} onChange={(e) => setLinkForm({ ...linkForm, dealerName: e.target.value })} style={field} />
-            <input required placeholder="Dealership" value={linkForm.dealerCompany} onChange={(e) => setLinkForm({ ...linkForm, dealerCompany: e.target.value })} style={field} />
-            <input placeholder="Phone" value={linkForm.dealerPhone} onChange={(e) => setLinkForm({ ...linkForm, dealerPhone: e.target.value })} style={field} />
-            <input placeholder="Email" value={linkForm.dealerEmail} onChange={(e) => setLinkForm({ ...linkForm, dealerEmail: e.target.value })} style={field} />
-            <input type="number" min={1} max={90} value={linkForm.daysValid} onChange={(e) => setLinkForm({ ...linkForm, daysValid: e.target.value })} style={field} />
+            <label style={label}>
+              Contact name
+              <input
+                required
+                name="dealerName"
+                autoComplete="name"
+                placeholder="Full name"
+                value={linkForm.dealerName}
+                onChange={(e) => setLinkForm((f) => ({ ...f, dealerName: e.target.value }))}
+                style={field}
+              />
+            </label>
+            <label style={label}>
+              Dealership
+              <input
+                required
+                name="dealerCompany"
+                autoComplete="organization"
+                placeholder="Business name"
+                value={linkForm.dealerCompany}
+                onChange={(e) => setLinkForm((f) => ({ ...f, dealerCompany: e.target.value }))}
+                style={field}
+              />
+            </label>
+            <label style={label}>
+              Phone
+              <input
+                name="dealerPhone"
+                autoComplete="tel"
+                placeholder="Phone"
+                value={linkForm.dealerPhone}
+                onChange={(e) => setLinkForm((f) => ({ ...f, dealerPhone: e.target.value }))}
+                style={field}
+              />
+            </label>
+            <label style={label}>
+              Email
+              <input
+                name="dealerEmail"
+                type="email"
+                autoComplete="email"
+                placeholder="Email"
+                value={linkForm.dealerEmail}
+                onChange={(e) => setLinkForm((f) => ({ ...f, dealerEmail: e.target.value }))}
+                style={field}
+              />
+            </label>
+            <label style={label}>
+              Days valid
+              <input
+                name="daysValid"
+                type="number"
+                min={1}
+                max={90}
+                value={linkForm.daysValid}
+                onChange={(e) => setLinkForm((f) => ({ ...f, daysValid: e.target.value }))}
+                style={field}
+              />
+            </label>
           </div>
           <button type="submit" disabled={creatingLink} style={primaryBtn}>
             {creatingLink ? 'Creating…' : 'Create and copy link'}
@@ -241,14 +295,15 @@ const field: CSSProperties = {
   width: '100%',
   padding: '10px 12px',
   borderRadius: 10,
-  border: '1px solid rgba(255,255,255,0.12)',
-  background: 'rgba(255,255,255,0.04)',
-  color: '#f3f4f6',
+  border: `1px solid ${C.borderStrong}`,
+  background: C.bg,
+  color: C.text,
   fontSize: 13,
   boxSizing: 'border-box',
+  outline: 'none',
 };
 
-const label: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 6, fontSize: 11, fontWeight: 700, marginBottom: 10 };
+const label: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 6, fontSize: 11, fontWeight: 700, marginBottom: 0, color: C.textSub };
 
 const primaryBtn: CSSProperties = {
   background: '#3b82f6',
