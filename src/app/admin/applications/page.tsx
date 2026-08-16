@@ -128,6 +128,16 @@ function ApplicationsPageContent() {
         }
         payload.rejectionReason = rejectionReason;
       }
+      if (status === "InfoRequested") {
+        const raw = prompt("Documents still needed (comma separated), e.g. Payslip, Bank statement, Utility bill");
+        if (raw == null) return;
+        payload.infoRequestItems = raw.split(",").map((s) => s.trim()).filter(Boolean);
+        payload.infoRequestMessage = prompt("Message to the customer (optional)") || "";
+        if (!payload.infoRequestItems.length && !payload.infoRequestMessage) {
+          toast.error("List at least one document or a message");
+          return;
+        }
+      }
 
       const res = await reviewApplication(payload).unwrap();
       if (res.success) {
@@ -210,6 +220,8 @@ function ApplicationsPageContent() {
         return C.amber;
       case "UnderReview":
         return C.purple;
+      case "InfoRequested":
+        return C.amber;
       case "Rejected":
         return C.red;
       default:
@@ -1081,6 +1093,26 @@ function ApplicationsPageContent() {
                 </div>
               </div>
 
+              {(selectedApp.vehicleId || selectedApp.applicationData?.vehiclePack) && (
+                <div style={{ marginTop: 24, padding: 16, border: `1px solid ${C.border}`, borderRadius: 16 }}>
+                  <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 900, color: C.textMuted, textTransform: "uppercase" }}>Vehicle pack</p>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700 }}>
+                    {(selectedApp.vehicleId?.year || selectedApp.applicationData?.vehiclePack?.year)}{" "}
+                    {(selectedApp.vehicleId?.make || selectedApp.applicationData?.vehiclePack?.make)}{" "}
+                    {(selectedApp.vehicleId?.model || selectedApp.applicationData?.vehiclePack?.model)}
+                  </p>
+                  <p style={{ margin: "6px 0 0", fontSize: 12, color: C.textSub }}>
+                    Customer price GH₵ {Number(selectedApp.vehicleId?.customerPrice || selectedApp.applicationData?.vehiclePack?.customerPrice || selectedApp.amount).toLocaleString()}
+                    {selectedApp.applicationData?.minDownPaymentPercent ? ` · min down ${selectedApp.applicationData.minDownPaymentPercent}%` : ""}
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
+                    {(selectedApp.applicationData?.vehiclePack?.documents || []).map((d: any, i: number) => (
+                      <a key={i} href={d.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: C.blueLight }}>{d.name || `Paper ${i + 1}`}</a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Decisive Actions */}
               <div
                 style={{ borderTop: `1px solid ${C.border}`, paddingTop: 24 }}
@@ -1120,8 +1152,27 @@ function ApplicationsPageContent() {
                 )}
 
                 {(selectedApp.status === "Pending" ||
-                  selectedApp.status === "UnderReview") && (
-                  <div style={{ display: "flex", gap: 12 }}>
+                  selectedApp.status === "UnderReview" ||
+                  selectedApp.status === "InfoRequested") && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <button
+                      onClick={() => handleReview(selectedApp._id, "InfoRequested")}
+                      disabled={isReviewing}
+                      style={{
+                        width: "100%",
+                        padding: "14px",
+                        borderRadius: 12,
+                        border: `1.5px solid ${C.amber}`,
+                        background: "transparent",
+                        color: C.amber,
+                        fontWeight: 800,
+                        fontSize: 13,
+                        cursor: isReviewing ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      Request more info
+                    </button>
+                    <div style={{ display: "flex", gap: 12 }}>
                     <button
                       onClick={() => handleReview(selectedApp._id, "Approved")}
                       disabled={isReviewing}
@@ -1162,6 +1213,24 @@ function ApplicationsPageContent() {
                       }}
                     >
                       {isReviewing ? "Rejecting..." : "Reject Application"}
+                    </button>
+                    </div>
+                    <button
+                      onClick={() => handleReview(selectedApp._id, "Cancelled")}
+                      disabled={isReviewing}
+                      style={{
+                        width: "100%",
+                        padding: "12px",
+                        borderRadius: 12,
+                        border: `1.5px solid ${C.borderStrong}`,
+                        background: "transparent",
+                        color: C.textSub,
+                        fontWeight: 800,
+                        fontSize: 13,
+                        cursor: isReviewing ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      Cancel request
                     </button>
                   </div>
                 )}

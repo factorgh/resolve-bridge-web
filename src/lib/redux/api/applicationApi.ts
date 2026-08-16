@@ -34,14 +34,14 @@ export const applicationApi = baseApi.injectEndpoints({
     }),
     adminReviewApplication: builder.mutation<
       any,
-      { id: string; status: string; rejectionReason?: string }
+      { id: string; status: string; rejectionReason?: string; infoRequestItems?: string[]; infoRequestMessage?: string }
     >({
       query: ({ id, ...body }) => ({
         url: `/Applications/admin/${id}/review`,
         method: "PATCH",
         body,
       }),
-      invalidatesTags: ["Application"],
+      invalidatesTags: ["Application", "Vehicle"],
     }),
     adminRestoreApplication: builder.mutation<any, string>({
       query: (id) => ({
@@ -64,6 +64,14 @@ export const applicationApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Application"],
     }),
+    respondToInfoRequest: builder.mutation<any, { id: string; notes?: string; documentIds?: string[] }>({
+      query: ({ id, ...body }) => ({
+        url: `/Applications/${id}/respond-info`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Application"],
+    }),
   }),
   overrideExisting: true,
 });
@@ -77,4 +85,5 @@ export const {
   useAdminRestoreApplicationMutation,
   useAdminToggleReminderFlagMutation,
   useAdminTriggerRemindersMutation,
+  useRespondToInfoRequestMutation,
 } = applicationApi;

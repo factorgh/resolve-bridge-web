@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import PortalShell, { C, F } from '../components/PortalShell';
 import { useGetProductsQuery } from '@/lib/redux/api/productApi';
+import { useGetPublicVehiclesQuery } from '@/lib/redux/api/vehicleApi';
 import { useCreateApplicationMutation } from '@/lib/redux/api/applicationApi';
 import { useGetMeQuery } from '@/lib/redux/api/userApi';
 import { toast } from 'react-hot-toast';
@@ -429,6 +430,7 @@ function MarketplaceContent() {
     searchTerm: search,
     providerType: filters.providers
   });
+  const { data: vehiclesRes } = useGetPublicVehiclesQuery(undefined, { skip: activeCat !== 'bnpl' });
 
   const products = useMemo(() => {
     if (apiData?.success && apiData?.data) {
@@ -470,7 +472,7 @@ function MarketplaceContent() {
               {[
                 { id: 'loan', label: 'Lending', icon: <AccountBalanceRounded sx={{ fontSize: 18 }} /> },
                 { id: 'insurance', label: 'Insurance', icon: <ShieldRounded sx={{ fontSize: 18 }} /> },
-                { id: 'bnpl', label: 'Shop Now', icon: <ShoppingCartRounded sx={{ fontSize: 18 }} /> },
+                { id: 'bnpl', label: 'Buy Now and Pay Later', icon: <ShoppingCartRounded sx={{ fontSize: 18 }} /> },
               ].map(cat => (
                 <button 
                   key={cat.id} 
@@ -538,18 +540,35 @@ function MarketplaceContent() {
                       <ProductCardSkeleton key={idx} viewMode={viewMode} />
                     ))
                   ) : (
-                    filteredProducts.map(prod => (
-                      <ProductCard 
-                        key={prod.id} 
-                        prod={prod} 
-                        viewMode={viewMode} 
-                        onInstantApply={handleInstantApplyStart} 
-                      />
-                    ))
+                    <>
+                      {activeCat === 'bnpl' && (vehiclesRes?.data || []).map((v: any) => (
+                        <div key={v.id} style={{ background: '#fff', borderRadius: 32, border: `1px solid ${C.border}`, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                          {v.photos?.[0]?.url && <img src={v.photos[0].url} alt="" style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 20 }} />}
+                          <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: C.textSub }}>{v.make}</p>
+                          <h4 style={{ margin: 0, fontSize: 18, fontWeight: 900 }}>{v.model}</h4>
+                          <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: C.blue }}>GH₵ {Number(v.customerPrice).toLocaleString()}</p>
+                          <p style={{ margin: 0, fontSize: 12, color: C.textSub }}>Recommended: {v.recommendedBank?.name || 'Lender assigned'}</p>
+                          <button
+                            onClick={() => router.push(`/portal/apply-vehicle/${v.id}`)}
+                            style={{ background: C.text, color: '#fff', border: 'none', padding: 14, borderRadius: 16, fontWeight: 800, cursor: 'pointer' }}
+                          >
+                            Get financed
+                          </button>
+                        </div>
+                      ))}
+                      {filteredProducts.map(prod => (
+                        <ProductCard 
+                          key={prod.id} 
+                          prod={prod} 
+                          viewMode={viewMode} 
+                          onInstantApply={handleInstantApplyStart} 
+                        />
+                      ))}
+                    </>
                   )}
               </div>
 
-              {filteredProducts.length === 0 && !isLoading && (
+              {filteredProducts.length === 0 && !isLoading && !(activeCat === 'bnpl' && (vehiclesRes?.data || []).length) && (
                 <EmptyState 
                   title="No Products Found" 
                   description="We couldn't find any financial products matching your current filters. Try adjusting your search term or exploring another category."

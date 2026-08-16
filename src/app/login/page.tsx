@@ -32,8 +32,11 @@ export default function LoginPage() {
       sessionStorage.setItem('rb_user', JSON.stringify(response.data.user));
       
       const adminRoles = ['Admin', 'SuperAdmin', 'InstitutionAdmin', 'InsuranceAdmin', 'BNPLAdmin', 'Insurance', 'BNPL', 'InstitutionStaff', 'InsuranceStaff', 'BNPLStaff'];
+      const next = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('next') : null;
       if (adminRoles.includes(response.data.user.role)) {
         router.push('/admin');
+      } else if (next && next.startsWith('/') && !next.startsWith('//')) {
+        router.push(next);
       } else {
         router.push('/portal');
       }

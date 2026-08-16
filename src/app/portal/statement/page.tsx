@@ -18,7 +18,7 @@ import {
   SearchRounded,
   ChatBubbleOutlineRounded
 } from '@mui/icons-material';
-import { useGetApplicationsQuery } from '@/lib/redux/api/applicationApi';
+import { useGetApplicationsQuery, useRespondToInfoRequestMutation } from '@/lib/redux/api/applicationApi';
 import { useGetTransactionsQuery } from '@/lib/redux/api/transactionApi';
 import EmptyState from '../components/EmptyState';
 import { AddRounded, AccountBalanceWalletRounded } from '@mui/icons-material';
@@ -69,6 +69,7 @@ export default function StatementPage() {
 
   const { data: apiData, isLoading } = useGetApplicationsQuery();
   const { data: txData, isLoading: txLoading } = useGetTransactionsQuery();
+  const [respondToInfo, { isLoading: sendingInfo }] = useRespondToInfoRequestMutation();
 
   const applications = useMemo(() => {
     return apiData?.success ? apiData.data : [];
@@ -434,7 +435,7 @@ export default function StatementPage() {
                       padding: '6px 12px', borderRadius: 10, 
                       background: (app.status === 'Approved' || app.status === 'Disbursed' || app.status === 'Completed')
                         ? `${C.emerald}10`
-                        : (app.status === 'Pending' || app.status === 'UnderReview')
+                        : (app.status === 'Pending' || app.status === 'UnderReview' || app.status === 'InfoRequested')
                           ? `${C.blue}10`
                           : app.status === 'PaymentPending'
                             ? `${C.amber}10`
@@ -453,7 +454,7 @@ export default function StatementPage() {
                       fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em',
                       minWidth: 80, textAlign: 'center'
                     }}>
-                       {app.status === 'UnderReview' ? 'Under Review' : app.status === 'PaymentPending' ? 'Payment Pending' : app.status}
+                       {app.status === 'UnderReview' ? 'Under Review' : app.status === 'PaymentPending' ? 'Payment Pending' : app.status === 'InfoRequested' ? 'More info needed' : app.status}
                     </div>
 
                     <IconButton 
@@ -712,7 +713,41 @@ export default function StatementPage() {
                       <p style={{ margin: 0, fontSize: 32, fontWeight: 900, fontFamily: F.heading }}>{selectedApp.amount}</p>
                    </div>
                    
-                   {/* Rejection/Alert Banner */}
+                    {selectedApp.status === 'InfoRequested' && (
+                      <div style={{
+                        background: `${C.amber}12`,
+                        border: `1.5px solid ${C.amber}44`,
+                        padding: '16px 20px',
+                        borderRadius: 16,
+                        marginBottom: 32,
+                      }}>
+                        <h5 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.amber }}>The lender needs more information</h5>
+                        <p style={{ margin: '6px 0 10px', fontSize: 13, color: C.textSub }}>{selectedApp.infoRequestMessage || 'Upload the items below, then send them back to the lender.'}</p>
+                        <ul style={{ margin: '0 0 14px', paddingLeft: 18, fontSize: 13, color: C.text }}>
+                          {(selectedApp.infoRequestItems || []).map((item: string) => <li key={item}>{item}</li>)}
+                        </ul>
+                        <button
+                          onClick={() => router.push('/portal/documents')}
+                          style={{ marginRight: 8, background: '#fff', border: `1.5px solid ${C.border}`, borderRadius: 10, padding: '10px 14px', fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          Upload documents
+                        </button>
+                        <button
+                          disabled={sendingInfo}
+                          onClick={async () => {
+                            try {
+                              await respondToInfo({ id: selectedApp.id, notes: 'Documents uploaded to vault' }).unwrap();
+                              setSelectedApp(null);
+                            } catch (err: any) {
+                              alert(err?.data?.message || 'Could not notify the lender');
+                            }
+                          }}
+                          style={{ background: C.sidebar, color: '#fff', border: 'none', borderRadius: 10, padding: '10px 14px', fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          {sendingInfo ? 'Sending…' : 'I have uploaded — notify lender'}
+                        </button>
+                      </div>
+                    )}
                     {selectedApp.status === 'Rejected' && (
                       <div style={{ 
                         background: `${C.red}10`, 

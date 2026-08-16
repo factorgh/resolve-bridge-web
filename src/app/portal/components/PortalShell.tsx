@@ -212,7 +212,8 @@ export default function PortalShell({
     
     const stored = sessionStorage.getItem('rb_user');
     if (!stored) { 
-      router.replace('/login'); 
+      const next = pathname && pathname.startsWith('/portal') ? `?next=${encodeURIComponent(pathname)}` : '';
+      router.replace(`/login${next}`); 
     } else { 
       try {
         setUser(JSON.parse(stored)); 

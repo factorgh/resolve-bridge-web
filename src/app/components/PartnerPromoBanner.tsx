@@ -27,7 +27,7 @@ const PROMO_ADS: PromoAd[] = [
     highlight: '405 km Range • Blade Battery',
     description: 'Incredible agility in rush hour traffic, completely maintenance-free powertrain, and next-to-zero operational fuel costs.',
     buttonText: 'GET FINANCED',
-    buttonHref: '/get-started?vehicle=BYD%20Seagull',
+    buttonHref: '/resolve-vehicles',
     image: '/cars/byd-seagull.png',
     stats: [
       { label: 'Battery', value: '38 kWh' },
@@ -44,7 +44,7 @@ const PROMO_ADS: PromoAd[] = [
     highlight: '1,360 km Combined Range',
     description: 'The ultimate family and VIP transport solution. Uncompromised luxury space matching or beating full-sized luxury continental imports.',
     buttonText: 'GET FINANCED',
-    buttonHref: '/get-started?vehicle=Li%20Auto%20L9',
+    buttonHref: '/resolve-vehicles',
     image: '/cars/li-auto-real.jpg',
     stats: [
       { label: 'Powertrain', value: '1.5L Turbo Ext' },
@@ -61,7 +61,7 @@ const PROMO_ADS: PromoAd[] = [
     highlight: '2.0L Turbo • Concept Styling',
     description: 'Breathtaking concept-car looks that turn heads everywhere, paired with a rock-solid, highly reliable powertrain.',
     buttonText: 'GET FINANCED',
-    buttonHref: '/get-started?vehicle=Changan%20UNI-K',
+    buttonHref: '/resolve-vehicles',
     image: '/cars/changan-real.jpg',
     stats: [
       { label: 'Engine', value: '2.0L Turbo' },
@@ -78,7 +78,7 @@ const PROMO_ADS: PromoAd[] = [
     highlight: '2.8L Turbo • 500 Nm Torque',
     description: 'The ultimate status symbol of executive off-road authority. Completely unbothered by seasonal flooding, muddy tracks, or heavy potholes.',
     buttonText: 'GET FINANCED',
-    buttonHref: '/get-started?vehicle=Toyota%20Land%20Cruiser%20Prado',
+    buttonHref: '/resolve-vehicles',
     image: '/cars/toyota-prado.jpg',
     stats: [
       { label: 'Engine', value: '2.8L Diesel' },
@@ -95,7 +95,7 @@ const PROMO_ADS: PromoAd[] = [
     highlight: '702 km Range • 800V Silicon',
     description: 'Impeccable executive status, ultra-fast charging capabilities, smart self-parking functionality, and absolute premium suspension comfort.',
     buttonText: 'GET FINANCED',
-    buttonHref: '/get-started?vehicle=Xpeng%20G9',
+    buttonHref: '/resolve-vehicles',
     image: '/cars/xpeng-g9.png',
     stats: [
       { label: 'Battery', value: '98 kWh' },
@@ -261,13 +261,12 @@ export default function PartnerPromoBanner({ onDismiss }: { onDismiss?: () => vo
                 style={{
                   display: 'flex',
                   flexDirection: isMobile ? 'column' : 'row',
-                  alignItems: 'center',
-                  gap: '32px',
+                  alignItems: isMobile ? 'stretch' : 'center',
+                  gap: isMobile ? '16px' : '32px',
                   width: '100%'
                 }}
               >
-                {/* Left side: Content text */}
-                <Box sx={{ flex: 1.3, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <Box sx={{ flex: 1.3, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
                   <Typography
                     variant="h3"
                     sx={{
@@ -277,38 +276,65 @@ export default function PartnerPromoBanner({ onDismiss }: { onDismiss?: () => vo
                       fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.65rem' },
                       lineHeight: 1.2,
                       letterSpacing: '-0.02em',
-                      mb: 1
+                      mb: { xs: 1.5, md: 1 }
                     }}
                   >
                     {currentAd.title}
                   </Typography>
-                  <Typography
-                    sx={{
-                      background: 'linear-gradient(90deg, #34d399 0%, #059669 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      fontWeight: 800,
-                      fontSize: { xs: '0.95rem', sm: '1.05rem', md: '1.15rem' },
-                      mb: 1.5,
-                    }}
-                  >
-                    {currentAd.highlight}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      color: '#94a3b8',
-                      fontFamily: "'Inter', sans-serif",
-                      fontSize: { xs: '0.8rem', md: '0.875rem' },
-                      lineHeight: 1.5,
-                      mb: 2,
-                      maxWidth: '650px',
-                      minHeight: { xs: 'auto', md: '64px' }
-                    }}
-                  >
-                    {currentAd.description}
-                  </Typography>
+
+                  {isMobile && (
+                    <Box
+                      sx={{
+                        position: 'relative',
+                        width: '100%',
+                        aspectRatio: '16/10',
+                        borderRadius: '14px',
+                        overflow: 'hidden',
+                        boxShadow: '0 8px 20px rgba(0,0,0,0.4)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        mb: 2,
+                      }}
+                    >
+                      <Box
+                        component="img"
+                        src={currentAd.image}
+                        alt={currentAd.title}
+                        sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    </Box>
+                  )}
+
+                  {!isMobile && (
+                    <>
+                      <Typography
+                        sx={{
+                          background: 'linear-gradient(90deg, #34d399 0%, #059669 100%)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          backgroundClip: 'text',
+                          fontFamily: "'Plus Jakarta Sans', sans-serif",
+                          fontWeight: 800,
+                          fontSize: { xs: '0.95rem', sm: '1.05rem', md: '1.15rem' },
+                          mb: 1.5,
+                        }}
+                      >
+                        {currentAd.highlight}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          color: '#94a3b8',
+                          fontFamily: "'Inter', sans-serif",
+                          fontSize: { xs: '0.8rem', md: '0.875rem' },
+                          lineHeight: 1.5,
+                          mb: 2,
+                          maxWidth: '650px',
+                          minHeight: { xs: 'auto', md: '64px' }
+                        }}
+                      >
+                        {currentAd.description}
+                      </Typography>
+                    </>
+                  )}
                   <Button
                     component={Link}
                     href={currentAd.buttonHref}
@@ -323,6 +349,7 @@ export default function PartnerPromoBanner({ onDismiss }: { onDismiss?: () => vo
                       fontWeight: 800,
                       textTransform: 'none',
                       fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      width: { xs: '100%', md: 'auto' },
                       '&:hover': {
                         borderColor: '#10b981',
                         background: 'rgba(16, 185, 129, 0.08)',
@@ -335,7 +362,6 @@ export default function PartnerPromoBanner({ onDismiss }: { onDismiss?: () => vo
                   </Button>
                 </Box>
 
-                {/* Right side: Mock image visual */}
                 {!isMobile && (
                   <Box
                     sx={{
@@ -366,13 +392,13 @@ export default function PartnerPromoBanner({ onDismiss }: { onDismiss?: () => vo
                       <Box
                         component="img"
                         src={currentAd.image}
+                        alt={currentAd.title}
                         sx={{
                           width: '100%',
                           height: '100%',
                           objectFit: 'cover'
                         }}
                       />
-                      {/* Gradient overlay on image */}
                       <Box
                         sx={{
                           position: 'absolute',
@@ -403,10 +429,10 @@ export default function PartnerPromoBanner({ onDismiss }: { onDismiss?: () => vo
               zIndex: 2
             }}
           >
-            {/* Metrics List */}
+            {/* Metrics List — desktop only; mobile shows name + image */}
             <Box
               sx={{
-                display: 'flex',
+                display: { xs: 'none', md: 'flex' },
                 flexWrap: 'wrap',
                 gap: { xs: 2, sm: 3 },
                 alignItems: 'center'

@@ -79,8 +79,14 @@ export default function BnplPage() {
                 ))}
               </Grid>
 
-              <Box className="w-full">
-                 <Typography variant="caption" className="font-black uppercase tracking-widest text-slate-300 block mb-6 px-1 text-[9px] md:text-xs">Integrated Retail Partners</Typography>
+                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} className="mt-2">
+                    <Button component={Link} href="/portal/marketplace" variant="contained" className="rounded-2xl px-6 py-3 font-bold" sx={{ textTransform: 'none' }}>
+                      Shop BNPL
+                    </Button>
+                    <Button component={Link} href="/resolve-vehicles" variant="outlined" className="rounded-2xl px-6 py-3 font-bold" sx={{ textTransform: 'none' }}>
+                      Cars available for loans
+                    </Button>
+                 </Stack>
                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap justifyContent={{ xs: 'center', lg: 'flex-start' }}>
                     {vendors.map((v, idx) => (
                       <Chip 

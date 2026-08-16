@@ -17,6 +17,7 @@ import "./api/notificationApi";
 import "./api/analyticsApi";
 import "./api/chatApi";
 import "./api/subscriptionApi";
+import "./api/vehicleApi";
 
 export const makeStore = () => {
   return configureStore({

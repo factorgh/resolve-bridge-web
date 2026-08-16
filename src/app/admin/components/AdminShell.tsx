@@ -27,7 +27,8 @@ import {
   AssignmentTurnedInRounded,
   AdminPanelSettingsRounded,
   NotificationsActiveRounded,
-  DoneAllRounded
+  DoneAllRounded,
+  DirectionsCarRounded,
 } from "@mui/icons-material";
 import {
   useGetNotificationsQuery,
@@ -149,6 +150,12 @@ export const NAV = [
     label: "Products",
     href: "/admin/products",
     icon: <StorefrontRounded sx={{ fontSize: 20 }} />,
+  },
+  {
+    id: "vehicles",
+    label: "Vehicles",
+    href: "/admin/vehicles",
+    icon: <DirectionsCarRounded sx={{ fontSize: 20 }} />,
   },
   {
     id: "billing",
@@ -374,7 +381,8 @@ export default function AdminShell({
         n.id !== "users" &&
         n.id !== "partners" &&
         n.id !== "insurance-integration" &&
-        n.id !== "merchant-console"
+        n.id !== "merchant-console" &&
+        n.id !== "vehicles"
       );
     }
     if (user.role === "InsuranceAdmin") {
@@ -384,7 +392,8 @@ export default function AdminShell({
         n.id !== "users" &&
         n.id !== "partners" &&
         n.id !== "bank-integration" &&
-        n.id !== "merchant-console"
+        n.id !== "merchant-console" &&
+        n.id !== "vehicles"
       );
     }
     if (user.role === "BNPLAdmin") {
@@ -394,7 +403,8 @@ export default function AdminShell({
         n.id !== "users" &&
         n.id !== "partners" &&
         n.id !== "bank-integration" &&
-        n.id !== "insurance-integration"
+        n.id !== "insurance-integration" &&
+        n.id !== "vehicles"
       );
     }
 
