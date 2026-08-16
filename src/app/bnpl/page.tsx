@@ -96,7 +96,6 @@ export default function BnplPage() {
                       />
                     ))}
                  </Stack>
-              </Box>
             </motion.div>
           </Grid>
 
