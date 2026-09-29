@@ -241,8 +241,6 @@ export default function AdminShell({
   const [notifOpen, setNotifOpen] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState<any>(null);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [loadingStep, setLoadingStep] = useState(0);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
@@ -274,13 +272,6 @@ export default function AdminShell({
       console.error("Failed to mark all as read:", err);
     }
   };
-
-  const LOADING_STEPS = [
-    "Establishing Cryptographic Handshake...",
-    "Authorizing Administrative Credentials...",
-    "Synchronizing Multi-Tenant Vaults...",
-    "Initializing Platform Command Center...",
-  ];
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -318,21 +309,7 @@ export default function AdminShell({
         }
 
         setUser(parsedUser);
-
-        // Administrative scanner animation sequence
-        let step = 0;
-        const interval = setInterval(() => {
-          if (step < LOADING_STEPS.length - 1) {
-            step++;
-            setLoadingStep(step);
-          } else {
-            clearInterval(interval);
-            setTimeout(() => {
-              setIsInitialLoading(false);
-              setReady(true);
-            }, 400);
-          }
-        }, 300);
+        setReady(true);
       } catch (e) {
         console.error("Session parsing error", e);
         sessionStorage.removeItem("rb_user");
@@ -412,7 +389,7 @@ export default function AdminShell({
     return n.id === "home" || n.id === "settings";
   });
 
-  if (!user && !isInitialLoading) return null; // Fallback for redirect
+  if (!user) return null; // Fallback for redirect
 
   // Custom visual badge mapping based on roles
   const getRoleBadge = (role: string) => {
@@ -557,204 +534,6 @@ export default function AdminShell({
           }
         }
       ` }} />
-
-      {/* Dark Mode Scanning Visual Handshake */}
-      <AnimatePresence>
-        {isInitialLoading && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 9999,
-              background: "#070a13",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              overflow: "hidden",
-            }}
-          >
-            {/* Glowing Matrix Background Effects */}
-            <motion.div
-              animate={{
-                x: [0, 80, -80, 0],
-                y: [0, -40, 40, 0],
-                scale: [1, 1.1, 0.9, 1],
-              }}
-              transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-              style={{
-                position: "absolute",
-                top: "15%",
-                left: "15%",
-                width: 280,
-                height: 280,
-                background:
-                  "radial-gradient(circle, rgba(59,130,246,0.12), transparent 70%)",
-                filter: "blur(50px)",
-              }}
-            />
-            <motion.div
-              animate={{
-                x: [0, -100, 100, 0],
-                y: [0, 80, -80, 0],
-                scale: [1, 0.8, 1.2, 1],
-              }}
-              transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-              style={{
-                position: "absolute",
-                bottom: "15%",
-                right: "15%",
-                width: 350,
-                height: 350,
-                background:
-                  "radial-gradient(circle, rgba(16,185,129,0.08), transparent 70%)",
-                filter: "blur(70px)",
-              }}
-            />
-
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              style={{ textAlign: "center", position: "relative", zIndex: 10 }}
-            >
-              {/* Cyber Laser Scanner Container */}
-              <div
-                style={{
-                  position: "relative",
-                  width: 140,
-                  height: 140,
-                  margin: "0 auto 40px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {/* Scanning Line */}
-                <motion.div
-                  animate={{ top: ["10%", "90%", "10%"] }}
-                  transition={{
-                    duration: 1.8,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                  style={{
-                    position: "absolute",
-                    left: "10%",
-                    right: "10%",
-                    height: 2,
-                    background: `linear-gradient(90deg, transparent, ${C.blue}, transparent)`,
-                    zIndex: 2,
-                    boxShadow: `0 0 15px ${C.blue}`,
-                    opacity: 0.8,
-                  }}
-                />
-
-                {/* Outer Ring */}
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{
-                    duration: 10,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                  style={{
-                    position: "absolute",
-                    width: 130,
-                    height: 130,
-                    borderRadius: "50%",
-                    border: `2px dashed ${C.blue}33`,
-                    zIndex: 0,
-                  }}
-                />
-
-                <motion.div
-                  animate={{ scale: [1, 1.04, 1] }}
-                  transition={{ duration: 3, repeat: Infinity }}
-                  style={{
-                    width: 72,
-                    height: 72,
-                    background: C.surface,
-                    borderRadius: 20,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    zIndex: 1,
-                    border: `1px solid ${C.borderStrong}`,
-                    padding: "16px",
-                  }}
-                >
-                  <img
-                    src="/resolve_icon.png"
-                    style={{
-                      width: "100%",
-                      height: "auto",
-                      objectFit: "contain",
-                    }}
-                    alt="Resolve"
-                  />
-                </motion.div>
-              </div>
-
-              {/* Progressive Stepper dots */}
-              <div
-                style={{
-                  display: "flex",
-                  gap: 6,
-                  justifyContent: "center",
-                  marginBottom: 28,
-                }}
-              >
-                {LOADING_STEPS.map((_, i) => (
-                  <motion.div
-                    key={i}
-                    animate={{
-                      width: loadingStep === i ? 28 : 6,
-                      background:
-                        loadingStep >= i ? C.blue : "rgba(255,255,255,0.06)",
-                    }}
-                    style={{ height: 4, borderRadius: 2 }}
-                  />
-                ))}
-              </div>
-
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={loadingStep}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                >
-                  <p
-                    style={{
-                      margin: "0 0 4px",
-                      fontSize: 10,
-                      fontWeight: 900,
-                      color: C.blue,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.25em",
-                      fontFamily: F.heading,
-                    }}
-                  >
-                    Security Layer Initializing
-                  </p>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: 13.5,
-                      fontWeight: 600,
-                      color: C.textSub,
-                    }}
-                  >
-                    {LOADING_STEPS[loadingStep]}
-                  </p>
-                </motion.div>
-              </AnimatePresence>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Desktop Administrative Sidebar */}
       {!isMobile && (

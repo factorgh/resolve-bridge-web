@@ -115,8 +115,6 @@ export default function PortalShell({
   const [notifOpen, setNotifOpen] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState<any>(null);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(false);
-  const [loadingStep, setLoadingStep] = useState(0);
 
   const { data: notifData } = useGetNotificationsQuery(undefined, {
     pollingInterval: 10000,
@@ -198,13 +196,6 @@ export default function PortalShell({
     }
   };
 
-  const LOADING_STEPS = [
-    "Establishing Secure Handshake...",
-    "Verifying Institutional Vault...",
-    "Synchronizing Verified Credentials...",
-    "Finalizing Security Protocol..."
-  ];
-
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
     handleResize();
@@ -217,24 +208,6 @@ export default function PortalShell({
     } else { 
       try {
         setUser(JSON.parse(stored)); 
-        
-        // Custom Page Loader Sequence commented out to avoid page load delay
-        /*
-        let step = 0;
-        const interval = setInterval(() => {
-           if (step < LOADING_STEPS.length - 1) {
-              step++;
-              setLoadingStep(step);
-           } else {
-              clearInterval(interval);
-              setTimeout(() => {
-                 setIsInitialLoading(false);
-                 setReady(true);
-              }, 400);
-           }
-        }, 300);
-        */
-        setIsInitialLoading(false);
         setReady(true);
 
       } catch (e) {
@@ -255,121 +228,12 @@ export default function PortalShell({
   const sidebarW = isMobile ? 0 : (collapsed ? 68 : 240);
   const activeNavItem = NAV.find(n => pathname === n.href || (n.href !== '/portal' && pathname.startsWith(n.href)));
 
-  if (!user && !isInitialLoading) return null; // Fallback for auth redirect
+  if (!user) return null; // Fallback for auth redirect
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: F.body, display: 'flex' }}>
        <link href={FONT_LINK} rel="stylesheet" />
        
-       {/* Immersive Initial Loader Modal */}
-       <AnimatePresence>
-          {isInitialLoading && (
-            <motion.div 
-              initial={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.8, ease: 'easeInOut' }}
-              style={{ 
-                position: 'fixed', inset: 0, zIndex: 9999, 
-                background: 'rgba(255, 255, 255, 0.3)', 
-                backdropFilter: 'blur(12px)',
-                display: 'flex', 
-                alignItems: 'center', justifyContent: 'center',
-                overflow: 'hidden'
-              }}
-            >
-               {/* Animated Institutional Orbs */}
-               <motion.div 
-                 animate={{ 
-                   x: [0, 100, -100, 0],
-                   y: [0, -50, 50, 0],
-                   scale: [1, 1.2, 0.8, 1]
-                 }}
-                 transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                 style={{ position: 'absolute', top: '10%', left: '10%', width: 300, height: 300, background: 'radial-gradient(circle, rgba(32,81,229,0.08), transparent 70%)', filter: 'blur(60px)' }} 
-               />
-               <motion.div 
-                 animate={{ 
-                   x: [0, -150, 150, 0],
-                   y: [0, 100, -100, 0],
-                   scale: [1, 0.7, 1.3, 1]
-                 }}
-                 transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-                 style={{ position: 'absolute', bottom: '10%', right: '10%', width: 400, height: 400, background: 'radial-gradient(circle, rgba(124,58,237,0.06), transparent 70%)', filter: 'blur(80px)' }} 
-               />
-
-               <motion.div 
-                 initial={{ scale: 0.8, opacity: 0 }}
-                 animate={{ scale: 1, opacity: 1 }}
-                 style={{ textAlign: 'center', position: 'relative', zIndex: 10 }}
-               >
-                  {/* Ultra Modern Icon Container */}
-                  <div style={{ position: 'relative', width: 160, height: 160, margin: '0 auto 48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                     
-                     {/* Scanning Laser Effect */}
-                     <motion.div 
-                       animate={{ top: ['15%', '85%', '15%'] }}
-                       transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                       style={{ 
-                         position: 'absolute', left: '15%', right: '15%', height: 2, 
-                         background: `linear-gradient(90deg, transparent, ${C.blue}, transparent)`, 
-                         zIndex: 2, boxShadow: `0 0 15px ${C.blue}`, opacity: 0.6
-                       }}
-                     />
-
-                     <motion.div 
-                       animate={{ scale: [1, 1.02, 1] }}
-                       transition={{ duration: 4, repeat: Infinity }}
-                       style={{ 
-                         width: 80, height: 80, background: '#fff', borderRadius: 28, 
-                         display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                         zIndex: 1, border: `1px solid ${C.border}`, padding: '20px'
-                       }}
-                     >
-                        <img src="/images/resolve_logo.png" style={{ width: '100%', height: 'auto', objectFit: 'contain' }} alt="Resolve" />
-                     </motion.div>
-                  </div>
-
-                  {/* Modern Stepper Progress */}
-                  <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 32 }}>
-                     {LOADING_STEPS.map((_, i) => (
-                       <motion.div 
-                         key={i}
-                         animate={{ 
-                           width: loadingStep === i ? 32 : 8,
-                           background: loadingStep >= i ? C.blue : 'rgba(0,0,0,0.05)'
-                         }}
-                         style={{ height: 4, borderRadius: 2 }}
-                       />
-                     ))}
-                  </div>
-
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={loadingStep}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                    >
-                       <p style={{ 
-                         margin: '0 0 4px', fontSize: 11, fontWeight: 900, 
-                         color: C.blue, textTransform: 'uppercase', 
-                         letterSpacing: '0.2em', fontFamily: F.heading 
-                       }}>
-                         Security Protocol Active
-                       </p>
-                       <p style={{ 
-                         margin: 0, fontSize: 14, fontWeight: 700, 
-                         color: C.textSub, opacity: 0.8 
-                       }}>
-                         {LOADING_STEPS[loadingStep]}
-                       </p>
-                    </motion.div>
-                  </AnimatePresence>
-               </motion.div>
-            </motion.div>
-          )}
-       </AnimatePresence>
-
        {/* Desktop Sidebar */}
        <aside style={{
          display: isMobile ? 'none' : 'flex',
