@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ResolveBridge Ecosystem Workflow & Stakeholder Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #3b82f6;
+      --primary-dark: #0f172a;
+      --accent: #10b981;
+      --accent-purple: #7c3aed;
+      --accent-amber: #f59e0b;
+      --bg: #0b0f19;
+      --surface: #111827;
+      --surface-card: #1e293b;
+      --surface-border: rgba(255, 255, 255, 0.08);
+      --text: #f8fafc;
+      --text-sub: #94a3b8;
+      --text-muted: #64748b;
+      --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-main);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      padding: 0;
+    }
+
+    /* Fixed Top Control Bar */
+    .top-action-bar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--surface-border);
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-logo-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo-badge {
+      background: linear-gradient(135deg, var(--primary-light), var(--accent-purple));
+      color: white;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      letter-spacing: 0.05em;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      border: none;
+      font-family: var(--font-main);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      color: white;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #1d4ed8, #2563eb);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--surface-card);
+      color: var(--text-sub);
+      border: 1px solid var(--surface-border);
+    }
+
+    .btn-secondary:hover {
+      background: #334155;
+      color: #fff;
+    }
+
+    /* Main Container */
+    .document-wrapper {
+      max-width: 1080px;
+      margin: 40px auto;
+      padding: 0 24px 80px;
+    }
+
+    /* Executive Hero Header */
+    .doc-header {
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid var(--surface-border);
+      border-radius: 20px;
+      padding: 48px;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+    }
+
+    .doc-header::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.15), transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .doc-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--primary-light);
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      padding: 6px 14px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+
+    .doc-main-title {
+      font-size: 38px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .doc-subtitle {
+      font-size: 17px;
+      color: var(--text-sub);
+      max-width: 760px;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .doc-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      border-top: 1px solid var(--surface-border);
+      padding-top: 24px;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .meta-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .meta-value {
+      font-size: 14px;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* Section Components */
+    .section-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 16px;
+      padding: 36px;
+      margin-bottom: 32px;
+    }
+
+    .section-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      letter-spacing: -0.01em;
+    }
+
+    .section-title-num {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary-light);
+      font-size: 14px;
+      font-weight: 800;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+    }
+
+    .section-lead {
+      font-size: 15px;
+      color: var(--text-sub);
+      margin-bottom: 28px;
+      line-height: 1.7;
+    }
+
+    /* Stakeholder Grid */
+    .stakeholder-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .stakeholder-card {
+      background: var(--surface-card);
+      border: 1px solid var(--surface-border);
+      border-radius: 14px;
+      padding: 24px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .stakeholder-card:hover {
+      border-color: rgba(59, 130, 246, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .stakeholder-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .stakeholder-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .icon-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+    .icon-green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .icon-purple { background: rgba(124, 58, 237, 0.15); color: #a78bfa; }
+    .icon-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .icon-cyan { background: rgba(6, 182, 212, 0.15); color: #22d3ee; }
+
+    .stakeholder-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .stakeholder-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .benefit-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .benefit-list li {
+      font-size: 13.5px;
+      color: var(--text-sub);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      line-height: 1.5;
+    }
+
+    .benefit-list li::before {
+      content: "✓";
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 14px;
+      margin-top: 1px;
+    }
+
+    /* Workflow Visual Stepper */
+    .workflow-container {
+      background: var(--surface-card);
+      border: 1px solid var(--surface-border);
+      border-radius: 14px;
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+
+    .workflow-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    .workflow-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .workflow-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(59, 130, 246, 0.12);
+      color: var(--primary-light);
+    }
+
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+    }
+
+    .step-item {
+      display: flex;
+      gap: 18px;
+      position: relative;
+    }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(59, 130, 246, 0.1);
+      border: 2px solid var(--primary-light);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      z-index: 2;
+    }
+
+    .step-content {
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid var(--surface-border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      flex: 1;
+    }
+
+    .step-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .step-desc {
+      font-size: 13px;
+      color: var(--text-sub);
+      line-height: 1.5;
+    }
+
+    .step-tech-tag {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--primary-light);
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-top: 8px;
+    }
+
+    /* Comparison Table */
+    .table-container {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--surface-border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      text-align: left;
+    }
+
+    th {
+      background: #1e293b;
+      color: #fff;
+      padding: 14px 18px;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--surface-border);
+      color: var(--text-sub);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.015);
+    }
+
+    .highlight-cell {
+      color: #34d399;
+      font-weight: 700;
+    }
+
+    .legacy-cell {
+      color: #f87171;
+    }
+
+    /* Footer */
+    .doc-footer {
+      text-align: center;
+      padding-top: 40px;
+      border-top: 1px solid var(--surface-border);
+      color: var(--text-muted);
+      font-size: 12.5px;
+    }
+
+    /* Print Styles for PDF Generation */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+      }
+
+      .top-action-bar {
+        display: none !important;
+      }
+
+      .document-wrapper {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      .doc-header {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: none !important;
+        color: #0f172a !important;
+        page-break-after: avoid;
+      }
+
+      .doc-main-title {
+        color: #0f172a !important;
+      }
+
+      .doc-subtitle, .meta-label, .meta-value {
+        color: #475569 !important;
+      }
+
+      .section-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+        margin-bottom: 24px;
+      }
+
+      .section-title {
+        color: #0f172a !important;
+      }
+
+      .stakeholder-card, .workflow-container, .step-content {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        color: #0f172a !important;
+      }
+
+      .stakeholder-name, .workflow-title, .step-title {
+        color: #0f172a !important;
+      }
+
+      .benefit-list li, .step-desc {
+        color: #475569 !important;
+      }
+
+      table, th, td {
+        border-color: #cbd5e1 !important;
+      }
+
+      th {
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+      }
+
+      td {
+        color: #334155 !important;
+      }
+
+      .highlight-cell {
+        color: #059669 !important;
+      }
+
+      .legacy-cell {
+        color: #dc2626 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Sticky Bar -->
+  <header class="top-action-bar">
+    <div class="brand-logo-area">
+      <div class="brand-logo-badge">RESOLVEBRIDGE</div>
+      <span class="brand-title">Ecosystem Architecture & Stakeholder Workflow</span>
+    </div>
+    <div class="action-buttons">
+      <button class="btn btn-secondary" onclick="window.navigator.clipboard.writeText(window.location.href); alert('Document link copied to clipboard!');">
+        🔗 Share Link
+      </button>
+      <button class="btn btn-primary" onclick="window.print()">
+        📥 Download as PDF / Print
+      </button>
+    </div>
+  </header>
+
+  <!-- Document Body -->
+  <main class="document-wrapper">
+
+    <!-- Executive Header -->
+    <section class="doc-header">
+      <div class="doc-tag">Institutional Ecosystem Briefing</div>
+      <h1 class="doc-main-title">ResolveBridge Operating Model & Multi-Party Value Architecture</h1>
+      <p class="doc-subtitle">
+        A comprehensive guide detailing end-to-end financial workflows, cryptographic security layers, and commercial benefits for Borrowers, Partner Banks, Insurers, Auto Dealers, and Regulatory Authorities.
+      </p>
+
+      <div class="doc-meta-grid">
+        <div class="meta-item">
+          <span class="meta-label">Classification</span>
+          <span class="meta-value">Ecosystem Master Guide</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Version</span>
+          <span class="meta-value">v2.4 (Enterprise Edition)</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Operational Markets</span>
+          <span class="meta-value">Ghana, Nigeria, Kenya, SA</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Settlement Rail</span>
+          <span class="meta-value">Paystack, MTN MoMo, Telecel</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1. Executive Summary -->
+    <article class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-num">1</span>
+        Executive Architecture Overview
+      </h2>
+      <p class="section-lead">
+        ResolveBridge is Africa’s integrated financial search engine and automated underwriting exchange. By deploying cloud-native risk engines, multi-tenant administrative vaults, and cryptographic verification badges, ResolveBridge unifies four historically disconnected credit and insurance verticals into a single cohesive ecosystem.
+      </p>
+
+      <div class="stakeholder-grid">
+        <div class="stakeholder-card">
+          <div class="stakeholder-header">
+            <div class="stakeholder-icon icon-blue">⚡</div>
+            <div>
+              <div class="stakeholder-name">Algorithmic Matchmaking</div>
+              <div class="stakeholder-sub">Intelligent Risk Router</div>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--text-sub);">
+            Matches borrowers and SMEs with optimal lenders in real time based on computed Credit Health Index scores (0–100%) and institution risk models.
+          </p>
+        </div>
+
+        <div class="stakeholder-card">
+          <div class="stakeholder-header">
+            <div class="stakeholder-icon icon-green">🛡️</div>
+            <div>
+              <div class="stakeholder-name">Cryptographic Trust</div>
+              <div class="stakeholder-sub">Anti-Forgery QR Seals</div>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--text-sub);">
+            Instantly binds digital insurance policies and certificates with AES-256 digital seals readable by traffic police, hospitals, and customs.
+          </p>
+        </div>
+
+        <div class="stakeholder-card">
+          <div class="stakeholder-header">
+            <div class="stakeholder-icon icon-purple">💳</div>
+            <div>
+              <div class="stakeholder-name">Automated Collections</div>
+              <div class="stakeholder-sub">Direct MoMo & Card Sweeps</div>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--text-sub);">
+            Executes recurring debit mandates across MTN Mobile Money, Telecel Cash, and bank cards with automated failure retry scheduling.
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <!-- 2. Stakeholder Benefit Matrix -->
+    <article class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-num">2</span>
+        How Each Party Benefits From The System
+      </h2>
+      <p class="section-lead">
+        ResolveBridge operates on a multi-sided network effect where value generated in one segment compounds across all other participants.
+      </p>
+
+      <div class="stakeholder-grid">
+        <!-- Clients -->
+        <div class="stakeholder-card">
+          <div class="stakeholder-header">
+            <div class="stakeholder-icon icon-blue">👤</div>
+            <div>
+              <div class="stakeholder-name">Borrowers & Clients</div>
+              <div class="stakeholder-sub">Retail Consumers & SME Owners</div>
+            </div>
+          </div>
+          <ul class="benefit-list">
+            <li><strong>Instant Comparative Quotes:</strong> Access competitive loan and insurance options from top institutions in under 2 minutes.</li>
+            <li><strong>Lower Interest Rates:</strong> Multi-lender bidding forces financial institutions to compete, driving down borrowing costs by up to 35%.</li>
+            <li><strong>Credit Health Index:</strong> Real-time assessment tools guide borrowers on improving creditworthiness to unlock higher credit lines.</li>
+            <li><strong>Zero Paperwork:</strong> 100% digital KYC and contract execution via national ID verification.</li>
+          </ul>
+        </div>
+
+        <!-- Financial Institutions -->
+        <div class="stakeholder-card">
+          <div class="stakeholder-header">
+            <div class="stakeholder-icon icon-green">🏛️</div>
+            <div>
+              <div class="stakeholder-name">Banks & Financial Lenders</div>
+              <div class="stakeholder-sub">Commercial Banks, MFIs & FinTechs</div>
+            </div>
+          </div>
+          <ul class="benefit-list">
+            <li><strong>Zero CAC Overhead:</strong> Receive pre-screened, KYC-verified, and risk-scored borrowers without expanding physical branch networks.</li>
+            <li><strong>Drastic NPL Reduction:</strong> Multi-layered risk underwriting and automated direct debit sweeps reduce defaults by up to 65%.</li>
+            <li><strong>Dedicated Multi-Tenant Console:</strong> Granular control over custom interest tiers, credit limits, and approval workflows.</li>
+            <li><strong>Automated Settlement & Ledger:</strong> End-to-end reconciliation powered by Paystack and SWIFT webhooks.</li>
+          </ul>
+        </div>
+
+        <!-- Insurance Providers -->
+        <div class="stakeholder-card">
+          <div class="stakeholder-header">
+            <div class="stakeholder-icon icon-purple">🛡️</div>
+            <div>
+              <div class="stakeholder-name">Insurance Underwriters</div>
+              <div class="stakeholder-sub">Motor, Health, Life & Asset Insurers</div>
+            </div>
+          </div>
+          <ul class="benefit-list">
+            <li><strong>Point-of-Credit Distribution:</strong> Auto loans and asset finance contracts automatically bundle comprehensive insurance policies at source.</li>
+            <li><strong>Zero Fraud via QR Cover Badges:</strong> Field-verifiable digital certificates eliminate fraudulent fake stickers.</li>
+            <li><strong>Automated Premium Routing:</strong> Deductions swept at loan disbursement directly into the underwriter’s reserve pool.</li>
+            <li><strong>Digital Claims Stream:</strong> First Notice of Loss (FNOL) submitted digitally with tamper-proof audit trails.</li>
+          </ul>
+        </div>
+
+        <!-- Merchants & Dealers -->
+        <div class="stakeholder-card">
+          <div class="stakeholder-header">
+            <div class="stakeholder-icon icon-amber">🚗</div>
+            <div>
+              <div class="stakeholder-name">Auto Dealers & Merchants</div>
+              <div class="stakeholder-sub">Dealerships & E-Commerce Retailers</div>
+            </div>
+          </div>
+          <ul class="benefit-list">
+            <li><strong>Higher Sales Velocity:</strong> Offering instant vehicle financing or BNPL options increases checkout conversion by 40–60%.</li>
+            <li><strong>Zero Default Exposure:</strong> Merchants are settled 100% upfront in escrow while the lender manages customer collections.</li>
+            <li><strong>Self-Service Tokenized Uploads:</strong> Dedicated dealer portal enables rapid inventory registration and pipeline tracking.</li>
+            <li><strong>Automated Co-ordination:</strong> Coordinated handover with lender approval and insurance issuance in one unified portal.</li>
+          </ul>
+        </div>
+
+        <!-- Regulatory & Bureaus -->
+        <div class="stakeholder-card">
+          <div class="stakeholder-header">
+            <div class="stakeholder-icon icon-cyan">⚖️</div>
+            <div>
+              <div class="stakeholder-name">Third Parties & Regulators</div>
+              <div class="stakeholder-sub">Credit Bureaus, Central Banks & Telcos</div>
+            </div>
+          </div>
+          <ul class="benefit-list">
+            <li><strong>Immutable Audit Vault:</strong> Complete tamper-proof logging of every financial decision and administrative touchpoint.</li>
+            <li><strong>Automated Bureau Reporting:</strong> Real-time feedback loops to Credit Reference Bureaus on repayment compliance.</li>
+            <li><strong>Strict Data Privacy Compliance:</strong> Full adherence to Ghana Data Protection Act (Act 843) and NDPR frameworks.</li>
+            <li><strong>Financial Inclusion Catalyst:</strong> Transitions unbanked informal entrepreneurs into formal digital credit registries.</li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <!-- 3. Step-by-Step Workflows -->
+    <article class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-num">3</span>
+        End-to-End Operational Workflows
+      </h2>
+      <p class="section-lead">
+        Step-by-step lifecycle execution illustrating how data and capital flow seamlessly between participants.
+      </p>
+
+      <!-- Workflow A: Loans -->
+      <div class="workflow-container">
+        <div class="workflow-header">
+          <div class="workflow-title">Workflow A: Personal & SME Credit Marketplace</div>
+          <span class="workflow-badge">Borrower ↔ Lender Direct</span>
+        </div>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <div class="step-title">Instant Onboarding & Digital KYC</div>
+              <div class="step-desc">The borrower registers via mobile or web, providing national identity credentials (Ghana Card / BVN). OCR validation and biometric checks establish instant identity verification.</div>
+              <span class="step-tech-tag">API: POST /api/v1/Auth/register & /api/v1/Users/kyc</span>
+            </div>
+          </div>
+
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <div class="step-title">Dynamic Credit Health Scoring & Priority Matching</div>
+              <div class="step-desc">The system computes the user's Health Index score based on verified cash flows and historical repayments, querying participating lenders for tailored product offerings.</div>
+              <span class="step-tech-tag">Algorithm: Dynamic Weighted Health Score Engine</span>
+            </div>
+          </div>
+
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <div class="step-title">Multi-Lender Comparison & Offer Acceptance</div>
+              <div class="step-desc">The borrower reviews competitive interest rates, tenures, and monthly repayment schedules, selecting the best loan offer with transparent fee disclosures.</div>
+              <span class="step-tech-tag">Module: /portal/apply-loan & /portal/marketplace</span>
+            </div>
+          </div>
+
+          <div class="step-item">
+            <div class="step-num">4</div>
+            <div class="step-content">
+              <div class="step-title">Automated Disbursal & Direct Debit Mandate</div>
+              <div class="step-desc">Upon administrative sign-off, capital is disbursed directly into the borrower's Mobile Money wallet or bank account. A recurring billing schedule is bound to the payment node.</div>
+              <span class="step-tech-tag">Integration: Paystack Transfers & MTN MoMo API</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workflow B: Vehicle Financing -->
+      <div class="workflow-container">
+        <div class="workflow-header">
+          <div class="workflow-title">Workflow B: Vehicle Financing & Dealer Escrow Ecosystem</div>
+          <span class="workflow-badge">Dealer ↔ Buyer ↔ Bank ↔ Insurer</span>
+        </div>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <div class="step-title">Dealer Inventory Upload via Tokenized Portal</div>
+              <div class="step-desc">Certified auto dealers list verified vehicles using secure upload tokens, inputting VIN, valuation appraisals, inspection certificates, and pricing parameters.</div>
+              <span class="step-tech-tag">Portal: /dealer-upload/[token] & /admin/vehicles</span>
+            </div>
+          </div>
+
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <div class="step-title">Customer Application & Collateral Packaging</div>
+              <div class="step-desc">Prospective buyers select their vehicle, input down-payment percentages, and generate a bundled auto-finance request.</div>
+              <span class="step-tech-tag">Route: /portal/apply-vehicle/[id]</span>
+            </div>
+          </div>
+
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <div class="step-title">Dual-Approval: Asset Loan + Comprehensive Insurance</div>
+              <div class="step-desc">The partner bank approves financing against the vehicle collateral while an insurance partner simultaneously binds a comprehensive motor policy.</div>
+              <span class="step-tech-tag">Module: /admin/bank-integration & /admin/insurance-integration</span>
+            </div>
+          </div>
+
+          <div class="step-item">
+            <div class="step-num">4</div>
+            <div class="step-content">
+              <div class="step-title">Escrow Payout to Dealer & Cryptographic QR Handover</div>
+              <div class="step-desc">Disbursement is held in escrow until delivery sign-off, after which funds are released to the dealer and a verified QR Cover Badge is generated for the vehicle owner.</div>
+              <span class="step-tech-tag">Verification: /verify/policy & AES-256 Stamp</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workflow C: BNPL -->
+      <div class="workflow-container">
+        <div class="workflow-header">
+          <div class="workflow-title">Workflow C: Buy Now Pay Later (BNPL) Point-of-Sale</div>
+          <span class="workflow-badge">Merchant ↔ Customer ↔ ResolveBridge</span>
+        </div>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <div class="step-title">Point-of-Sale BNPL Selection</div>
+              <div class="step-desc">Customer scans the merchant's QR code or chooses ResolveBridge at web checkout. Instant credit line eligibility is calculated in real time.</div>
+              <span class="step-tech-tag">Module: /portal/apply-bnpl</span>
+            </div>
+          </div>
+
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <div class="step-title">Split Payment Schedule Execution</div>
+              <div class="step-desc">Customer pays 25% down-payment via Mobile Money. Remaining installments are locked into a 3 to 12-month zero-hassle repayment plan.</div>
+              <span class="step-tech-tag">Schedule: Automated MoMo Sweep Engine</span>
+            </div>
+          </div>
+
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <div class="step-title">Guaranteed Merchant T+1 Settlement</div>
+              <div class="step-desc">The merchant receives 100% payout upfront (minus platform discount fee), eliminating all default risks for the seller.</div>
+              <span class="step-tech-tag">Console: /admin/merchant-console</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 4. Value Metric Table -->
+    <article class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-num">4</span>
+        Traditional Financial Process vs. ResolveBridge Ecosystem
+      </h2>
+      <p class="section-lead">
+        Quantitative comparison demonstrating institutional efficiency gains across key operational dimensions.
+      </p>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Performance Dimension</th>
+              <th>Legacy Industry Benchmark</th>
+              <th>ResolveBridge Ecosystem</th>
+              <th>System Improvement</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Loan Approval Turnaround</strong></td>
+              <td class="legacy-cell">7 – 21 business days</td>
+              <td class="highlight-cell">5 – 15 minutes</td>
+              <td><strong>98% Faster Processing</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Customer Acquisition Cost (CAC)</strong></td>
+              <td class="legacy-cell">High branch & agent commissions</td>
+              <td class="highlight-cell">Shared marketplace model</td>
+              <td><strong>60% Lower Acquisition Cost</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Underwriting Default Rates (NPL)</strong></td>
+              <td class="legacy-cell">12% – 18% (Sub-Saharan Avg)</td>
+              <td class="highlight-cell">&lt; 4.5% via automated debit sweeps</td>
+              <td><strong>65% Default Reduction</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Insurance Counterfeiting</strong></td>
+              <td class="legacy-cell">Physical paper decals vulnerable to forgery</td>
+              <td class="highlight-cell">Cryptographic QR Verification Hub</td>
+              <td><strong>100% Fraud Elimination</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Merchant Cart Abandonment</strong></td>
+              <td class="legacy-cell">High due to lack of buyer liquidity</td>
+              <td class="highlight-cell">Instant BNPL & Asset Finance</td>
+              <td><strong>+45% Sales Conversion Surge</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Compliance & Audit Logging</strong></td>
+              <td class="legacy-cell">Manual sampling & paper binders</td>
+              <td class="highlight-cell">Immutable real-time audit ledger</td>
+              <td><strong>100% Real-time Audit Readiness</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    <!-- 5. Security & Governance -->
+    <article class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-num">5</span>
+        Security, Privacy & Regulatory Compliance
+      </h2>
+      <p class="section-lead">
+        ResolveBridge enforces strict zero-trust institutional security protocols across all API and database interactions.
+      </p>
+
+      <div class="stakeholder-grid">
+        <div class="stakeholder-card">
+          <div class="stakeholder-name" style="margin-bottom: 8px;">🔐 Encryption & Data Integrity</div>
+          <p style="font-size: 13px; color: var(--text-sub);">
+            TLS 1.3 in-transit encryption and AES-256 payload encryption middleware. All sensitive financial records and customer PII are cryptographically isolated.
+          </p>
+        </div>
+
+        <div class="stakeholder-card">
+          <div class="stakeholder-name" style="margin-bottom: 8px;">🛡️ Role-Based Access Isolation</div>
+          <p style="font-size: 13px; color: var(--text-sub);">
+            Multi-tenant architecture guarantees strict walling between competing institutions (`SuperAdmin`, `InstitutionAdmin`, `InsuranceAdmin`, `BNPLAdmin`).
+          </p>
+        </div>
+
+        <div class="stakeholder-card">
+          <div class="stakeholder-name" style="margin-bottom: 8px;">📜 Regulatory Alignment</div>
+          <p style="font-size: 13px; color: var(--text-sub);">
+            Full alignment with Central Bank consumer credit directives, National Insurance Commission guidelines, and Data Protection Acts (Act 843 & NDPR).
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <!-- Footer -->
+    <footer class="doc-footer">
+      <p>© 2026 ResolveBridge Financial Technologies Inc. All rights reserved.</p>
+      <p style="margin-top: 6px;">Confidential Ecosystem Operating Specification. For inquiries: <strong>partners@resolvebridge.com</strong> | <strong>compliance@resolvebridge.com</strong></p>
+    </footer>
+
+  </main>
+
+</body>
+</html>

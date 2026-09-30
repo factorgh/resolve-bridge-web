@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ResolveBridge App Live Demo & Walkthrough Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #3b82f6;
+      --primary-dark: #0f172a;
+      --accent-green: #10b981;
+      --accent-purple: #7c3aed;
+      --accent-amber: #f59e0b;
+      --accent-cyan: #06b6d4;
+      --bg: #0b0f19;
+      --surface: #111827;
+      --surface-card: #1e293b;
+      --surface-border: rgba(255, 255, 255, 0.08);
+      --text: #f8fafc;
+      --text-sub: #94a3b8;
+      --text-muted: #64748b;
+      --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-main);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Sticky Control Bar */
+    .top-action-bar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--surface-border);
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-logo-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo-badge {
+      background: linear-gradient(135deg, var(--primary-light), var(--accent-purple));
+      color: white;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      letter-spacing: 0.05em;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      border: none;
+      font-family: var(--font-main);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      color: white;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #1d4ed8, #2563eb);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--surface-card);
+      color: var(--text-sub);
+      border: 1px solid var(--surface-border);
+    }
+
+    .btn-secondary:hover {
+      background: #334155;
+      color: #fff;
+    }
+
+    /* Container */
+    .doc-container {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 24px 80px;
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid var(--surface-border);
+      border-radius: 20px;
+      padding: 44px;
+      margin-bottom: 36px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+    }
+
+    .hero-banner::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 420px;
+      height: 420px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.15), transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .badge-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--primary-light);
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      padding: 5px 12px;
+      border-radius: 20px;
+      margin-bottom: 18px;
+    }
+
+    .hero-title {
+      font-size: 36px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.25;
+      margin-bottom: 14px;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-sub {
+      font-size: 16.5px;
+      color: var(--text-sub);
+      max-width: 780px;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .meta-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-top: 1px solid var(--surface-border);
+      padding-top: 20px;
+    }
+
+    .pill-item {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--surface-border);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      color: var(--text-sub);
+    }
+
+    .pill-item strong {
+      color: #fff;
+    }
+
+    /* Track Navigation Tabs */
+    .track-tabs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      margin-bottom: 36px;
+    }
+
+    .track-tab-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: block;
+    }
+
+    .track-tab-card:hover {
+      border-color: rgba(59, 130, 246, 0.4);
+      transform: translateY(-2px);
+      background: #1e293b;
+    }
+
+    .track-tab-num {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+    }
+
+    .track-tab-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .track-tab-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Track Section Box */
+    .track-section {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 18px;
+      padding: 36px;
+      margin-bottom: 36px;
+    }
+
+    .track-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    .track-title-area {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .track-badge-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .icon-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+    .icon-purple { background: rgba(124, 58, 237, 0.15); color: #a78bfa; }
+    .icon-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .icon-green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+
+    .track-name {
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .track-audience {
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+
+    .track-quick-link {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      color: var(--primary-light);
+      padding: 6px 12px;
+      border-radius: 6px;
+      text-decoration: none;
+    }
+
+    /* Step Card */
+    .step-card {
+      background: var(--surface-card);
+      border: 1px solid var(--surface-border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .step-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .step-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .step-index {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary-light);
+      font-size: 12px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .step-route-tag {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #38bdf8;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+
+    .step-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 768px) {
+      .step-grid { grid-template-columns: 1fr; }
+    }
+
+    .step-box {
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid var(--surface-border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .step-box-label {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .label-show { color: #60a5fa; }
+    .label-say { color: #34d399; }
+    .label-wow { color: #fbbf24; }
+
+    .step-box-content {
+      font-size: 13.5px;
+      color: var(--text-sub);
+      line-height: 1.6;
+    }
+
+    .step-box-content ul {
+      padding-left: 18px;
+    }
+
+    .script-quote {
+      font-style: italic;
+      color: #e2e8f0;
+      border-left: 3px solid var(--accent-green);
+      padding-left: 12px;
+      margin: 4px 0;
+    }
+
+    .wow-banner {
+      margin-top: 14px;
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12.5px;
+      color: #fde68a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Cheat Sheet Table */
+    .cheat-sheet-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 36px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      margin-top: 16px;
+    }
+
+    th {
+      background: #1e293b;
+      color: #fff;
+      padding: 12px 16px;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      text-align: left;
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--surface-border);
+      color: var(--text-sub);
+    }
+
+    tr:nth-child(even) { background: rgba(255, 255, 255, 0.015); }
+
+    .tag-cred {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #38bdf8;
+    }
+
+    /* Print Styles */
+    @media print {
+      body { background: #fff !important; color: #0f172a !important; }
+      .top-action-bar { display: none !important; }
+      .doc-container { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+      .hero-banner { background: #f8fafc !important; border: 1px solid #cbd5e1 !important; color: #0f172a !important; }
+      .hero-title, .track-name, .step-name { color: #0f172a !important; }
+      .track-section, .step-card, .step-box, .cheat-sheet-card { background: #fff !important; border: 1px solid #cbd5e1 !important; page-break-inside: avoid; }
+      .step-box-content, .hero-sub, td { color: #334155 !important; }
+      .script-quote { color: #0f172a !important; border-color: #059669 !important; }
+      .wow-banner { background: #fef3c7 !important; color: #92400e !important; border-color: #fde68a !important; }
+      th { background: #f1f5f9 !important; color: #0f172a !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Sticky Navigation -->
+  <header class="top-action-bar">
+    <div class="brand-logo-area">
+      <div class="brand-logo-badge">RESOLVEBRIDGE</div>
+      <span class="brand-title">App Live Demo & Walkthrough Guide</span>
+    </div>
+    <div class="action-buttons">
+      <a href="http://localhost:3000" target="_blank" class="btn btn-secondary">
+        🚀 Launch App
+      </a>
+      <button class="btn btn-primary" onclick="window.print()">
+        📥 Download as PDF / Print
+      </button>
+    </div>
+  </header>
+
+  <main class="doc-container">
+
+    <!-- Hero Header -->
+    <section class="hero-banner">
+      <div class="badge-tag">Executive Presentation Kit</div>
+      <h1 class="hero-title">ResolveBridge End-to-End Walkthrough & Pitch Guide</h1>
+      <p class="hero-sub">
+        A structured presentation guide with exact navigation paths, speaker scripts, and key feature demonstrations tailored for Pitching to Partner Banks, Underwriters, Auto Dealers, and Prospective Borrowers.
+      </p>
+
+      <div class="meta-pills">
+        <div class="pill-item">Target Markets: <strong>Ghana, Nigeria, Kenya, SA</strong></div>
+        <div class="pill-item">Demo Version: <strong>Enterprise v3.0</strong></div>
+        <div class="pill-item">Seeded Banks: <strong>GCB, Fidelity, Stanbic, CalBank, NIB, Absa</strong></div>
+        <div class="pill-item">Payment Rail: <strong>MTN MoMo, Telecel, Paystack</strong></div>
+      </div>
+    </section>
+
+    <!-- Quick Track Switcher -->
+    <nav class="track-tabs">
+      <a href="#track-1" class="track-tab-card">
+        <div class="track-tab-num" style="color: #60a5fa;">Track 01</div>
+        <div class="track-tab-title">Borrower / Client Experience</div>
+        <div class="track-tab-desc">Search, Health Index, Multi-Bank Loan Comparison & Instant Disbursal.</div>
+      </a>
+
+      <a href="#track-2" class="track-tab-card">
+        <div class="track-tab-num" style="color: #a78bfa;">Track 02</div>
+        <div class="track-tab-title">Bank / Lender Console</div>
+        <div class="track-tab-desc">Multi-tenant Underwriting Vault, Risk Dossiers, 1-Click Disbursals.</div>
+      </a>
+
+      <a href="#track-3" class="track-tab-card">
+        <div class="track-tab-num" style="color: #fbbf24;">Track 03</div>
+        <div class="track-tab-title">Auto Dealership & Asset Finance</div>
+        <div class="track-tab-desc">Tokenized Vehicle Upload, Bundled Motor Insurance & Escrow Payout.</div>
+      </a>
+
+      <a href="#track-4" class="track-tab-card">
+        <div class="track-tab-num" style="color: #34d399;">Track 04</div>
+        <div class="track-tab-title">Insurance & QR Verification</div>
+        <div class="track-tab-desc">Instant Bind, Dynamic QR Cover Badge & Field Anti-Forgery Scan.</div>
+      </a>
+    </nav>
+
+    <!-- Credentials Cheat Sheet -->
+    <section class="cheat-sheet-card">
+      <h2 style="font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 6px;">📋 Demo Accounts & Rapid Access Cheat-Sheet</h2>
+      <p style="font-size: 13px; color: var(--text-sub);">Use these pre-seeded accounts during live walkthroughs to show isolated stakeholder perspectives.</p>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Stakeholder Perspective</th>
+            <th>Navigation URL</th>
+            <th>Login Email</th>
+            <th>Password</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>SuperAdmin (Full Platform)</strong></td>
+            <td><code>/admin</code></td>
+            <td><span class="tag-cred">superadmin@resolvebridge.com</span></td>
+            <td><span class="tag-cred">Password123!</span></td>
+          </tr>
+          <tr>
+            <td><strong>GCB Bank Officer</strong></td>
+            <td><code>/admin</code></td>
+            <td><span class="tag-cred">gcbadmin@resolvebridge.com</span></td>
+            <td><span class="tag-cred">Password123!</span></td>
+          </tr>
+          <tr>
+            <td><strong>Fidelity Bank Officer</strong></td>
+            <td><code>/admin</code></td>
+            <td><span class="tag-cred">fidelityadmin@resolvebridge.com</span></td>
+            <td><span class="tag-cred">Password123!</span></td>
+          </tr>
+          <tr>
+            <td><strong>Stanbic Bank Officer</strong></td>
+            <td><code>/admin</code></td>
+            <td><span class="tag-cred">stanbicadmin@resolvebridge.com</span></td>
+            <td><span class="tag-cred">Password123!</span></td>
+          </tr>
+          <tr>
+            <td><strong>CalBank / NIB Officers</strong></td>
+            <td><code>/admin</code></td>
+            <td><span class="tag-cred">calbankadmin@resolvebridge.com</span></td>
+            <td><span class="tag-cred">Password123!</span></td>
+          </tr>
+          <tr>
+            <td><strong>Client / Borrower Portal</strong></td>
+            <td><code>/portal</code></td>
+            <td><span class="tag-cred">Borrower Session or /login</span></td>
+            <td><span class="tag-cred">Password123!</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ========================================= -->
+    <!-- TRACK 1: BORROWER EXPERIENCE -->
+    <!-- ========================================= -->
+    <section id="track-1" class="track-section">
+      <div class="track-header">
+        <div class="track-title-area">
+          <div class="track-badge-icon icon-blue">👤</div>
+          <div>
+            <div class="track-name">Track 1: The Borrower / Client Experience</div>
+            <div class="track-audience">Audience: Retail Consumers, SME Entrepreneurs, Commercial Borrowers</div>
+          </div>
+        </div>
+        <a href="http://localhost:3000/get-started" target="_blank" class="track-quick-link">/get-started ↗</a>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="step-card">
+        <div class="step-top">
+          <div class="step-title-wrap">
+            <span class="step-index">1</span>
+            <span class="step-name">The Public Discovery & Search Engine</span>
+          </div>
+          <span class="step-route-tag">Route: /</span>
+        </div>
+        <div class="step-grid">
+          <div class="step-box">
+            <div class="step-box-label label-show">👁️ What to Show</div>
+            <div class="step-box-content">
+              <ul>
+                <li>Show the multi-vertical search tabs: <strong>Loans, Insurance, BNPL, Vehicles</strong>.</li>
+                <li>Highlight tier-1 Ghanaian bank badges: <strong>GCB, Fidelity, Stanbic, CalBank, Absa</strong>.</li>
+                <li>Demonstrate the real-time interest calculator slider on the homepage.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="step-box">
+            <div class="step-box-label label-say">🗣️ What to Say (Pitch Script)</div>
+            <div class="step-box-content">
+              <p class="script-quote">
+                "In emerging markets, finding a competitive loan or insurance policy means visiting multiple bank branches and waiting weeks. ResolveBridge turns that into a unified digital marketplace where top-tier institutions compete for the borrower in real time."
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="wow-banner">
+          ✨ <strong>Key Wow Factor:</strong> Borrowers see transparent, pre-vetted rates across 6+ commercial banks in one central dashboard.
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step-card">
+        <div class="step-top">
+          <div class="step-title-wrap">
+            <span class="step-index">2</span>
+            <span class="step-name">Digital Onboarding & Single-Window KYC</span>
+          </div>
+          <span class="step-route-tag">Route: /get-started</span>
+        </div>
+        <div class="step-grid">
+          <div class="step-box">
+            <div class="step-box-label label-show">👁️ What to Show</div>
+            <div class="step-box-content">
+              <ul>
+                <li>Click through the 4-step onboarding flow: Financial Goal ➔ Employment/Income ➔ National ID (Ghana Card / BVN) ➔ Target Amount.</li>
+                <li>Show how the account is instantly created with zero physical paperwork.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="step-box">
+            <div class="step-box-label label-say">🗣️ What to Say (Pitch Script)</div>
+            <div class="step-box-content">
+              <p class="script-quote">
+                "With a single 60-second digital KYC verification, the borrower builds a portable financial passport that unlocks loans, credit lines, and insurance across all our institutional partners."
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step-card">
+        <div class="step-top">
+          <div class="step-title-wrap">
+            <span class="step-index">3</span>
+            <span class="step-name">Credit Health Index & Command Center</span>
+          </div>
+          <span class="step-route-tag">Route: /portal</span>
+        </div>
+        <div class="step-grid">
+          <div class="step-box">
+            <div class="step-box-label label-show">👁️ What to Show</div>
+            <div class="step-box-content">
+              <ul>
+                <li>The <strong>Credit Health Index Gauge (0–100%)</strong> with customized diagnostic coaching.</li>
+                <li>Explain how positive repayment behavior dynamically improves the user's score.</li>
+                <li>Click into <code>/portal/features/priority-loan-matching</code>.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="step-box">
+            <div class="step-box-label label-say">🗣️ What to Say (Pitch Script)</div>
+            <div class="step-box-content">
+              <p class="script-quote">
+                "Rather than a punitive black-box credit score, borrowers receive actionable coaching through our Health Index, showing them exactly how to qualify for lower interest rates and higher credit limits."
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step-card">
+        <div class="step-top">
+          <div class="step-title-wrap">
+            <span class="step-index">4</span>
+            <span class="step-name">Instant Loan Application & MoMo Disbursal</span>
+          </div>
+          <span class="step-route-tag">Route: /portal/apply-loan</span>
+        </div>
+        <div class="step-grid">
+          <div class="step-box">
+            <div class="step-box-label label-show">👁️ What to Show</div>
+            <div class="step-box-content">
+              <ul>
+                <li>Enter Loan Amount (e.g. GH₵ 20,000) and Duration (12 months).</li>
+                <li>Compare live bank rates: <strong>Stanbic VAF 18.5%, CalBank 20.0%, GCB 21.5%, Fidelity 22.0%</strong>.</li>
+                <li>Select preferred bank offer ➔ Choose Mobile Money / Bank payout ➔ Submit.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="step-box">
+            <div class="step-box-label label-say">🗣️ What to Say (Pitch Script)</div>
+            <div class="step-box-content">
+              <p class="script-quote">
+                "The application is routed directly into the chosen bank's underwriting vault. Once approved, the funds hit the borrower's MTN MoMo wallet with automated monthly debit sweeps."
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================= -->
+    <!-- TRACK 2: BANK / LENDER EXPERIENCE -->
+    <!-- ========================================= -->
+    <section id="track-2" class="track-section">
+      <div class="track-header">
+        <div class="track-title-area">
+          <div class="track-badge-icon icon-purple">🏛️</div>
+          <div>
+            <div class="track-name">Track 2: The Bank / Lender Underwriting Console</div>
+            <div class="track-audience">Audience: Commercial Banks, Credit Committees, Risk Officers, MFIs</div>
+          </div>
+        </div>
+        <a href="http://localhost:3000/admin" target="_blank" class="track-quick-link">/admin ↗</a>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="step-card">
+        <div class="step-top">
+          <div class="step-title-wrap">
+            <span class="step-index">1</span>
+            <span class="step-name">Multi-Tenant Isolated Bank Dashboard</span>
+          </div>
+          <span class="step-route-tag">Route: /admin</span>
+        </div>
+        <div class="step-grid">
+          <div class="step-box">
+            <div class="step-box-label label-show">👁️ What to Show</div>
+            <div class="step-box-content">
+              <ul>
+                <li>Login with <code>gcbadmin@resolvebridge.com</code> or <code>fidelityadmin@resolvebridge.com</code>.</li>
+                <li>Show portfolio overview: Disbursed capital, Active applications, and Portfolio risk metrics.</li>
+                <li>Explain strict institutional data isolation between competing banks.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="step-box">
+            <div class="step-box-label label-say">🗣️ What to Say (Pitch Script)</div>
+            <div class="step-box-content">
+              <p class="script-quote">
+                "Partner banks operate inside isolated multi-tenant workspaces. GCB Bank only sees GCB-bound borrowers. Banks get access to pre-screened, verified borrowers with zero branch expansion overhead."
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step-card">
+        <div class="step-top">
+          <div class="step-title-wrap">
+            <span class="step-index">2</span>
+            <span class="step-name">Underwriting Dossier & 1-Click Disbursal</span>
+          </div>
+          <span class="step-route-tag">Route: /admin/applications</span>
+        </div>
+        <div class="step-grid">
+          <div class="step-box">
+            <div class="step-box-label label-show">👁️ What to Show</div>
+            <div class="step-box-content">
+              <ul>
+                <li>Open a live loan application to inspect the borrower's risk scorecard.</li>
+                <li>View uploaded KYC documents, salary slips, and statement analysis.</li>
+                <li>Click <strong>"Approve Application"</strong> to trigger the automated payment workflow.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="step-box">
+            <div class="step-box-label label-say">🗣️ What to Say (Pitch Script)</div>
+            <div class="step-box-content">
+              <p class="script-quote">
+                "Underwriting turnaround is slashed from 14 days to under 10 minutes. The credit team reviews verified cash flows, approves the mandate, and our payment engine dispatches the loan instantly."
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="wow-banner">
+          ✨ <strong>Key Wow Factor:</strong> Paystack and Mobile Money direct-debit sweeps reduce loan default rates by up to 65%.
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================= -->
+    <!-- TRACK 3: AUTO DEALER & VEHICLE FINANCING -->
+    <!-- ========================================= -->
+    <section id="track-3" class="track-section">
+      <div class="track-header">
+        <div class="track-title-area">
+          <div class="track-badge-icon icon-amber">🚗</div>
+          <div>
+            <div class="track-name">Track 3: Auto Dealership & Asset Finance Flow</div>
+            <div class="track-audience">Audience: Dealership Principals, Fleet Managers, Asset Lenders</div>
+          </div>
+        </div>
+        <a href="http://localhost:3000/resolve-vehicles" target="_blank" class="track-quick-link">/resolve-vehicles ↗</a>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="step-card">
+        <div class="step-top">
+          <div class="step-title-wrap">
+            <span class="step-index">1</span>
+            <span class="step-name">Tokenized Dealer Inventory Portal</span>
+          </div>
+          <span class="step-route-tag">Route: /dealer-upload</span>
+        </div>
+        <div class="step-grid">
+          <div class="step-box">
+            <div class="step-box-label label-show">👁️ What to Show</div>
+            <div class="step-box-content">
+              <ul>
+                <li>Show how dealers upload vehicles via simple tokenized links without complex integrations.</li>
+                <li>VIN lookup, inspection certificates, and dealer asking price.</li>
+                <li>Instant generation of a pre-configured asset financing application link.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="step-box">
+            <div class="step-box-label label-say">🗣️ What to Say (Pitch Script)</div>
+            <div class="step-box-content">
+              <p class="script-quote">
+                "Dealers don't need technical IT staff. With a secure token link, their inventory is published immediately and becomes purchasable on a 12-to-60 month bank finance schedule."
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step-card">
+        <div class="step-top">
+          <div class="step-title-wrap">
+            <span class="step-index">2</span>
+            <span class="step-name">Buyer Vehicle Finance & Bundled Insurance</span>
+          </div>
+          <span class="step-route-tag">Route: /portal/apply-vehicle/[id]</span>
+        </div>
+        <div class="step-grid">
+          <div class="step-box">
+            <div class="step-box-label label-show">👁️ What to Show</div>
+            <div class="step-box-content">
+              <ul>
+                <li>The customer selects a vehicle, adjusts the down-payment slider (20% - 50%).</li>
+                <li>Show how **Comprehensive Motor Insurance** is automatically bundled into the monthly installment.</li>
+                <li>Submit to partner bank (e.g. Stanbic VAF or Absa DriveNow).</li>
+              </ul>
+            </div>
+          </div>
+          <div class="step-box">
+            <div class="step-box-label label-say">🗣️ What to Say (Pitch Script)</div>
+            <div class="step-box-content">
+              <p class="script-quote">
+                "The buyer gets the car, the bank finances the asset, the insurer binds the motor policy, and the dealer gets settled 100% upfront in escrow. Everybody wins."
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================= -->
+    <!-- TRACK 4: INSURANCE & QR VERIFICATION -->
+    <!-- ========================================= -->
+    <section id="track-4" class="track-section">
+      <div class="track-header">
+        <div class="track-title-area">
+          <div class="track-badge-icon icon-green">🛡️</div>
+          <div>
+            <div class="track-name">Track 4: Insurance & Field QR Verification Hub</div>
+            <div class="track-audience">Audience: Insurance Executives, Regulators, Law Enforcement, Hospitals</div>
+          </div>
+        </div>
+        <a href="http://localhost:3000/verify/policy" target="_blank" class="track-quick-link">/verify/policy ↗</a>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="step-card">
+        <div class="step-top">
+          <div class="step-title-wrap">
+            <span class="step-index">1</span>
+            <span class="step-name">Instant Policy Binding & QR Cover Seal</span>
+          </div>
+          <span class="step-route-tag">Route: /portal/insurance-quote & /verify/policy</span>
+        </div>
+        <div class="step-grid">
+          <div class="step-box">
+            <div class="step-box-label label-show">👁️ What to Show</div>
+            <div class="step-box-content">
+              <ul>
+                <li>Generate an instant quote across Health, Auto, Life, or Property cover.</li>
+                <li>Bind policy via Mobile Money premium payment.</li>
+                <li>Open the cryptographic **QR Cover Badge** with its AES-256 digital checksum.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="step-box">
+            <div class="step-box-label label-say">🗣️ What to Say (Pitch Script)</div>
+            <div class="step-box-content">
+              <p class="script-quote">
+                "Fake insurance stickers cost the African insurance market hundreds of millions of dollars each year. ResolveBridge replaces paper stickers with real-time cryptographic QR seals."
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step-card">
+        <div class="step-top">
+          <div class="step-title-wrap">
+            <span class="step-index">2</span>
+            <span class="step-name">Public Field Verification by Police & Clinics</span>
+          </div>
+          <span class="step-route-tag">Route: /verify/policy</span>
+        </div>
+        <div class="step-grid">
+          <div class="step-box">
+            <div class="step-box-label label-show">👁️ What to Show</div>
+            <div class="step-box-content">
+              <ul>
+                <li>Demonstrate opening <code>/verify/policy</code> on any smartphone or browser.</li>
+                <li>Show the instant real-time response: **Policyholder identity, Underwriter, Active status, and validity window**.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="step-box">
+            <div class="step-box-label label-say">🗣️ What to Say (Pitch Script)</div>
+            <div class="step-box-content">
+              <p class="script-quote">
+                "Any traffic police officer, healthcare clinic, or customs officer can point their camera at the badge to verify genuine coverage in 2 seconds—completely eradicating insurance fraud."
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="wow-banner">
+          ✨ <strong>Key Wow Factor:</strong> Zero app installation needed for field verification; works instantly in any mobile browser.
+        </div>
+      </div>
+    </section>
+
+    <!-- Presentation Summary & Call to Action -->
+    <section class="cheat-sheet-card" style="text-align: center; padding: 40px 24px;">
+      <h2 style="font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 12px;">Ready to Walk Through Live?</h2>
+      <p style="font-size: 15px; color: var(--text-sub); max-width: 650px; margin: 0 auto 24px;">
+        Open the application locally or share this guide directly with institutional partners, lenders, and investors to present ResolveBridge.
+      </p>
+      <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
+        <a href="http://localhost:3000" target="_blank" class="btn btn-primary" style="padding: 12px 24px; font-size: 14px;">
+          🚀 Open ResolveBridge App
+        </a>
+        <button class="btn btn-secondary" onclick="window.print()" style="padding: 12px 24px; font-size: 14px;">
+          📥 Print / Save Walkthrough as PDF
+        </button>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 40px;">
+      <p>© 2026 ResolveBridge Financial Technologies. Master Demo & Walkthrough Specification.</p>
+    </footer>
+
+  </main>
+
+</body>
+</html>
