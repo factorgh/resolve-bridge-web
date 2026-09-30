@@ -12,7 +12,7 @@ export default function SettingsPage() {
   const { data: apiData, isLoading: isUserLoading } = useGetMeQuery();
   const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
   
-  const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '' });
+  const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', primaryBank: '' });
   const [activeTab, setActiveTab] = useState('profile');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -28,7 +28,8 @@ export default function SettingsPage() {
           ...prev,
           firstName: parsed.firstName || parsed.name?.split(' ')[0] || '',
           lastName: parsed.lastName || parsed.name?.split(' ').slice(1).join(' ') || '',
-          email: parsed.email || ''
+          email: parsed.email || '',
+          primaryBank: parsed.primaryBank || ''
         }));
       } catch (e) {}
     }
@@ -39,7 +40,8 @@ export default function SettingsPage() {
       setFormData({
         firstName: apiData.data.firstName || '',
         lastName: apiData.data.lastName || '',
-        email: apiData.data.email || ''
+        email: apiData.data.email || '',
+        primaryBank: apiData.data.primaryBank || ''
       });
     }
   }, [apiData]);
@@ -177,6 +179,34 @@ export default function SettingsPage() {
                                style={{ padding: '14px 16px', borderRadius: 14, border: `1.5px solid ${C.border}`, fontSize: 15, width: '100%', boxSizing: 'border-box', background: isUserLoading ? '#f8fafc' : '#fff', opacity: isUserLoading ? 0.6 : 1 }} 
                               />
                               {isUserLoading && !formData.email && <div style={{ position: 'absolute', inset: 0, background: '#f1f5f9', borderRadius: 14, animation: 'pulse 1.5s infinite' }} />}
+                           </div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                             <label style={{ fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Primary Banking Institution</label>
+                             <span style={{ fontSize: 10, fontWeight: 800, color: C.blue, background: C.bluePale, padding: '2px 8px', borderRadius: 12 }}>Matched Partner</span>
+                           </div>
+                           <div style={{ position: 'relative' }}>
+                              <select
+                               value={formData.primaryBank}
+                               onChange={(e) => setFormData({...formData, primaryBank: e.target.value})}
+                               disabled={isUserLoading}
+                               style={{ padding: '14px 16px', borderRadius: 14, border: `1.5px solid ${C.border}`, fontSize: 15, width: '100%', boxSizing: 'border-box', background: '#fff', color: C.text, outline: 'none' }}
+                              >
+                                <option value="">Select your primary bank...</option>
+                                <option value="Fidelity Bank">Fidelity Bank</option>
+                                <option value="GCB Bank">GCB Bank</option>
+                                <option value="Ecobank Ghana">Ecobank Ghana</option>
+                                <option value="CalBank">CalBank</option>
+                                <option value="Absa Bank Ghana">Absa Bank</option>
+                                <option value="Stanbic Bank Ghana">Stanbic Bank</option>
+                                <option value="Consolidated Bank Ghana (CBG)">Consolidated Bank Ghana (CBG)</option>
+                                <option value="Access Bank Ghana">Access Bank</option>
+                                <option value="Zenith Bank Ghana">Zenith Bank</option>
+                                <option value="Standard Chartered">Standard Chartered</option>
+                                <option value="Republic Bank">Republic Bank</option>
+                                <option value="Other Bank">Other / Rural Bank / Microfinance</option>
+                              </select>
                            </div>
                         </div>
                         <style>{`@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; } }`}</style>

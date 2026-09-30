@@ -25,6 +25,8 @@ interface OnboardingData {
   dob: string;
   idType: string;
   idNumber: string;
+  primaryBank: string;
+  bankAccountNumber: string;
   employmentStatus: string;
   monthlyIncome: string;
   loanDuration: string;
@@ -139,6 +141,21 @@ const GOAL_OPTIONS = [
 ];
 
 const ID_TYPES = ['Ghana Card ID'];
+
+const POPULAR_BANKS = [
+  { id: 'Fidelity Bank', name: 'Fidelity Bank', color: '#f58220', bg: '#fff4eb', short: 'Fidelity' },
+  { id: 'GCB Bank', name: 'GCB Bank', color: '#1e3a8a', bg: '#eff6ff', short: 'GCB' },
+  { id: 'Ecobank Ghana', name: 'Ecobank Ghana', color: '#0284c7', bg: '#f0f9ff', short: 'Ecobank' },
+  { id: 'CalBank', name: 'CalBank', color: '#ea580c', bg: '#fff7ed', short: 'CalBank' },
+  { id: 'Absa Bank Ghana', name: 'Absa Bank', color: '#be123c', bg: '#fff1f2', short: 'Absa' },
+  { id: 'Stanbic Bank Ghana', name: 'Stanbic Bank', color: '#1d4ed8', bg: '#eff6ff', short: 'Stanbic' },
+  { id: 'Consolidated Bank Ghana (CBG)', name: 'CBG Bank', color: '#881337', bg: '#fff1f2', short: 'CBG' },
+  { id: 'Access Bank Ghana', name: 'Access Bank', color: '#d97706', bg: '#fffbeb', short: 'Access' },
+  { id: 'Zenith Bank Ghana', name: 'Zenith Bank', color: '#dc2626', bg: '#fef2f2', short: 'Zenith' },
+  { id: 'Standard Chartered', name: 'Standard Chartered', color: '#059669', bg: '#ecfdf5', short: 'StanChart' },
+  { id: 'Republic Bank', name: 'Republic Bank', color: '#2563eb', bg: '#eff6ff', short: 'Republic' },
+  { id: 'Other', name: 'Other Bank / Momo', color: '#475569', bg: '#f1f5f9', short: 'Other' },
+];
 
 const ANALYSIS_STEPS = [
   { label: 'Profile validated',      delay: 0    },
@@ -827,10 +844,86 @@ function FinanceStep({
         eyebrow="Financial profile"
         title="Check your"
         italic="eligibility"
-        sub="Our engine needs this data to secure accurate institutional rates."
+        sub="Connect your primary institution to unlock pre-approved rates and fast matching."
       />
 
       <div className="space-y-6">
+        {/* 1. Primary Banking Institution ("Where do you bank?") */}
+        <div className="p-4 rounded-xl border border-blue-100 bg-blue-50/30">
+          <div className="flex items-center justify-between mb-2">
+            <FieldLabel>Where do you bank? (Primary Account)</FieldLabel>
+            <span className="text-[10px] font-semibold text-[#1a56db] bg-blue-100/70 px-2 py-0.5 rounded-full">
+              Matched Partner
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 mb-3.5 leading-relaxed">
+            Select the institution where your salary or primary business income is received to automatically tag verified pre-approvals.
+          </p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+            {POPULAR_BANKS.map((b) => {
+              const isSelected = data.primaryBank === b.id || (b.id === 'Other' && !POPULAR_BANKS.slice(0, -1).some(p => p.id === data.primaryBank) && Boolean(data.primaryBank));
+              return (
+                <button
+                  key={b.id}
+                  type="button"
+                  onClick={() => {
+                    if (b.id === 'Other') {
+                      onChange('primaryBank', data.primaryBank && !POPULAR_BANKS.slice(0, -1).some(p => p.id === data.primaryBank) ? data.primaryBank : 'Other Bank');
+                    } else {
+                      onChange('primaryBank', b.id);
+                    }
+                  }}
+                  className={`flex items-center gap-2 p-2.5 rounded-xl border transition-all text-left ${
+                    isSelected
+                      ? 'border-[#1a56db] bg-white shadow-sm ring-2 ring-[#1a56db]/20'
+                      : 'border-slate-200 bg-white/80 hover:border-slate-300 hover:bg-white'
+                  }`}
+                >
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0"
+                    style={{ background: b.bg, color: b.color }}
+                  >
+                    {b.short.substring(0, 3).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-xs truncate font-medium ${isSelected ? 'text-[#1a56db] font-semibold' : 'text-slate-800'}`}>
+                      {b.name}
+                    </p>
+                  </div>
+                  {isSelected && (
+                    <div className="w-4 h-4 rounded-full bg-[#1a56db] text-white flex items-center justify-center text-[9px] shrink-0 font-bold">
+                      ✓
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Custom bank input if "Other" */}
+          {(!POPULAR_BANKS.slice(0, -1).some(p => p.id === data.primaryBank) && Boolean(data.primaryBank)) && (
+            <div className="mt-2.5">
+              <FieldLabel>Specify Bank / Microfinance / Momo Provider</FieldLabel>
+              <Input
+                placeholder="e.g. Prudential Bank, MTN MoMo, Fidelity Microfinance"
+                value={data.primaryBank === 'Other Bank' ? '' : data.primaryBank}
+                onChange={(e) => onChange('primaryBank', e.target.value)}
+              />
+            </div>
+          )}
+
+          <div className="mt-3">
+            <FieldLabel>Primary Account Number / MoMo Number (Optional)</FieldLabel>
+            <Input
+              placeholder="e.g. 1050123456789 or 024XXXXXXX"
+              value={data.bankAccountNumber || ''}
+              onChange={(e) => onChange('bankAccountNumber', e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* 2. Employment & Income */}
         <div>
           <FieldLabel>Employment status</FieldLabel>
           <div className="flex flex-wrap gap-2 mt-1">
@@ -952,7 +1045,7 @@ function FinanceStep({
         onBack={onBack} 
         onNext={onNext} 
         nextLabel="See matches" 
-        nextDisabled={!data.employmentStatus || !data.monthlyIncome || !data.loanDuration}
+        nextDisabled={!data.primaryBank || !data.employmentStatus || !data.monthlyIncome || !data.loanDuration}
       />
     </>
   );
@@ -1379,6 +1472,8 @@ export default function OnboardingFlow() {
     dob: '',
     idType: 'Ghana Card ID',
     idNumber: '',
+    primaryBank: '',
+    bankAccountNumber: '',
     employmentStatus: '',
     monthlyIncome: '',
     loanDuration: '',
@@ -1441,6 +1536,8 @@ export default function OnboardingFlow() {
             payload.dateOfBirth = data.dob ? new Date(data.dob).toISOString() : null;
             payload.idType = data.idType;
             payload.idNumber = data.idNumber;
+            payload.primaryBank = data.primaryBank;
+            payload.bankAccountNumber = data.bankAccountNumber;
             payload.employmentStatus = data.employmentStatus;
             payload.monthlyIncome = data.monthlyIncome;
             payload.loanDuration = data.loanDuration;

@@ -55,7 +55,7 @@ function Dashboard({ onCardClick }: { onCardClick: (action: string) => void }) {
         </div>
 
         <button
-          onClick={() => router.push('/portal/apply-loan')}
+          onClick={() => router.push('/portal/marketplace')}
           className="portal-apply-btn"
         >
           Apply for a loan
