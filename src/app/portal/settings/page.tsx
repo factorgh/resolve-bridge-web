@@ -85,7 +85,7 @@ export default function SettingsPage() {
 
   return (
     <PortalShell title="Settings" backHref="/portal">
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? '0 16px 100px' : '0 20px 80px' }}>
+      <div style={{ maxWidth: 1000, margin: '0 auto', padding: isMobile ? '24px 18px 100px' : '32px 36px 80px' }}>
         
         <div style={{ marginBottom: isMobile ? 32 : 44, marginTop: isMobile ? 12 : 0 }}>
            <h1 style={{ margin: '0 0 8px', fontSize: isMobile ? 26 : 32, fontWeight: 900, color: C.text, fontFamily: F.heading }}>Settings</h1>

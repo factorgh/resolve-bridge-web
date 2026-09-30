@@ -131,15 +131,15 @@ export default function CustomerBillingPage() {
       });
 
   return (
-    <PortalShell title="Billing & Subscriptions" backHref="/portal">
-      <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 40 }}>
+    <PortalShell title="Billing plan">
+      <div style={{ maxWidth: 1240, margin: '0 auto', padding: '36px 36px 64px', display: 'flex', flexDirection: 'column', gap: 32, boxSizing: 'border-box' }}>
         
         {/* Header Block */}
         <div>
-          <h1 style={{ margin: 0, fontSize: 36, fontWeight: 300, color: C.text, fontFamily: F.serif }}>
-            Billing Console & Account Shield
+          <h1 style={{ margin: 0, fontSize: 'clamp(28px, 3.5vw, 36px)', fontWeight: 600, color: '#101a33', fontFamily: "'Fraunces', Georgia, serif", letterSpacing: '-0.02em', lineHeight: 1.15 }}>
+            Billing console & account shield
           </h1>
-          <p style={{ margin: '8px 0 0', fontSize: 13, color: C.textSub }}>
+          <p style={{ margin: '6px 0 0', fontSize: 14, color: '#6b7690', fontWeight: 400 }}>
             Settle your platform monthly access dues, manage payment profiles, and audit subscription history ledger logs.
           </p>
         </div>
@@ -149,21 +149,21 @@ export default function CustomerBillingPage() {
           
           {/* Active Plan Card */}
           <motion.div 
-            whileHover={{ y: -4 }}
+            whileHover={{ y: -2 }}
             style={{ 
-              background: '#fff', borderRadius: 28, border: `1px solid ${C.border}`,
-              boxShadow: '0 4px 25px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', overflow: 'hidden'
+              background: '#fff', borderRadius: 16, border: `1px solid ${C.border}`,
+              boxShadow: 'none', display: 'flex', flexDirection: 'column', overflow: 'hidden'
             }}
           >
-            <div style={{ padding: 32, background: `linear-gradient(135deg, ${C.blue} 0%, ${C.blueLight} 100%)`, color: '#fff' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <span style={{ fontSize: 10, fontWeight: 900, background: 'rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: 20, letterSpacing: '0.04em' }}>ACTIVE PROFILE</span>
+            <div style={{ padding: '24px 28px', background: `linear-gradient(135deg, ${C.blue} 0%, ${C.blueLight} 100%)`, color: '#fff' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <span style={{ fontSize: 10, fontWeight: 900, background: 'rgba(255,255,255,0.2)', padding: '3px 10px', borderRadius: 20, letterSpacing: '0.04em' }}>ACTIVE PROFILE</span>
                 <span style={{ fontSize: 16 }}>🛡️</span>
               </div>
-              <h3 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 800, fontFamily: F.heading }}>Resolve Platform Access</h3>
-              <p style={{ margin: 0, fontSize: 12.5, opacity: 0.8 }}>Automated underwriting and dynamic credit scoring access.</p>
+              <h3 style={{ margin: '0 0 6px', fontSize: 20, fontWeight: 700, fontFamily: F.heading }}>Resolve Platform Access</h3>
+              <p style={{ margin: 0, fontSize: 13, opacity: 0.9 }}>Automated underwriting and dynamic credit scoring access.</p>
             </div>
-            <div style={{ padding: 32, display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'space-between', gap: 20 }}>
+            <div style={{ padding: '24px 28px', display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'space-between', gap: 20 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                   <span style={{ color: C.textSub }}>Platform Fee:</span>
@@ -199,37 +199,37 @@ export default function CustomerBillingPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             
             {/* Quick Settle MoMo Card */}
-            <div style={{ background: '#fff', borderRadius: 28, border: `1px solid ${C.border}`, padding: 32, flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ background: '#fff', borderRadius: 16, border: `1px solid ${C.border}`, padding: '24px 28px', flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <SmartphoneRounded sx={{ color: C.blueLight, fontSize: 20 }} />
-                <h4 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: C.text, fontFamily: F.heading }}>Express MoMo Payment</h4>
+                <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.text, fontFamily: F.heading }}>Express MoMo payment</h4>
               </div>
-              <p style={{ margin: 0, fontSize: 12.5, color: C.textSub, lineHeight: 1.5 }}>
+              <p style={{ margin: 0, fontSize: 13, color: C.textSub, lineHeight: 1.5 }}>
                 Manually dispatch a platform subscription settlement fee directly to lock in another 30 days of seamless institutional financing services.
               </p>
               
               <button
                 onClick={() => setShowPayModal(true)}
                 style={{
-                  marginTop: 'auto', width: '100%', padding: '14px', borderRadius: 12, border: `1.5px solid ${C.borderStrong}`,
-                  background: C.bg, color: C.text, fontWeight: 800, fontSize: 13, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+                  marginTop: 'auto', width: '100%', padding: '12px 16px', borderRadius: 10, border: `1px solid ${C.border}`,
+                  background: '#f8fafc', color: C.text, fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background-color 150ms ease'
                 }}
               >
-                Settle Monthly Access dues (GH₵ 20)
+                Settle monthly access dues (GH₵ 20)
               </button>
             </div>
           </div>
         </div>
 
         {/* Subscription Transaction Ledger History */}
-        <div style={{ background: '#fff', borderRadius: 28, border: `1px solid ${C.border}`, overflow: 'hidden' }}>
-          <div style={{ padding: 32, borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ background: '#fff', borderRadius: 16, border: `1px solid ${C.border}`, overflow: 'hidden' }}>
+          <div style={{ padding: '24px 28px', borderBottom: `1px solid ${C.border}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
               <HistoryRounded sx={{ color: C.textSub, fontSize: 20 }} />
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: C.text, fontFamily: F.heading }}>Billing & Subscription Ledger</h3>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.text, fontFamily: F.heading }}>Billing & subscription ledger</h3>
             </div>
-            <p style={{ margin: 0, fontSize: 12.5, color: C.textSub }}>Detailed log history of all platform subscription access disbursements.</p>
+            <p style={{ margin: 0, fontSize: 13, color: C.textSub }}>Detailed log history of all platform subscription access disbursements.</p>
           </div>
 
           {subscriptionTxs.length === 0 ? (

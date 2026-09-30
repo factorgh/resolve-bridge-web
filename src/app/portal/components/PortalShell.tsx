@@ -3,8 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Drawer, Box, Typography, IconButton, CircularProgress as MUICircularProgress } from '@mui/material';
+import { Drawer, IconButton, CircularProgress as MUICircularProgress } from '@mui/material';
 import { 
   CloseRounded, 
   NotificationsRounded, 
@@ -12,87 +11,75 @@ import {
   BoltRounded, 
   AssignmentLateRounded, 
   VerifiedRounded,
-  AccountCircleRounded,
-  SecurityRounded,
-  SupportAgentRounded,
-  ExitToAppRounded,
-  MenuRounded
 } from '@mui/icons-material';
+import Sidebar, { SIDEBAR_NAV_GROUPS } from './Sidebar';
 import FloatingChat from './FloatingChat';
 import { useGetNotificationsQuery, useMarkNotificationReadMutation } from '@/lib/redux/api/notificationApi';
 
-/* ─── Design tokens ──────────────────────────────────────────────────────── */
+/* ─── Design Tokens ──────────────────────────────────────────────────────── */
 export const C = {
-  bg: '#f0f2f8',
+  bg: '#f3f5fa',
   surface: '#ffffff',
-  border: 'rgba(20,30,70,0.07)',
-  borderStrong: 'rgba(20,30,70,0.15)',
-  text: '#0d1b3e',
-  textSub: '#5c6b8a',
+  card: '#ffffff',
+  ink: '#101a33',
+  text: '#101a33',
+  textSub: '#6b7690',
+  mute: '#6b7690',
   textMuted: '#9aa5bf',
-  blue: '#2051e5',
+  line: '#e4e8f1',
+  border: '#e4e8f1',
+  borderStrong: '#cbd5e1',
+  accent: '#2f5bea',
+  accentSoft: '#e8eefd',
+  blue: '#2f5bea',
   blueLight: '#4f78ff',
-  bluePale: 'rgba(32,81,229,0.08)',
-  green: '#00b67a',
-  greenPale: 'rgba(0,182,122,0.08)',
-  emerald: '#10b981',
-  emeraldLight: '#34d399',
-  emeraldPale: 'rgba(16,185,129,0.1)',
+  bluePale: '#e8eefd',
+  green: '#1f8a5b',
+  greenSoft: '#e3f4ec',
+  greenPale: '#e3f4ec',
+  emerald: '#1f8a5b',
+  emeraldLight: '#e3f4ec',
+  emeraldPale: '#e3f4ec',
+  gold: '#c9a24b',
   red: '#ef4444',
   redPale: 'rgba(239,68,68,0.08)',
   purple: '#7c3aed',
   purplePale: 'rgba(124,58,237,0.08)',
-  amber: '#f59e0b',
-  amberPale: 'rgba(245,158,11,0.08)',
-  sidebar: '#0b1630',
-  sidebarActive: 'rgba(64,100,255,0.18)',
-  sidebarText: 'rgba(255,255,255,0.55)',
-  sidebarHover: 'rgba(255,255,255,0.06)',
+  amber: '#c9a24b',
+  amberPale: 'rgba(201,162,75,0.08)',
+  sidebar: '#0f1a33',
+  sidebarText: '#aeb8d0',
+  sidebarDivider: '#1e2a48',
+  sidebarActive: '#1a2a55',
+  sidebarActiveText: '#8fb0ff',
+  sidebarGroupLabel: '#6f7b98',
 };
 
 export const F = {
-  heading: "'Plus Jakarta Sans', system-ui, sans-serif",
-  body: "'Inter', system-ui, sans-serif",
-  serif: "'Lora', serif",
+  heading: "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  body: "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  display: "'Fraunces', Georgia, serif",
+  serif: "'Fraunces', Georgia, serif",
 };
 
-export const FONT_LINK = `https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,700&family=Inter:wght@400;500;600;700&family=Lora:wght@400;700&display=swap`;
+export const FONT_LINK = `https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Fraunces:ital,opsz,wght@0,9..144,500..600;1,9..144,500..600&display=swap`;
 
-/* ─── Nav definition ─────────────────────────────────────────────────────── */
-export const NAV = [
-  {
-    id: 'dashboard', label: 'Overview', href: '/portal',
-    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
-  },
-  {
-    id: 'marketplace', label: 'Marketplace', href: '/portal/marketplace',
-    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
-  },
-  {
-    id: 'loans', label: 'Portfolio', href: '/portal/statement',
-    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
-  },
-  {
-    id: 'calculator', label: 'Calculators', href: '/portal/calculator',
-    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/></svg>,
-  },
-  {
-    id: 'chat', label: 'Messages', href: '/portal/chat',
-    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
-  },
-  {
-    id: 'documents', label: 'Vault', href: '/portal/documents',
-    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>,
-  },
-  {
-    id: 'billing', label: 'Billing Plan', href: '/portal/billing',
-    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M12 10V14"/><path d="M10 12h4"/></svg>,
-  },
-  {
-    id: 'settings', label: 'Settings', href: '/portal/settings',
-    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
-  },
-];
+/* ─── Page Title Mapping ─────────────────────────────────────────────────── */
+const getPageTitle = (pathname: string, customTitle?: string) => {
+  if (customTitle) return customTitle;
+  if (pathname === '/portal') return 'Overview';
+  if (pathname.startsWith('/portal/marketplace')) return 'Marketplace';
+  if (pathname.startsWith('/portal/statement')) return 'Portfolio';
+  if (pathname.startsWith('/portal/calculator')) return 'Calculators';
+  if (pathname.startsWith('/portal/chat')) return 'Messages';
+  if (pathname.startsWith('/portal/documents')) return 'Vault';
+  if (pathname.startsWith('/portal/billing')) return 'Billing plan';
+  if (pathname.startsWith('/portal/settings')) return 'Settings';
+  if (pathname.startsWith('/portal/apply-loan')) return 'Apply for a loan';
+  if (pathname.startsWith('/portal/apply-insurance')) return 'Insurance application';
+  if (pathname.startsWith('/portal/apply-bnpl')) return 'BNPL application';
+  return 'Overview';
+};
 
 /* ─── Shell Core ─────────────────────────────────────────────────────────── */
 
@@ -107,28 +94,54 @@ export default function PortalShell({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<any>(null);
-  const [ready, setReady] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Initialize user synchronously if in browser to prevent unmount flash
+  const [user, setUser] = useState<any>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = sessionStorage.getItem('rb_user');
+        if (stored) return JSON.parse(stored);
+      } catch (e) {
+        // ignore
+      }
+    }
+    return { firstName: 'Thethrees', email: 'user@resolvebridge.com' };
+  });
+
   const [notifOpen, setNotifOpen] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState<any>(null);
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [notifSearch, setNotifSearch] = useState('');
 
   const { data: notifData } = useGetNotificationsQuery(undefined, {
-    pollingInterval: 10000,
+    pollingInterval: 15000,
   });
   const [markNotificationRead] = useMarkNotificationReadMutation();
   const notifications = notifData?.data || [];
-  const unreadCount = notifications.filter(n => !n.isRead).length;
-  
-  const [notifSearch, setNotifSearch] = useState('');
+  const unreadCount = notifications.filter((n: any) => !n.isRead).length;
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem('rb_user');
+    if (stored) {
+      try {
+        setUser(JSON.parse(stored));
+      } catch (e) {
+        console.error('Session error', e);
+      }
+    }
+  }, []);
+
+  const logout = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('rb_user');
+      localStorage.removeItem('rb_token');
+    }
+    router.push('/login');
+  }, [router]);
 
   const getNotificationConfig = (item: any) => {
     if (item.type === 'ApplicationReview') {
       if (item.title?.toLowerCase().includes('approve') || item.message?.toLowerCase().includes('approve')) {
-        return { icon: <VerifiedRounded sx={{ fontSize: 18 }} />, color: C.emerald };
+        return { icon: <VerifiedRounded sx={{ fontSize: 18 }} />, color: C.green };
       }
       if (item.title?.toLowerCase().includes('reject') || item.message?.toLowerCase().includes('reject')) {
         return { icon: <AssignmentLateRounded sx={{ fontSize: 18 }} />, color: C.red };
@@ -136,17 +149,17 @@ export default function PortalShell({
       if (item.title?.toLowerCase().includes('disburse') || item.message?.toLowerCase().includes('disburse')) {
         return { icon: <BoltRounded sx={{ fontSize: 18 }} />, color: C.purple };
       }
-      return { icon: <HistoryRounded sx={{ fontSize: 18 }} />, color: C.blue };
+      return { icon: <HistoryRounded sx={{ fontSize: 18 }} />, color: C.accent };
     }
-    return { icon: <NotificationsRounded sx={{ fontSize: 18 }} />, color: C.blue };
+    return { icon: <NotificationsRounded sx={{ fontSize: 18 }} />, color: C.accent };
   };
 
   const formatNotifTime = (createdAtStr: string) => {
+    if (!createdAtStr) return 'Just now';
     const diffMs = Date.now() - new Date(createdAtStr).getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
-    
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
@@ -154,7 +167,7 @@ export default function PortalShell({
   };
 
   const mappedNotifs = useMemo(() => {
-    return notifications.map(n => {
+    return notifications.map((n: any) => {
       const config = getNotificationConfig(n);
       return {
         id: n._id,
@@ -170,9 +183,9 @@ export default function PortalShell({
   }, [notifications]);
 
   const filteredNotifs = useMemo(() => {
-    return mappedNotifs.filter(n => 
-      n.title.toLowerCase().includes(notifSearch.toLowerCase()) ||
-      n.desc.toLowerCase().includes(notifSearch.toLowerCase())
+    return mappedNotifs.filter((n: any) => 
+      (n.title || '').toLowerCase().includes(notifSearch.toLowerCase()) ||
+      (n.desc || '').toLowerCase().includes(notifSearch.toLowerCase())
     );
   }, [mappedNotifs, notifSearch]);
 
@@ -196,454 +209,316 @@ export default function PortalShell({
     }
   };
 
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 1024);
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    
-    const stored = sessionStorage.getItem('rb_user');
-    if (!stored) { 
-      const next = pathname && pathname.startsWith('/portal') ? `?next=${encodeURIComponent(pathname)}` : '';
-      router.replace(`/login${next}`); 
-    } else { 
-      try {
-        setUser(JSON.parse(stored)); 
-        setReady(true);
-
-      } catch (e) {
-        console.error('Session corruption detected', e);
-        sessionStorage.removeItem('rb_user');
-        router.replace('/login');
-      }
-    }
-
-    return () => window.removeEventListener('resize', handleResize);
-  }, [router]);
-
-  const logout = useCallback(() => {
-    sessionStorage.removeItem('rb_user');
-    router.push('/login');
-  }, [router]);
-
-  const sidebarW = isMobile ? 0 : (collapsed ? 68 : 240);
-  const activeNavItem = NAV.find(n => pathname === n.href || (n.href !== '/portal' && pathname.startsWith(n.href)));
-
-  if (!user) return null; // Fallback for auth redirect
+  const pageTitle = getPageTitle(pathname, title);
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: F.body, display: 'flex' }}>
-       <link href={FONT_LINK} rel="stylesheet" />
-       
-       {/* Desktop Sidebar */}
-       <aside style={{
-         display: isMobile ? 'none' : 'flex',
-         width: sidebarW, height: '100vh', background: C.sidebar, position: 'fixed', left: 0, top: 0, zIndex: 100,
-         flexDirection: 'column', transition: '0.2s cubic-bezier(0.2, 0, 0, 1)', overflow: 'hidden'
-       }}>
-          <div style={{ padding: '24px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-             <div style={{ background: '#fff', padding: 6, borderRadius: 8 }}><img src="/images/resolve_logo.png" style={{ height: 20 }} /></div>
-             {!collapsed && <span style={{ fontWeight: 800, color: '#fff', fontSize: 16 }}>ResolveBridge</span>}
-          </div>
-          
-          <div style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
-             {NAV.map(n => {
-               const active = activeNavItem?.id === n.id;
-               return (
-                 <button key={n.id} onClick={() => router.push(n.href)} style={{
-                   width: '100%', padding: '12px', borderRadius: 10, border: 'none', background: active ? C.sidebarActive : 'transparent',
-                   color: active ? '#fff' : C.sidebarText, display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: '0.2s',
-                   marginBottom: 4
-                 }}>
-                    {n.icon}
-                    {!collapsed && <span style={{ fontWeight: 600, fontSize: 13.5 }}>{n.label}</span>}
-                 </button>
-               );
-             })}
+    <div className="portal-root-layout">
+      {/* Google Fonts */}
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link href={FONT_LINK} rel="stylesheet" />
+
+      {/* Sidebar Component */}
+      <Sidebar user={user} onLogout={logout} />
+
+      {/* Main Content Area */}
+      <div className="portal-main-wrapper">
+        {/* Top Header */}
+        <header className="portal-topbar">
+          <div className="portal-topbar-left">
+            {backHref ? (
+              <Link href={backHref} className="portal-back-link">
+                ← {backLabel || 'Back'}
+              </Link>
+            ) : (
+              <h1 className="portal-page-title">{pageTitle}</h1>
+            )}
           </div>
 
-          {!collapsed && (
-            <div style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 14, border: '1px solid rgba(255,255,255,0.05)' }}>
-                <p style={{ margin: '0 0 8px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trust & Security</p>
-                <div style={{ display: 'flex', gap: 10 }}>
-                  <div title="Verified by Ghana Card" style={{ width: 24, height: 24, borderRadius: 6, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>🇬🇭</div>
-                  <div title="SSL Secure" style={{ width: 24, height: 24, borderRadius: 6, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.emerald }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  </div>
-                  <div title="No Hidden Fees" style={{ width: 24, height: 24, borderRadius: 6, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.amber }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                  </div>
-                </div>
-              </div>
+          <div className="portal-topbar-right">
+            {/* Zero borrower fees pill */}
+            <div className="portal-zero-fees-pill">
+              <span className="portal-zero-fees-dot" />
+              <span>Zero borrower fees</span>
             </div>
-          )}
 
-          <div style={{ padding: 20, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-             <button onClick={logout} style={{ width: '100%', padding: 10, background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>Sign Out</button>
+            {/* Notification button */}
+            <button
+              onClick={() => { setNotifOpen(true); setSelectedNotif(null); }}
+              className="portal-notif-btn"
+              aria-label="Notifications"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#101a33" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+              </svg>
+              {unreadCount > 0 && <span className="portal-notif-unread-dot" />}
+            </button>
           </div>
-       </aside>
+        </header>
 
-       {/* Mobile Side Menu Drawer (Hamburger Menu) */}
-       <Drawer
-         anchor="left"
-         open={mobileMenuOpen}
-         onClose={() => setMobileMenuOpen(false)}
-         PaperProps={{
-           sx: {
-             width: 280,
-             background: C.sidebar,
-             color: '#fff',
-             display: 'flex',
-             flexDirection: 'column',
-           }
-         }}
-       >
-          <div style={{ padding: '24px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ background: '#fff', padding: 6, borderRadius: 8 }}><img src="/images/resolve_logo.png" style={{ height: 20 }} /></div>
-                <span style={{ fontWeight: 800, color: '#fff', fontSize: 16 }}>ResolveBridge</span>
-             </div>
-             <IconButton onClick={() => setMobileMenuOpen(false)} sx={{ color: 'rgba(255,255,255,0.5)', p: 0.5 }}>
-               <CloseRounded sx={{ fontSize: 20 }} />
-             </IconButton>
+        {/* Page Content View */}
+        <main className="portal-content-body">
+          {children}
+        </main>
+      </div>
+
+      {/* Floating Chat Support Widget */}
+      <FloatingChat />
+
+      {/* Notifications Drawer */}
+      <Drawer
+        anchor="right"
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+        PaperProps={{
+          sx: {
+            width: { xs: '100%', sm: 400 },
+            background: '#ffffff',
+            boxShadow: '-8px 0 32px rgba(16,26,51,0.08)',
+            borderLeft: '1px solid #e4e8f1',
+            display: 'flex',
+            flexDirection: 'column',
+            fontFamily: "'DM Sans', sans-serif"
+          }
+        }}
+      >
+        <div style={{ padding: '24px 20px', borderBottom: '1px solid #e4e8f1', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#101a33' }}>Notifications</h3>
+            <p style={{ margin: '4px 0 0', fontSize: 12, color: '#6b7690' }}>
+              {unreadCount > 0 ? `You have ${unreadCount} unread update${unreadCount > 1 ? 's' : ''}` : 'All caught up'}
+            </p>
           </div>
-          
-          <div style={{ flex: 1, padding: '20px 10px', overflowY: 'auto' }}>
-             {NAV.map(n => {
-               const active = activeNavItem?.id === n.id;
-               return (
-                 <button key={n.id} onClick={() => { router.push(n.href); setMobileMenuOpen(false); }} style={{
-                   width: '100%', padding: '12px', borderRadius: 10, border: 'none', background: active ? C.sidebarActive : 'transparent',
-                   color: active ? '#fff' : C.sidebarText, display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: '0.2s',
-                   marginBottom: 4, textAlign: 'left'
-                 }}>
-                    {n.icon}
-                    <span style={{ fontWeight: 600, fontSize: 13.5 }}>{n.label}</span>
-                 </button>
-               );
-             })}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {unreadCount > 0 && (
+              <button
+                onClick={handleMarkAllRead}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#2f5bea',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                  borderRadius: 6
+                }}
+              >
+                Mark all read
+              </button>
+            )}
+            <IconButton onClick={() => setNotifOpen(false)} size="small" aria-label="Close notifications">
+              <CloseRounded sx={{ fontSize: 20, color: '#6b7690' }} />
+            </IconButton>
           </div>
+        </div>
 
-          <div style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 14, border: '1px solid rgba(255,255,255,0.05)' }}>
-              <p style={{ margin: '0 0 8px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trust & Security</p>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <div title="Verified by Ghana Card" style={{ width: 24, height: 24, borderRadius: 6, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>🇬🇭</div>
-                <div title="SSL Secure" style={{ width: 24, height: 24, borderRadius: 6, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.emerald }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                </div>
-                <div title="No Hidden Fees" style={{ width: 24, height: 24, borderRadius: 6, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.amber }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ padding: 20, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-             <button onClick={() => { logout(); setMobileMenuOpen(false); }} style={{ width: '100%', padding: 10, background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>Sign Out</button>
-          </div>
-       </Drawer>
-
-       {/* Main Content Area */}
-       <main style={{ flex: 1, marginLeft: sidebarW, minHeight: '100vh', transition: '0.2s' }}>
-          {/* Topbar */}
-          <header style={{ 
-            height: 64, position: 'sticky', top: 0, zIndex: 80, background: 'rgba(240,242,248,0.9)', backdropFilter: 'blur(16px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '0 20px' : '0 32px', borderBottom: `1px solid ${C.border}`
-          }}>
-             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <IconButton 
-                   onClick={() => setMobileMenuOpen(true)}
-                   style={{
-                     display: (isMobile && !backHref) ? 'inline-flex' : 'none'
-                   }}
-                   sx={{ 
-                     color: C.text, 
-                     border: `1px solid ${C.border}`,
-                     borderRadius: 3, 
-                     background: '#fff',
-                     p: '6px',
-                     mr: 0.5
-                   }}
-                 >
-                   <MenuRounded sx={{ fontSize: 18 }} />
-                 </IconButton>
-                {backHref ? (
-                   <Link href={backHref} style={{ color: C.textSub, textDecoration: 'none', fontSize: 13, fontWeight: 700 }}>← {backLabel || 'Back'}</Link>
-                ) : (
-                   <span style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{activeNavItem?.label || 'Portal'}</span>
-                )}
-             </div>
-             
-             <div style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'relative' }}>
-                <button 
-                  onClick={() => { setNotifOpen(true); setSelectedNotif(null); setProfileOpen(false); }}
-                  style={{ 
-                    position: 'relative', width: 40, height: 40, borderRadius: 12, border: `1px solid ${C.border}`, 
-                    background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                    transition: '0.2s', padding: 0
-                  }}
-                >
-                   <NotificationsRounded sx={{ fontSize: 18, color: C.text }} />
-                   {unreadCount > 0 && (
-                     <span style={{ position: 'absolute', top: 10, right: 10, width: 8, height: 8, borderRadius: '50%', background: C.red, border: '2px solid #fff' }} />
-                   )}
-                </button>
-
-                <div style={{ width: 1, height: 24, background: C.border, margin: '0 4px' }} />
-
-                <button 
-                  onClick={() => { setProfileOpen(!profileOpen); setNotifOpen(false); }}
-                  style={{ 
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '4px 4px 4px 12px', 
-                    borderRadius: 14, border: `1px solid ${profileOpen ? C.blue : C.border}`, 
-                    background: '#fff', cursor: 'pointer', transition: '0.2s'
-                  }}
-                >
-                   <div style={{ display: isMobile ? 'none' : 'block', textAlign: 'right' }}>
-                      <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: C.text }}>{user?.firstName || 'User'}</p>
-                      <p style={{ margin: 0, fontSize: 10, color: C.textMuted, fontWeight: 700 }}>Personal Account</p>
-                   </div>
-                   <div style={{ 
-                     width: 32, height: 32, borderRadius: 10, 
-                     background: 'linear-gradient(135deg, #2051e5, #7c3aed)', 
-                     display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                     color: '#fff', fontWeight: 900, fontSize: 12, position: 'relative' 
-                   }}>
-                      {user?.firstName?.charAt(0) || 'U'}
-                      <div style={{ position: 'absolute', bottom: -2, right: -2, width: 10, height: 10, background: C.emerald, border: '2px solid #fff', borderRadius: '50%' }} />
-                   </div>
-                </button>
-
-                {/* Profile Dropdown */}
-                <AnimatePresence>
-                   {profileOpen && (
-                     <>
-                       <motion.div 
-                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                         onClick={() => setProfileOpen(false)}
-                         style={{ position: 'fixed', inset: 0, zIndex: 90 }}
-                       />
-                       <motion.div 
-                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                         style={{ 
-                           position: 'absolute', top: 'calc(100% + 12px)', right: 0, width: 240, 
-                           background: '#fff', borderRadius: 20, padding: 8, zIndex: 100,
-                           boxShadow: '0 20px 50px rgba(13,27,62,0.15)', border: `1px solid ${C.border}`
-                         }}
-                       >
-                          <div style={{ padding: '12px 16px', borderBottom: `1px solid ${C.border}`, marginBottom: 4 }}>
-                             <p style={{ margin: 0, fontSize: 14, fontWeight: 900, color: C.text }}>{user?.firstName} {user?.lastName}</p>
-                             <p style={{ margin: 0, fontSize: 12, color: C.textMuted, overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</p>
-                          </div>
-                          
-                          {[
-                            { label: 'My Profile', icon: <AccountCircleRounded sx={{ fontSize: 18 }} />, href: '/portal/settings' },
-                            { label: 'Security', icon: <SecurityRounded sx={{ fontSize: 18 }} />, href: '/portal/settings' },
-                            { label: 'Direct Support', icon: <SupportAgentRounded sx={{ fontSize: 18 }} />, href: '/portal/marketplace' },
-                          ].map(item => (
-                            <button 
-                              key={item.label}
-                              onClick={() => { router.push(item.href); setProfileOpen(false); }}
-                              style={{ 
-                                width: '100%', padding: '10px 12px', borderRadius: 10, border: 'none', 
-                                background: 'transparent', display: 'flex', alignItems: 'center', gap: 10, 
-                                cursor: 'pointer', transition: '0.2s', color: C.textSub, fontWeight: 700, fontSize: 13
-                              }}
-                            >
-                               {item.icon}
-                               {item.label}
-                            </button>
-                          ))}
-
-                          <div style={{ height: 1, background: C.border, margin: '4px 0' }} />
-                          
-                          <button 
-                            onClick={logout}
-                            style={{ 
-                              width: '100%', padding: '10px 12px', borderRadius: 10, border: 'none', 
-                              background: 'transparent', display: 'flex', alignItems: 'center', gap: 10, 
-                              cursor: 'pointer', transition: '0.2s', color: C.red, fontWeight: 800, fontSize: 13
-                            }}
-                          >
-                             <ExitToAppRounded sx={{ fontSize: 18 }} />
-                             Sign Out
-                          </button>
-                       </motion.div>
-                     </>
-                   )}
-                </AnimatePresence>
-             </div>
-          </header>
-
-          <Drawer 
-            anchor="right" 
-            open={notifOpen} 
-            onClose={() => setNotifOpen(false)}
-            PaperProps={{
-              sx: { 
-                width: isMobile ? '100%' : (selectedNotif ? 840 : 420), 
-                background: 'rgba(255,255,255,0.95)', 
-                backdropFilter: 'blur(24px)',
-                borderLeft: `1px solid ${C.border}`,
-                boxShadow: '-20px 0 60px rgba(13,27,62,0.1)',
-                transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
-              }
+        {/* Search */}
+        <div style={{ padding: '12px 20px', borderBottom: '1px solid #e4e8f1' }}>
+          <input
+            type="text"
+            placeholder="Search updates..."
+            value={notifSearch}
+            onChange={(e) => setNotifSearch(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              borderRadius: 8,
+              border: '1px solid #e4e8f1',
+              fontSize: 12.5,
+              color: '#101a33',
+              outline: 'none',
+              fontFamily: "'DM Sans', sans-serif"
             }}
-          >
-             <Box sx={{ height: '100%', display: 'flex', overflow: 'hidden' }}>
-                
-                {/* Master List Column */}
-                <Box sx={{ 
-                  width: isMobile && selectedNotif ? 0 : 420, 
-                  height: '100%', display: 'flex', flexDirection: 'column', 
-                  borderRight: selectedNotif && !isMobile ? `1px solid ${C.border}` : 'none',
-                  transition: 'width 0.3s'
-                }}>
-                    {/* Drawer Header */}
-                    <Box sx={{ p: 3, borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                       <Box>
-                          <Typography sx={{ fontSize: 18, fontWeight: 900, fontFamily: F.heading, color: C.text, lineHeight: 1.2 }}>Intelligence Feed</Typography>
-                       </Box>
-                    </Box>
+          />
+        </div>
 
-                    {/* Search Bar */}
-                    <Box sx={{ p: 2, background: 'rgba(0,0,0,0.01)', borderBottom: `1px solid ${C.border}` }}>
-                       <div style={{ position: 'relative' }}>
-                          <input 
-                            value={notifSearch}
-                            onChange={(e) => setNotifSearch(e.target.value)}
-                            placeholder="Search signals..."
-                            style={{ width: '100%', padding: '10px 16px 10px 36px', borderRadius: 12, border: `1.5px solid ${C.border}`, background: '#fff', fontSize: 13, outline: 'none', color: C.text }}
-                          />
-                          <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 16, color: C.textMuted }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                       </div>
-                    </Box>
+        {/* List */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px' }}>
+          {filteredNotifs.length === 0 ? (
+            <div style={{ padding: '40px 20px', textAlign: 'center', color: '#6b7690', fontSize: 13 }}>
+              No notifications found
+            </div>
+          ) : (
+            filteredNotifs.map((n: any) => (
+              <div
+                key={n.id}
+                onClick={() => handleSelectNotification(n)}
+                style={{
+                  padding: '14px',
+                  borderRadius: 12,
+                  border: `1px solid ${n.unread ? '#e8eefd' : '#e4e8f1'}`,
+                  background: n.unread ? '#f8fafc' : '#ffffff',
+                  marginBottom: 10,
+                  cursor: 'pointer',
+                  transition: 'background 150ms ease'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <div style={{ color: n.color, marginTop: 2 }}>{n.icon}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                      <h4 style={{ margin: 0, fontSize: 13, fontWeight: n.unread ? 700 : 600, color: '#101a33' }}>
+                        {n.title}
+                      </h4>
+                      <span style={{ fontSize: 11, color: '#6b7690', whiteSpace: 'nowrap' }}>{n.time}</span>
+                    </div>
+                    <p style={{ margin: '4px 0 0', fontSize: 12, color: '#6b7690', lineHeight: 1.4 }}>
+                      {n.desc}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </Drawer>
 
-                    <Box sx={{ flex: 1, overflowY: 'auto' }}>
-                       {filteredNotifs.length > 0 ? (
-                         filteredNotifs.map((n) => (
-                           <Box key={n.id} onClick={() => handleSelectNotification(n)} sx={{ 
-                             p: '20px 24px', display: 'flex', gap: 16, borderBottom: `1px solid ${C.border}`, 
-                             background: selectedNotif?.id === n.id ? C.bluePale : (n.unread ? 'rgba(32,81,229,0.02)' : 'transparent'),
-                             cursor: 'pointer', transition: '0.2s',
-                             '&:hover': { background: selectedNotif?.id === n.id ? C.bluePale : 'rgba(0,0,0,0.02)' }
-                           }}>
-                              <Box sx={{ width: 36, height: 36, borderRadius: 10, background: `${n.color}10`, color: n.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                 {n.icon}
-                              </Box>
-                              <Box sx={{ minWidth: 0, flex: 1 }}>
-                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 0.5 }}>
-                                    <Typography sx={{ fontSize: 14, fontWeight: 800, color: C.text }}>{n.title}</Typography>
-                                    <Typography sx={{ fontSize: 10, color: C.textMuted, fontWeight: 700 }}>{n.time}</Typography>
-                                 </Box>
-                                 <Typography sx={{ fontSize: 12.5, color: C.textSub, lineHeight: 1.4 }}>{n.desc}</Typography>
-                              </Box>
-                           </Box>
-                         ))
-                       ) : (
-                         <Box sx={{ p: 4, textAlign: 'center', color: C.textMuted }}>
-                           <Typography sx={{ fontSize: 13, fontWeight: 700 }}>No Signals Found</Typography>
-                         </Box>
-                       )}
-                    </Box>
+      <style jsx global>{`
+        body {
+          background-color: var(--bg);
+          color: var(--ink);
+          margin: 0;
+          padding: 0;
+          font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
 
-                    <Box sx={{ p: 2.5, borderTop: `1px solid ${C.border}`, display: 'flex', gap: 1.5 }}>
-                       <button 
-                        onClick={() => { router.push('/portal/settings'); setNotifOpen(false); }}
-                        style={{ flex: 1, padding: '12px', borderRadius: 14, border: `1.5px solid ${C.border}`, background: '#fff', color: C.text, fontWeight: 800, fontSize: 13, cursor: 'pointer', transition: '0.2s' }}
-                       >
-                         Settings
-                       </button>
-                       <button 
-                        disabled={unreadCount === 0}
-                        onClick={handleMarkAllRead}
-                        style={{ flex: 2, padding: '12px', borderRadius: 14, border: 'none', background: C.text, color: '#fff', fontWeight: 800, fontSize: 13, cursor: unreadCount === 0 ? 'not-allowed' : 'pointer', transition: '0.2s', opacity: unreadCount === 0 ? 0.5 : 1 }}
-                       >
-                         Mark All as Read
-                       </button>
-                    </Box>
-                </Box>
+        .portal-root-layout {
+          min-height: 100vh;
+          background-color: #f3f5fa;
+          display: flex;
+          box-sizing: border-box;
+        }
 
-                {/* Detail View Column */}
-                <AnimatePresence>
-                   {selectedNotif && (
-                     <motion.div 
-                       initial={{ opacity: 0, x: 20 }}
-                       animate={{ opacity: 1, x: 0 }}
-                       exit={{ opacity: 0, x: 20 }}
-                       style={{ flex: 1, height: '100%', background: '#fff', display: 'flex', flexDirection: 'column' }}
-                     >
-                        <Box sx={{ p: 3, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 2 }}>
-                           <IconButton onClick={() => setSelectedNotif(null)} style={{ display: isMobile ? 'inline-flex' : 'none' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg></IconButton>
-                           <Box>
-                              <Typography sx={{ fontSize: 14, fontWeight: 800, color: C.text }}>Signal Details</Typography>
-                              <Typography sx={{ fontSize: 9, color: C.textMuted, fontWeight: 900, letterSpacing: '0.1em' }}>INSTITUTIONAL METADATA</Typography>
-                           </Box>
-                           <IconButton onClick={() => setSelectedNotif(null)} style={{ display: isMobile ? 'none' : 'inline-flex' }} sx={{ ml: 'auto', width: 36, height: 36 }}><CloseRounded sx={{ fontSize: 18 }} /></IconButton>
-                        </Box>
+        .portal-main-wrapper {
+          flex: 1;
+          margin-left: 248px;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+          background-color: #f3f5fa;
+        }
 
-                        <Box sx={{ p: isMobile ? 4 : 6, flex: 1, overflowY: 'auto' }}>
-                           <Box sx={{ mb: 6 }}>
-                              <Box sx={{ 
-                                width: 52, height: 52, borderRadius: 14, 
-                                background: `${selectedNotif.color}10`, color: selectedNotif.color, 
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 3 
-                              }}>
-                                 {selectedNotif.icon}
-                              </Box>
-                              <Typography sx={{ fontSize: 24, fontWeight: 900, color: C.text, mb: 1, fontFamily: F.heading, letterSpacing: '-0.02em' }}>{selectedNotif.title}</Typography>
-                              <Typography sx={{ fontSize: 13, color: C.textMuted, fontWeight: 700 }}>Signal verified {selectedNotif.time}</Typography>
-                           </Box>
+        .portal-topbar {
+          height: 64px;
+          background-color: #ffffff;
+          border-bottom: 1px solid #e4e8f1;
+          position: sticky;
+          top: 0;
+          z-index: 80;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 16px 36px;
+          box-sizing: border-box;
+        }
 
-                           <Box sx={{ mb: 6 }}>
-                              <Typography sx={{ fontSize: 15, color: C.textSub, lineHeight: 1.8, fontWeight: 500 }}>
-                                 {selectedNotif.desc} This institutional update has been processed through Resolve's proprietary compliance handshake.
-                              </Typography>
-                              <Box sx={{ mt: 4, p: '14px 20px', borderRadius: 12, background: 'rgba(16,185,129,0.05)', border: `1px solid ${C.emerald}20`, display: 'inline-flex', gap: 1.5, alignItems: 'center' }}>
-                                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.emerald }} />
-                                 <Typography sx={{ fontSize: 12, fontWeight: 800, color: C.emerald, textTransform: 'uppercase', letterSpacing: '0.02em' }}>Verified Institutional Signal</Typography>
-                              </Box>
-                           </Box>
+        .portal-topbar-left {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
 
-                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                              <Typography sx={{ fontSize: 10, fontWeight: 900, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em', mb: 1 }}>Recommended Actions</Typography>
-                              {selectedNotif.raw?.targetId ? (
-                                <button 
-                                  onClick={() => { router.push('/portal/statement'); setNotifOpen(false); }}
-                                  style={{ width: '100%', padding: '16px', borderRadius: 18, border: 'none', background: C.text, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', transition: '0.2s', boxShadow: '0 4px 12px rgba(13,27,62,0.1)' }}
-                                >
-                                  Review Application Status
-                                </button>
-                              ) : (
-                                <button 
-                                  onClick={() => { router.push('/portal/marketplace'); setNotifOpen(false); }}
-                                  style={{ width: '100%', padding: '16px', borderRadius: 18, border: 'none', background: C.text, color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer', transition: '0.2s', boxShadow: '0 4px 12px rgba(13,27,62,0.1)' }}
-                                >
-                                  Review Marketplace Matches
-                                </button>
-                              )}
-                              <button 
-                                onClick={() => setSelectedNotif(null)}
-                                style={{ width: '100%', padding: '16px', borderRadius: 18, border: `1.5px solid ${C.border}`, background: '#fff', color: C.text, fontWeight: 800, fontSize: 13, cursor: 'pointer', transition: '0.2s' }}
-                              >
-                                Dismiss Signal
-                              </button>
-                           </Box>
-                        </Box>
-                     </motion.div>
-                   )}
-                </AnimatePresence>
-             </Box>
-          </Drawer>
+        .portal-page-title {
+          margin: 0;
+          font-size: 18px;
+          font-weight: 700;
+          color: #101a33;
+          font-family: 'DM Sans', system-ui, sans-serif;
+        }
 
-          <div style={{ padding: isMobile ? '24px 20px' : '40px 32px' }}>
-             {children}
-          </div>
-          {pathname !== '/portal/chat' && <FloatingChat />}
-       </main>
+        .portal-back-link {
+          color: #6b7690;
+          text-decoration: none;
+          font-size: 13.5px;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          transition: color 150ms ease;
+        }
+        .portal-back-link:hover {
+          color: #101a33;
+        }
+
+        .portal-topbar-right {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+
+        .portal-zero-fees-pill {
+          background-color: #e3f4ec;
+          color: #1f8a5b;
+          font-size: 12px;
+          font-weight: 600;
+          padding: 6px 14px;
+          border-radius: 9999px;
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          user-select: none;
+          font-family: 'DM Sans', system-ui, sans-serif;
+        }
+
+        .portal-zero-fees-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background-color: #1f8a5b;
+        }
+
+        .portal-notif-btn {
+          width: 38px;
+          height: 38px;
+          border-radius: 10px;
+          border: 1px solid #e4e8f1;
+          background-color: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          position: relative;
+          transition: border-color 150ms ease, background-color 150ms ease;
+          padding: 0;
+        }
+        .portal-notif-btn:hover {
+          border-color: #cbd5e1;
+          background-color: #f8fafc;
+        }
+        .portal-notif-btn:focus-visible {
+          outline: 2px solid #2f5bea;
+          outline-offset: 2px;
+        }
+
+        .portal-notif-unread-dot {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background-color: #ef4444;
+          border: 1.5px solid #ffffff;
+        }
+
+        .portal-content-body {
+          flex: 1;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        @media (max-width: 800px) {
+          .portal-main-wrapper {
+            margin-left: 0;
+          }
+          .portal-topbar {
+            padding: 14px 18px;
+          }
+        }
+      `}</style>
     </div>
   );
 }

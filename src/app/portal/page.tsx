@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import PortalShell from './components/PortalShell';
 import { useGetDashboardMetricsQuery, useGetNewsArticlesQuery, useGetMeQuery } from '@/lib/redux/api/userApi';
@@ -12,1166 +11,679 @@ import { toast } from 'react-hot-toast';
 import { Drawer, IconButton } from '@mui/material';
 import { 
   CloseRounded,
-  AccountBalanceRounded,
-  CreditCardRounded,
-  SmartphoneRounded,
   ShieldRounded,
-  HistoryRounded,
-  ReceiptLongRounded,
-  LocalAtmRounded,
-  SpeedRounded,
-  CloudDoneRounded,
-  CheckCircleRounded,
-  QrCodeRounded,
-  ChatBubbleOutlineRounded,
-  ShoppingCartRounded
 } from '@mui/icons-material';
 
-/* ─── Dashboard Sub-component ─────────────────────────────────────────── */
+/* ─── Dashboard Overview Component ─────────────────────────────────────── */
 
-function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
+function Dashboard({ onCardClick }: { onCardClick: (action: string) => void }) {
   const router = useRouter();
   const { data: userData } = useGetMeQuery();
   const user = userData?.data;
-  const firstName = user?.firstName || 'User';
-  const { data: metricsResponse, isLoading: metricsLoading, isError: metricsError } = useGetDashboardMetricsQuery();
-  const { data: newsResponse, isLoading: newsLoading, isError: newsError } = useGetNewsArticlesQuery();
-  
+  const firstName = user?.firstName || 'Thethrees';
+
+  const { data: metricsResponse, isLoading: metricsLoading } = useGetDashboardMetricsQuery();
+  const { data: newsResponse } = useGetNewsArticlesQuery();
   const metrics = metricsResponse?.data;
   const articles = newsResponse?.data || [];
 
-  // Active Facilities & Double-Entry Ledger repayments
-  const { data: appsResponse, isLoading: appsLoading, refetch: refetchApps } = useGetApplicationsQuery();
-  const { data: txResponse, isLoading: txLoading, refetch: refetchTx } = useGetTransactionsQuery();
-  const [createTransaction] = useCreateTransactionMutation();
-  const { data: instsResponse, isLoading: instsLoading } = useGetInstitutionsQuery();
-  const institutions = useMemo(() => {
-    if (instsResponse?.success && instsResponse?.data) {
-      return instsResponse.data.filter((inst: any) => inst.isActive !== false && inst.isVerified === true);
-    }
-    return [];
-  }, [instsResponse]);
+  const { data: appsResponse } = useGetApplicationsQuery();
+  const { data: txResponse } = useGetTransactionsQuery();
+  const { data: instsResponse } = useGetInstitutionsQuery();
 
-  const [selectedPayApp, setSelectedPayApp] = useState<any>(null);
-  const [momoPhone, setMomoPhone] = useState('0244123456');
-  const [momoCarrier, setMomoCarrier] = useState('MTN MoMo');
-  const [payAmount, setPayAmount] = useState<number>(0);
-  const [momoPin, setMomoPin] = useState('');
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-
-  const [selectedQrApp, setSelectedQrApp] = useState<any>(null);
-  const [qrUrl, setQrUrl] = useState<string>('');
-  const [isGeneratingQr, setIsGeneratingQr] = useState<boolean>(false);
-
-  const handleLoadQrCode = async (appId: string) => {
-    setIsGeneratingQr(true);
-    try {
-      const tokenStr = typeof window !== 'undefined' ? localStorage.getItem('rb_token') : null;
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1';
-      
-      const res = await fetch(`${apiUrl}/Applications/${appId}/verify-token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${tokenStr}`
-        }
-      });
-      const result = await res.json();
-      if (result.success && result.data?.verifyUrl) {
-        const url = new URL(result.data.verifyUrl);
-        const frontendVerifyUrl = `${window.location.origin}/verify/policy${url.search}`;
-        setQrUrl(frontendVerifyUrl);
-      } else {
-        toast.error('Failed to generate secure policy verification token.');
-      }
-    } catch (err) {
-      toast.error('Network error during verification token handshake.');
-    } finally {
-      setIsGeneratingQr(false);
-    }
-  };
-
-  const C = {
-    bg: '#f8fafc', 
-    surface: '#ffffff',
-    border: 'rgba(13,27,62,0.08)',
-    borderStrong: 'rgba(13,27,62,0.12)',
-    text: '#0d1b3e',
-    textSub: '#475569',
-    textMuted: '#94a3b8',
-    blue: '#2051e5',
-    emerald: '#008652', 
-    emeraldLight: '#e6f3ef',
-    red: '#ef4444',
-    purple: '#7c3aed',
-    purplePale: 'rgba(124,58,237,0.08)'
-  };
-
-  const F = {
-    heading: "'Plus Jakarta Sans', system-ui, sans-serif",
-    body: "'Inter', sans-serif",
-    serif: "'Playfair Display', serif",
-  };
-
-  /* ─── Promo & Blog Logic ─────────────────────────────────────────── */
-  const PROMOS = [
-    { id: 1, tag: 'EXCLUSIVE', title: '0% Interest BNPL', desc: 'Upgrade your home office today with our new tech financing partnership.', btn: 'Explore Tech Loans', color: `linear-gradient(135deg, ${C.blue}, ${C.purple})`, shadow: C.blue, icon: <ShoppingCartRounded sx={{ fontSize: 180, position: 'absolute', right: -30, bottom: -30, opacity: 0.08, transform: 'rotate(-15deg)', color: '#fff' }} /> },
-    { id: 2, tag: 'NEW', title: 'Instant Health Quote', desc: 'Get covered in 60 seconds with Enterprise Resolve Health premiums.', btn: 'Get Quote', color: `linear-gradient(135deg, ${C.emerald}, ${C.blue})`, shadow: C.emerald, icon: <ShieldRounded sx={{ fontSize: 180, position: 'absolute', right: -30, bottom: -30, opacity: 0.08, transform: 'rotate(-15deg)', color: '#fff' }} /> },
-    { id: 3, tag: 'LIMITED', title: 'Stanbic High-Yield', desc: 'Unlock 14% p.a on your savings when you link your account today.', btn: 'Link Account', color: `linear-gradient(135deg, ${C.purple}, ${C.red})`, shadow: C.purple, icon: <AccountBalanceRounded sx={{ fontSize: 180, position: 'absolute', right: -30, bottom: -30, opacity: 0.08, transform: 'rotate(-15deg)', color: '#fff' }} /> },
-  ];
-
-  const [promoIdx, setPromoIdx] = useState(0);
   const [selectedBlog, setSelectedBlog] = useState<any>(null);
 
-  const isLoading = (metricsLoading || newsLoading) && !metricsError && !newsError;
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setPromoIdx(prev => (prev + 1) % PROMOS.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [PROMOS.length]);
-
-  if (isLoading) {
-    return (
-      <div style={{ maxWidth: 1100, margin: '0 auto', opacity: 0.8 }}>
-         <div style={{ height: 44, width: 300, background: '#f1f5f9', borderRadius: 12, marginBottom: 40, animation: 'pulse 2s infinite' }} />
-         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '380px 1fr', gap: 48 }}>
-            {/* Left Column (Small) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-               <div style={{ height: 260, background: '#f1f5f9', borderRadius: 32, animation: 'pulse 2s infinite' }} />
-               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {[1,2,3].map(i => <div key={i} style={{ height: 100, background: '#f1f5f9', borderRadius: 20, animation: 'pulse 2s infinite' }} />)}
-               </div>
-            </div>
-            {/* Right Column (Large) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
-               <div style={{ height: 260, background: '#f1f5f9', borderRadius: 32, animation: 'pulse 2s infinite' }} />
-               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 20 }}>
-                  {[1,2,3].map(i => <div key={i} style={{ height: 160, background: '#f1f5f9', borderRadius: 24, animation: 'pulse 2s infinite' }} />)}
-               </div>
-            </div>
-         </div>
-         <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
-      </div>
-    );
-  }
+  // Health score calculation
+  const rawScore = metrics?.healthIndex ?? 0;
+  const score = Math.max(0, Math.min(100, rawScore));
+  
+  // Semicircle gauge calculation
+  // Total arc length for radius 45 is ~141.37
+  const strokeDashoffset = 141.37 - (141.37 * (score / 100));
 
   return (
-    <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-      
-      {/* Blog Modal */}
-      <AnimatePresence>
-        {selectedBlog && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? 0 : 24 }}>
-             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedBlog(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(13,27,62,0.6)', backdropFilter: 'blur(8px)' }} />
-             <motion.div 
-               initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }}
-               style={{ 
-                 position: 'relative', width: '100%', maxWidth: 540, background: '#fff', borderRadius: isMobile ? 0 : 32, overflow: 'hidden',
-                 boxShadow: '0 30px 60px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column'
-               }}
-             >
-                <div style={{ padding: 40 }}>
-                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                      <span style={{ fontSize: 11, fontWeight: 900, color: C.blue, background: C.purplePale, padding: '6px 12px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{selectedBlog.tag}</span>
-                      <button onClick={() => setSelectedBlog(null)} style={{ background: '#f1f5f9', border: 'none', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', fontWeight: 900 }}>✕</button>
-                   </div>
-                   <h2 style={{ margin: '0 0 16px', fontSize: 24, fontWeight: 900, color: C.text, fontFamily: F.heading, lineHeight: 1.2 }}>{selectedBlog.title}</h2>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32, color: C.textMuted, fontSize: 13, fontWeight: 600 }}>
-                      <span>{selectedBlog.icon || '🗞️'} Resolve Intelligence</span>
-                      <span>•</span>
-                      <span>{selectedBlog.readingTimeMinutes}m read</span>
-                   </div>
-                   <p style={{ margin: '0 0 40px', fontSize: 16, color: C.textSub, lineHeight: 1.8, fontFamily: F.body }}>{selectedBlog.content}</p>
-                   <div style={{ display: 'flex', gap: 12 }}>
-                      <a href={selectedBlog.externalUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1, textDecoration: 'none', background: C.text, color: '#fff', padding: '16px', borderRadius: 16, textAlign: 'center', fontWeight: 800, fontSize: 14, transition: '0.2s' }}>Read Full Article ↗</a>
-                      <button onClick={() => setSelectedBlog(null)} style={{ flex: 1, background: '#f1f5f9', color: C.textSub, border: 'none', padding: '16px', borderRadius: 16, fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>Close</button>
-                   </div>
-                </div>
-             </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-      
-      {/* Header */}
-      <div style={{ 
-        display: 'flex', flexDirection: isMobile ? 'column' : 'row', 
-        justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', 
-        marginBottom: isMobile ? 32 : 44, gap: isMobile ? 24 : 0 
-      }}>
-         <div>
-            <h1 style={{ margin: 0, fontSize: isMobile ? 28 : 42, fontWeight: 400, color: C.text, fontFamily: F.serif }}>
-               {user ? `Good afternoon, ${firstName}` : 'Welcome back'}
-            </h1>
-         </div>
-         <div style={{ display: 'flex', gap: 12, alignItems: 'center', width: isMobile ? '100%' : 'auto', alignSelf: isMobile ? 'stretch' : 'auto' }}>
-            <div style={{ position: 'relative', flex: isMobile ? 1 : 'none' }}>
-               <select
-                 value={activeTab}
-                 onChange={(e) => setActiveTab(e.target.value)}
-                 style={{
-                   width: '100%',
-                   minWidth: isMobile ? 'auto' : 200,
-                   height: 48,
-                   padding: '0 40px 0 16px',
-                   background: '#fff',
-                   border: `1px solid ${C.borderStrong}`,
-                   borderRadius: 12,
-                   fontSize: 13,
-                   fontWeight: 700,
-                   color: C.text,
-                   cursor: 'pointer',
-                   appearance: 'none',
-                   outline: 'none',
-                   boxShadow: '0 2px 8px rgba(13,27,62,0.04)',
-                   transition: '0.2s',
-                   fontFamily: F.heading
-                 }}
-               >
-                 <option value="overview">Overview</option>
-                 <option value="performance">Performance</option>
-                 <option value="repayments">My Credit & Repayments</option>
-               </select>
-               <div style={{
-                 position: 'absolute',
-                 right: 16,
-                 top: '50%',
-                 transform: 'translateY(-50%)',
-                 pointerEvents: 'none',
-                 color: C.textMuted,
-                 fontSize: 10,
-                 display: 'flex',
-                 alignItems: 'center'
-               }}>
-                 ▼
-               </div>
-            </div>
-            <button 
-              onClick={() => router.push('/portal/apply-loan')}
-              style={{ flex: isMobile ? 1 : 'none', minWidth: isMobile ? 'auto' : 180, height: 48, background: C.text, border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer', boxShadow: '0 4px 14px rgba(13,27,62,0.1)' }}
-            >
-              Apply for Loan
-            </button>
-         </div>
+    <div className="portal-overview-container">
+      {/* 1. Greeting Row */}
+      <div className="portal-greeting-row">
+        <div>
+          <h1 className="portal-greeting-title">
+            Good afternoon, {firstName}
+          </h1>
+          <p className="portal-greeting-subtitle">
+            Here is where your money stands today.
+          </p>
+        </div>
+
+        <button
+          onClick={() => router.push('/portal/apply-loan')}
+          className="portal-apply-btn"
+        >
+          Apply for a loan
+        </button>
       </div>
 
-       {/* Trust & Simplicity Banner */}
-       <div style={{ 
-         background: '#fff', 
-         padding: '12px 20px', 
-         borderRadius: 14, 
-         border: `1.5px solid ${C.border}`,
-         marginBottom: 32,
-         display: 'flex',
-         flexDirection: isMobile ? 'column' : 'row',
-         alignItems: isMobile ? 'flex-start' : 'center',
-         gap: isMobile ? 12 : 20,
-         overflow: 'hidden'
-       }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-             <div style={{ width: 24, height: 24, borderRadius: '50%', background: C.emeraldLight, color: C.emerald, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>✓</div>
-             <span style={{ fontSize: 11, fontWeight: 800, color: C.textSub, textTransform: 'uppercase' }}>Zero Borrower Fees</span>
+      {/* 2. Three Stat Cards */}
+      <div className="portal-stats-grid">
+        {/* Cash flow Card */}
+        <div 
+          className="portal-stat-card clickable"
+          onClick={() => onCardClick('cashflow')}
+        >
+          <div className="portal-stat-header">
+            <span className="portal-stat-label">Cash flow</span>
+            <div className="portal-stat-icon-tile">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2f5bea" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                <polyline points="17 6 23 6 23 12" />
+              </svg>
+            </div>
           </div>
-          <div style={{ display: isMobile ? 'none' : 'block', width: 1, height: 16, background: C.border }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-             <div style={{ width: 24, height: 24, borderRadius: '50%', background: C.emeraldLight, color: C.emerald, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>✓</div>
-             <span style={{ fontSize: 11, fontWeight: 800, color: C.textSub, textTransform: 'uppercase' }}>GH Card Verified</span>
+          <div className="portal-stat-value">
+            GH₵ {metrics?.cashFlow ? Number(metrics.cashFlow).toFixed(2) : '0.00'}
           </div>
-          <div style={{ display: isMobile ? 'none' : 'block', width: 1, height: 16, background: C.border }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-             <div style={{ width: 24, height: 24, borderRadius: '50%', background: C.emeraldLight, color: C.emerald, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>✓</div>
-             <span style={{ fontSize: 11, fontWeight: 800, color: C.textSub, textTransform: 'uppercase' }}>Secure Process</span>
+          <div className="portal-stat-sub green">
+            Available now
           </div>
-       </div>
+        </div>
 
-      <AnimatePresence mode="wait">
-        {activeTab === 'overview' && (
-          <motion.div 
-            key="overview"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            style={{ 
-              display: 'grid', 
-              gridTemplateColumns: isMobile ? '1fr' : '380px 1fr', 
-              gap: isMobile ? 32 : 40,
-              alignItems: 'start'
-            }}>
-              
-              {/* Left Column: Core Stats (Small) */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                
-                <motion.div whileHover={{ y: -4 }} style={{ background: '#fff', borderRadius: 32, border: `1px solid ${C.border}`, padding: 28, boxShadow: '0 4px 30px rgba(0,0,0,0.03)', cursor: 'pointer' }}>
-                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: C.emerald, boxShadow: `0 0 10px ${C.emerald}` }} />
-                            <span style={{ fontSize: 11, fontWeight: 700, color: C.textSub, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Financial Health Index</span>
-                         </div>
-                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                            <span style={{ fontSize: 48, fontWeight: 400, color: C.text, fontFamily: F.heading, letterSpacing: '-0.04em' }}>{metrics?.healthIndex || 0}</span>
-                            <span style={{ fontSize: 20, color: C.textMuted }}>/ 100</span>
-                         </div>
-                      </div>
-                      <div style={{ width: 110, height: 55 }}>
-                         <svg width="100%" height="100%" viewBox="0 0 100 55">
-                            <path d="M10,50 A40,40 0 0,1 90,50" fill="none" stroke="#f1f5f9" strokeWidth="6" strokeLinecap="round" />
-                            <motion.path 
-                              initial={{ pathLength: 0 }} 
-                              animate={{ pathLength: (metrics?.healthIndex || 0) / 100 }} 
-                              transition={{ duration: 1.5, ease: "circOut", delay: 0.2 }}
-                              d="M10,50 A40,40 0 0,1 90,50" 
-                              fill="none" stroke={C.emerald} strokeWidth="8" strokeLinecap="round" 
-                            />
-                         </svg>
-                      </div>
-                   </div>
-                   <div style={{ 
-                     marginTop: 24, 
-                     paddingTop: 24, 
-                     borderTop: `1px solid ${C.border}`, 
-                     display: 'flex', 
-                     flexDirection: 'column',
-                     gap: 16
-                   }}>
-                      <p style={{ margin: 0, fontSize: 13, color: C.textSub, lineHeight: 1.4 }}>{metrics?.healthIndexMessage || 'Finding institutional offers...'}</p>
-                      <button onClick={() => router.push('/portal/marketplace')} style={{ width: '100%', background: C.text, border: 'none', borderRadius: 10, padding: '12px 20px', fontSize: 12.5, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>Compare Real Offers</button>
-                   </div>
-                </motion.div>
+        {/* Net worth Card */}
+        <div className="portal-stat-card">
+          <div className="portal-stat-header">
+            <span className="portal-stat-label">Net worth</span>
+            <div className="portal-stat-icon-tile">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2f5bea" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <line x1="2" y1="10" x2="22" y2="10" />
+              </svg>
+            </div>
+          </div>
+          <div className="portal-stat-value">
+            GH₵ {metrics?.netWorth ? metrics.netWorth.toLocaleString() : '0'}
+          </div>
+          <div className="portal-stat-sub mute">
+            Add assets to track
+          </div>
+        </div>
 
-                {/* Quick Stats */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                   {[
-                     { l: 'Cash Flow', v: `GH₵ ${metrics?.cashFlow || '0.00'}`, d: 'Available now', action: 'cashflow' },
-                     { l: 'Net Worth', v: `GH₵ ${metrics?.netWorth?.toLocaleString() || '0'}`, d: '+2.4% vs Mar' },
-                     { l: 'Credit Score', v: metrics?.creditScore || '---', d: 'Secure Link' }
-                   ].map((stat, idx) => (
-                      <motion.div 
-                        key={stat.l} initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 + idx * 0.05 }}
-                        whileHover={{ y: -2, boxShadow: '0 8px 20px rgba(0,0,0,0.03)' }}
-                        onClick={() => stat.action === 'cashflow' && onCardClick('cashflow')} 
-                        style={{ background: '#fff', borderRadius: 20, border: `1px solid ${C.border}`, padding: 20, cursor: 'pointer', transition: '0.2s' }}
-                      >
-                         <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{stat.l}</p>
-                         <p style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 400, color: C.text }}>{stat.v}</p>
-                         <span style={{ fontSize: 11, fontWeight: 700, color: C.emerald }}>{stat.d}</span>
-                      </motion.div>
-                   ))}
-                </div>
+        {/* Loan offers Card */}
+        <div 
+          className="portal-stat-card clickable"
+          onClick={() => router.push('/portal/marketplace')}
+        >
+          <div className="portal-stat-header">
+            <span className="portal-stat-label">Loan offers</span>
+            <div className="portal-stat-icon-tile">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2f5bea" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23" />
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              </svg>
+            </div>
+          </div>
+          <div className="portal-stat-value">
+            Searching
+          </div>
+          <div className="portal-stat-sub mute">
+            Checking institutions
+          </div>
+        </div>
+      </div>
 
-                {/* Institutional Verification Badge */}
-                <div style={{ background: C.emeraldLight, padding: 20, borderRadius: 20, display: 'flex', alignItems: 'center', gap: 12, border: `1px solid ${C.emerald}22` }}>
-                   <div style={{ fontSize: 24 }}>🛡️</div>
-                   <div>
-                      <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: C.emerald }}>Grade A Security</p>
-                      <p style={{ margin: 0, fontSize: 11, color: C.textSub }}>Your data is protected by 256-bit encryption.</p>
-                   </div>
-                </div>
+      {/* 3. Two-Column Row (1fr / 1.5fr) */}
+      <div className="portal-two-col-grid">
+        {/* Left Card: Financial Health Index */}
+        <div className="portal-card portal-health-card">
+          <h2 className="portal-card-header-title">Financial health index</h2>
+          
+          <div className="portal-health-content">
+            {/* Semicircle Gauge (120px wide) */}
+            <div className="portal-gauge-wrapper">
+              <svg width="120" height="65" viewBox="0 0 100 55" className="portal-gauge-svg">
+                <path
+                  d="M 10 50 A 40 40 0 0 1 90 50"
+                  fill="none"
+                  stroke="#e4e8f1"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M 10 50 A 40 40 0 0 1 90 50"
+                  fill="none"
+                  stroke="#1f8a5b"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray="125.66"
+                  strokeDashoffset={125.66 - (125.66 * (score / 100))}
+                  style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+                />
+              </svg>
+            </div>
 
-              </div>
+            {/* Score */}
+            <div className="portal-health-score-block">
+              <span className="portal-health-score-num">{score}</span>
+              <span className="portal-health-score-max">/ 100</span>
+            </div>
+          </div>
 
-              {/* Right Column: Promos & Advisory & Partners (Large) */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
-                 
-                 {/* Promo Carousel */}
-                 <div style={{ position: 'relative' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                       <h3 style={{ margin: 0, fontSize: 12, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Featured Opportunities</h3>
-                       <div style={{ display: 'flex', gap: 4 }}>
-                          {PROMOS.map((_, i) => (
-                             <div key={i} style={{ width: 12, height: 4, borderRadius: 2, background: i === promoIdx ? C.blue : C.border, transition: '0.3s' }} />
-                          ))}
-                       </div>
-                    </div>
-                    
-                    <div style={{ height: 260, position: 'relative' }}>
-                       <AnimatePresence mode="wait">
-                          <motion.div 
-                            key={promoIdx}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.4, ease: 'circOut' }}
-                            whileHover={{ scale: 1.005 }}
-                            style={{ 
-                              position: 'absolute', inset: 0,
-                              background: PROMOS[promoIdx].color, 
-                              borderRadius: 32, padding: 40, color: '#fff', boxShadow: `0 20px 45px ${PROMOS[promoIdx].shadow}33`,
-                              overflow: 'hidden', cursor: 'pointer',
-                              display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start'
-                            }}
-                          >
-                             {/* Large floating watermark icon */}
-                             {PROMOS[promoIdx].icon}
-                             
-                             <span style={{ fontSize: 10, fontWeight: 900, background: 'rgba(255,255,255,0.2)', padding: '4px 12px', borderRadius: 20, marginBottom: 16, display: 'inline-block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{PROMOS[promoIdx].tag}</span>
-                             <h4 style={{ margin: '0 0 12px', fontSize: 26, fontWeight: 900, fontFamily: F.heading, lineHeight: 1.1, maxWidth: '65%' }}>{PROMOS[promoIdx].title}</h4>
-                             <p style={{ margin: '0 0 28px', fontSize: 14, opacity: 0.85, lineHeight: 1.5, maxWidth: '65%' }}>{PROMOS[promoIdx].desc}</p>
-                             <button style={{ background: '#fff', color: PROMOS[promoIdx].shadow, border: 'none', borderRadius: 12, padding: '12px 28px', fontSize: 13, fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>{PROMOS[promoIdx].btn}</button>
-                          </motion.div>
-                       </AnimatePresence>
-                    </div>
-                 </div>
+          <p className="portal-health-helper">
+            Add income and verify your employer to build your score.
+          </p>
 
-                 {/* Advisory Intelligence */}
-                 <div>
-                     <h3 style={{ margin: '0 0 20px', fontSize: 12, fontWeight: 900, color: C.textSub, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Advisory Intelligence</h3>
-                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 20 }}>
-                        <motion.div whileHover={{ y: -4, borderColor: C.blue }} onClick={() => router.push('/portal/documents')} style={{ background: '#fff', borderRadius: 24, border: `1px solid ${C.border}`, padding: 24, cursor: 'pointer', transition: '0.2s', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 180 }}>
-                           <div>
-                              <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 800, color: C.text, fontFamily: F.heading }}>Unlock a 5.2% better rate</p>
-                              <p style={{ margin: 0, fontSize: 12, color: C.textSub, lineHeight: 1.4 }}>Complete **Employment Verification** to unlock specialist rates.</p>
-                           </div>
-                           <button style={{ background: '#0d1b3e', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 11, fontWeight: 700, cursor: 'pointer', alignSelf: 'flex-start', marginTop: 16 }}>Go to Vault</button>
-                        </motion.div>
-                        <motion.div whileHover={{ y: -4, borderColor: C.blue }} onClick={() => router.push('/portal/calculator')} style={{ background: '#fff', borderRadius: 24, border: `1px solid ${C.border}`, padding: 24, cursor: 'pointer', transition: '0.2s', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 180 }}>
-                           <div>
-                              <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 800, color: C.text, fontFamily: F.heading }}>Loan Calculator</p>
-                              <p style={{ margin: 0, fontSize: 12, color: C.textSub, lineHeight: 1.4 }}>Estimate your monthly payments before you apply.</p>
-                           </div>
-                           <button style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 11, fontWeight: 700, cursor: 'pointer', alignSelf: 'flex-start', marginTop: 16 }}>Calculate Now</button>
-                        </motion.div>
-                        <motion.div whileHover={{ y: -4, borderColor: C.blue }} onClick={() => router.push('/portal/marketplace?type=insurance')} style={{ background: '#fff', borderRadius: 24, border: `1px solid ${C.border}`, padding: 24, cursor: 'pointer', transition: '0.2s', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 180 }}>
-                           <div>
-                              <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 800, color: C.text, fontFamily: F.heading }}>Insurance Savings</p>
-                              <p style={{ margin: 0, fontSize: 12, color: C.textSub, lineHeight: 1.4 }}>Save **GH₵ 120/mo** by switching to Resolve Health cover.</p>
-                           </div>
-                           <button style={{ background: C.emerald, color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 11, fontWeight: 700, cursor: 'pointer', alignSelf: 'flex-start', marginTop: 16 }}>Explore Protection</button>
-                        </motion.div>
-                     </div>
-                 </div>
-
-                 {/* Approved Ecosystem Partners */}
-                 <div>
-                     <h3 style={{ margin: '0 0 20px', fontSize: 12, fontWeight: 900, color: C.textSub, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Approved Ecosystem Partners</h3>
-                     {instsLoading ? (
-                       <div style={{ padding: '20px 0', fontSize: 12, color: C.textMuted }}>Synchronizing verified portal lenders...</div>
-                     ) : institutions.length === 0 ? (
-                       <div style={{ padding: '20px 0', fontSize: 12, color: C.textMuted }}>No certified partners found.</div>
-                     ) : (
-                       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 20 }}>
-                         {institutions.slice(0, 6).map((inst: any) => (
-                           <motion.div 
-                             key={inst._id}
-                             whileHover={{ y: -4, boxShadow: '0 10px 25px rgba(0,0,0,0.04)', borderColor: C.blue }}
-                             onClick={() => router.push(`/portal/marketplace?provider=${encodeURIComponent(inst.name)}`)}
-                             style={{ 
-                               background: '#fff', 
-                               borderRadius: 24, 
-                               border: `1px solid ${C.border}`, 
-                               padding: 20, 
-                               cursor: 'pointer', 
-                               display: 'flex', 
-                               flexDirection: 'column', 
-                               gap: 12,
-                               transition: '0.2s'
-                             }}
-                           >
-                             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                               <div style={{ 
-                                 width: 44, 
-                                 height: 44, 
-                                 background: '#f8fafc', 
-                                 borderRadius: 12, 
-                                 border: `1.5px solid ${C.border}`, 
-                                 display: 'flex', 
-                                 alignItems: 'center', 
-                                 justifyContent: 'center', 
-                                 padding: 6,
-                                 flexShrink: 0
-                               }}>
-                                 {inst.logoUrl ? (
-                                   <img src={inst.logoUrl} alt="" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-                                 ) : (
-                                   <span style={{ fontSize: 18 }}>🏦</span>
-                                 )}
-                               </div>
-                               <div style={{ minWidth: 0, flex: 1 }}>
-                                 <h4 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inst.name}</h4>
-                                 <span style={{ fontSize: 10, fontWeight: 950, color: C.blue, textTransform: 'uppercase', letterSpacing: '0.02em' }}>{inst.type}</span>
-                               </div>
-                             </div>
-                             
-                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${C.border}`, paddingTop: 10, fontSize: 10.5 }}>
-                               <span style={{ color: C.emerald, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.emerald }} /> Active Cover
-                               </span>
-                               <span style={{ color: C.textMuted, fontWeight: 700 }}>Rate: {inst.billingStatus === 'Active' ? 'Tier 1' : 'Core'}</span>
-                             </div>
-                           </motion.div>
-                         ))}
-                       </div>
-                     )}
-                 </div>
-
-                 {/* Market Intelligence Grid */}
-                 <div>
-                    <h3 style={{ margin: '0 0 20px', fontSize: 12, fontWeight: 900, color: C.textSub, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Market Intelligence & Reports</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 20 }}>
-                       {articles && articles.length > 0 ? (
-                         articles.slice(0, 3).map((blog: any) => (
-                          <motion.div 
-                            key={blog.id}
-                            whileHover={{ y: -4, background: '#fff', boxShadow: '0 10px 30px rgba(0,0,0,0.04)', borderColor: C.blue }}
-                            onClick={() => setSelectedBlog(blog)}
-                            style={{ 
-                              padding: 20, borderRadius: 24, border: `1px solid ${C.border}`, 
-                              display: 'flex', flexDirection: 'column', gap: 14, cursor: 'pointer', transition: '0.2s',
-                              background: 'rgba(255,255,255,0.4)', backdropFilter: 'blur(10px)'
-                            }}
-                          >
-                             <div style={{ width: 40, height: 40, borderRadius: 12, background: '#fff', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, alignSelf: 'flex-start' }}>
-                                {blog.icon || '🗞️'}
-                             </div>
-                             <div style={{ flex: 1 }}>
-                                <span style={{ fontSize: 9, fontWeight: 800, color: C.blue, textTransform: 'uppercase', letterSpacing: '0.02em' }}>{blog.tag}</span>
-                                <p style={{ margin: '4px 0 0', fontSize: 13.5, fontWeight: 800, color: C.text, lineHeight: 1.4 }}>{blog.title}</p>
-                             </div>
-                          </motion.div>
-                         ))
-                       ) : (
-                          <div style={{ textAlign: 'start', padding: '10px 0' }}>
-                             <p style={{ fontSize: 13, color: C.textMuted, fontWeight: 600 }}>Stay tuned for market intelligence reports.</p>
-                          </div>
-                       )}
-                    </div>
-                 </div>
-
-              </div>
-          </motion.div>
-        )}
-        {activeTab === 'performance' && (
-          <motion.div 
-            key="performance"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.3 }}
-            style={{ display: 'flex', flexDirection: 'column', gap: 32 }}
+          <button
+            onClick={() => router.push('/portal/marketplace')}
+            className="portal-health-action-btn"
           >
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.5fr 1fr', gap: 32 }}>
-                   {/* Velocity Chart */}
-                   <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} style={{ background: '#fff', borderRadius: 32, border: `1px solid ${C.border}`, padding: 32 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-                         <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: C.text, fontFamily: F.heading }}>Credit Velocity</h3>
-                         <div style={{ display: 'flex', background: C.bg, borderRadius: 8, padding: 4 }}>
-                            {['6m', '1y'].map(t => <button key={t} onClick={() => {}} style={{ border: 'none', background: t === '6m' ? '#fff' : 'transparent', padding: '4px 12px', fontSize: 10, fontWeight: 800, color: t === '6m' ? C.blue : C.textMuted, borderRadius: 6, boxShadow: t === '6m' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none' }}>{t}</button>)}
-                         </div>
-                      </div>
-                      <div style={{ height: 200, display: 'flex', alignItems: 'flex-end', gap: isMobile ? 8 : 16, paddingBottom: 24 }}>
-                         {metrics?.velocityData && metrics.velocityData.length > 0 ? (
-                            metrics.velocityData.map((d: any, i: number) => (
-                               <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                                  <motion.div 
-                                    initial={{ height: 0 }} animate={{ height: `${d.value}%` }} transition={{ delay: i * 0.1, duration: 1, ease: 'circOut' }}
-                                    style={{ width: '100%', background: `linear-gradient(to top, ${C.blue}, ${C.blue}88)`, borderRadius: '4px 4px 2px 2px' }} 
-                                  />
-                                  <span style={{ fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase' }}>{d.label}</span>
-                               </div>
-                            ))
-                         ) : (
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, height: '100%' }}>
-                               <div style={{ fontSize: 32, opacity: 0.3 }}>📊</div>
-                               <p style={{ margin: 0, fontSize: 13, color: C.textMuted, fontWeight: 600 }}>Velocity data arriving soon</p>
-                            </div>
-                         )}
-                      </div>
-                   </motion.div>
+            Compare real offers
+          </button>
+        </div>
 
-                   {/* Health Factors */}
-                   <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} style={{ background: '#fff', borderRadius: 32, border: `1px solid ${C.border}`, padding: 32 }}>
-                      <h3 style={{ margin: '0 0 32px', fontSize: 16, fontWeight: 800, color: C.text, fontFamily: F.heading }}>Health Factors</h3>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                         {metrics?.healthFactors && metrics.healthFactors.length > 0 ? (
-                            metrics.healthFactors.map((f: any) => (
-                               <div key={f.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                  <span style={{ fontSize: 13, fontWeight: 700, color: C.textSub }}>{f.name}</span>
-                                  <span style={{ fontSize: 12, fontWeight: 800, color: f.color }}>{f.status}</span>
-                                </div>
-                            ))
-                         ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, paddingTop: 20, paddingBottom: 20 }}>
-                               <div style={{ fontSize: 32, opacity: 0.3 }}>🛡️</div>
-                               <p style={{ margin: 0, fontSize: 13, color: C.textMuted, fontWeight: 600, textAlign: 'center' }}>Connect your first account to view health factors.</p>
-                            </div>
-                         )}
-                      </div>
-                   </motion.div>
-                </div>
-
-             <div style={{ background: C.purple, borderRadius: 24, padding: isMobile ? 32 : 48, color: '#fff', textAlign: 'center' }}>
-                <div style={{ maxWidth: 600, marginInline: 'auto' }}>
-                   <h3 style={{ margin: '0 0 16px', fontSize: isMobile ? 24 : 32, fontWeight: 300, fontFamily: F.serif }}>The Path to 850</h3>
-                   <p style={{ margin: '0 0 32px', fontSize: 14.5, opacity: 0.7, lineHeight: 1.6 }}>By maintaining your current spending patterns for **3 more months**, ResolveBridge predicts your Score will reach the **Institutional Tier (820+)**.</p>
-                   <button style={{ background: C.blue, color: '#fff', border: 'none', borderRadius: 12, padding: '14px 32px', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>View Advanced Insights</button>
-                </div>
-             </div>
-          </motion.div>
-        )}
-
-        {activeTab === 'repayments' && (
-          <motion.div
-            key="repayments"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            style={{ display: 'flex', flexDirection: 'column', gap: 40 }}
+        {/* Right Card: Instant Health Quote */}
+        <div className="portal-card portal-quote-card">
+          <div className="portal-quote-badge">New</div>
+          <h2 className="portal-quote-title">Instant health quote</h2>
+          <p className="portal-quote-desc">
+            Get covered in 60 seconds with Enterprise Resolve Health premiums.
+          </p>
+          <button
+            onClick={() => router.push('/portal/insurance-quote')}
+            className="portal-quote-btn"
           >
-            {/* Actuarial Summary Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: 20 }}>
-              <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 24, padding: 24 }}>
-                <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Active Facilities</p>
-                <p style={{ margin: 0, fontSize: 24, fontWeight: 405, color: C.text }}>
-                  {appsLoading ? '...' : (appsResponse?.data || []).filter((a: any) => a.status === 'Disbursed').length} Active
-                </p>
-              </div>
-              <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 24, padding: 24 }}>
-                <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Total Active Debt</p>
-                <p style={{ margin: 0, fontSize: 24, fontWeight: 405, color: C.text }}>
-                  GH₵ {appsLoading ? '0' : (appsResponse?.data || [])
-                    .filter((a: any) => a.status === 'Disbursed')
-                    .reduce((sum: number, a: any) => sum + (a.amount || 0), 0).toLocaleString()}
-                </p>
-              </div>
-              <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 24, padding: 24 }}>
-                <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Total Repayments</p>
-                <p style={{ margin: 0, fontSize: 24, fontWeight: 405, color: C.emerald }}>
-                  GH₵ {txLoading ? '0' : (txResponse?.data?.items || [])
-                    .filter((t: any) => t.category === 'Loan' || t.category === 'BNPL' || t.category === 'Insurance')
-                    .reduce((sum: number, t: any) => sum + Math.abs(t.amount || 0), 0).toLocaleString()}
-                </p>
-              </div>
-              <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 24, padding: 24 }}>
-                <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Credit Limit Cap</p>
-                <p style={{ margin: 0, fontSize: 24, fontWeight: 405, color: C.blue }}>GH₵ 15,000</p>
-              </div>
+            Get a quote
+          </button>
+        </div>
+      </div>
+
+      {/* 4. Advisory Row (Three Equal Cards) */}
+      <div className="portal-advisory-grid">
+        {/* Advisory 1: Rate */}
+        <div className="portal-card portal-advisory-card">
+          <div>
+            <h3 className="portal-advisory-title">Unlock a 5.2% better rate</h3>
+            <p className="portal-advisory-desc">
+              Complete employment verification to see specialist rates.
+            </p>
+          </div>
+          <button
+            onClick={() => router.push('/portal/documents')}
+            className="portal-advisory-btn dark"
+          >
+            Go to Vault
+          </button>
+        </div>
+
+        {/* Advisory 2: Calculator */}
+        <div className="portal-card portal-advisory-card">
+          <div>
+            <h3 className="portal-advisory-title">Loan calculator</h3>
+            <p className="portal-advisory-desc">
+              Estimate your monthly payments before you apply.
+            </p>
+          </div>
+          <button
+            onClick={() => router.push('/portal/calculator')}
+            className="portal-advisory-btn soft"
+          >
+            Calculate now
+          </button>
+        </div>
+
+        {/* Advisory 3: Insurance Savings */}
+        <div className="portal-card portal-advisory-card">
+          <div>
+            <h3 className="portal-advisory-title">Insurance savings</h3>
+            <p className="portal-advisory-desc">
+              Save <strong className="portal-highlight-green">GH₵ 120/mo</strong> by switching to Resolve Health cover.
+            </p>
+          </div>
+          <button
+            onClick={() => router.push('/portal/marketplace?type=insurance')}
+            className="portal-advisory-btn soft"
+          >
+            Explore protection
+          </button>
+        </div>
+      </div>
+
+      {/* Article / News Blog Modal if triggered */}
+      {selectedBlog && (
+        <div 
+          onClick={() => setSelectedBlog(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(16,26,51,0.5)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 20
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#ffffff',
+              borderRadius: 16,
+              maxWidth: 520,
+              width: '100%',
+              padding: 28,
+              boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+              border: '1px solid #e4e8f1'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#2f5bea', background: '#e8eefd', padding: '4px 10px', borderRadius: 9999 }}>
+                {selectedBlog.tag || 'Insight'}
+              </span>
+              <IconButton onClick={() => setSelectedBlog(null)} size="small">
+                <CloseRounded sx={{ fontSize: 18 }} />
+              </IconButton>
             </div>
-
-            {/* Core Facilities List */}
-            <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 32, overflow: 'hidden' }}>
-              <div style={{ padding: 32, borderBottom: `1px solid ${C.border}` }}>
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: C.text, fontFamily: F.heading }}>My Active Credit Contracts</h3>
-                <p style={{ margin: '4px 0 0', fontSize: 12, color: C.textSub }}>Track outstanding balance, interest cycles, and register mobile money repayments.</p>
-              </div>
-
-              {appsLoading ? (
-                <div style={{ overflowX: 'auto', width: '100%' }}>
-                  <table style={{ width: '100%', minWidth: 800, borderCollapse: 'collapse', textAlign: 'left' }}>
-                    <thead>
-                      <tr style={{ borderBottom: `1px solid ${C.border}`, background: 'rgba(0,0,0,0.01)' }}>
-                        <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Contract Details</th>
-                        <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Lender Partner</th>
-                        <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Outstanding Repayment</th>
-                        <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Settle Rate Progress</th>
-                        <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Array.from({ length: 3 }).map((_, idx) => (
-                        <tr key={idx} style={{ borderBottom: `1px solid ${C.border}` }}>
-                          <td style={{ padding: '20px 24px' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                              <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }} style={{ height: 14, width: 180, background: '#f1f5f9', borderRadius: 4 }} />
-                              <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.1 }} style={{ height: 10, width: 120, background: '#f1f5f9', borderRadius: 3 }} />
-                            </div>
-                          </td>
-                          <td style={{ padding: '20px 24px' }}>
-                            <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }} style={{ height: 13, width: 140, background: '#f1f5f9', borderRadius: 4 }} />
-                          </td>
-                          <td style={{ padding: '20px 24px' }}>
-                            <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }} style={{ height: 14, width: 100, background: '#f1f5f9', borderRadius: 4 }} />
-                          </td>
-                          <td style={{ padding: '20px 24px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }} style={{ height: 6, width: 80, background: '#f1f5f9', borderRadius: 3 }} />
-                              <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }} style={{ height: 10, width: 30, background: '#f1f5f9', borderRadius: 3 }} />
-                            </div>
-                          </td>
-                          <td style={{ padding: '20px 24px', textAlign: 'right' }}>
-                            <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }} style={{ height: 36, width: 80, background: '#f1f5f9', borderRadius: 12, marginLeft: 'auto' }} />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (appsResponse?.data || []).filter((a: any) => a.status === 'Disbursed' || a.status === 'Completed').length === 0 ? (
-                <div style={{ padding: 80, textAlign: 'center' }}>
-                  <CloudDoneRounded sx={{ fontSize: 48, color: C.textMuted, marginBottom: 2 }} />
-                  <h4 style={{ margin: 0, fontSize: 15, color: C.text, fontWeight: 700 }}>No Active Facilities</h4>
-                  <p style={{ margin: '4px 0 0', fontSize: 12, color: C.textSub }}>All clear! You currently do not have any active loans, protection policies, or BNPL facilities.</p>
-                </div>
-              ) : (
-                <div style={{ overflowX: 'auto', width: '100%' }}>
-                  <table style={{ width: '100%', minWidth: 800, borderCollapse: 'collapse', textAlign: 'left' }}>
-                  <thead>
-                    <tr style={{ borderBottom: `1px solid ${C.border}`, background: 'rgba(0,0,0,0.01)' }}>
-                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Contract Details</th>
-                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Lender Partner</th>
-                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Outstanding Repayment</th>
-                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Settle Rate Progress</th>
-                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(appsResponse?.data || [])
-                      .filter((a: any) => a.status === 'Disbursed' || a.status === 'Completed')
-                      .map((app: any) => {
-                        const expectedPayable = app.amount * (1 + (app.productId?.interestRate || 0.1));
-                        const paidToDate = (txResponse?.data?.items || [])
-                          .filter((t: any) => t.applicationId === app._id && t.type === 'debit')
-                          .reduce((sum: number, t: any) => sum + Math.abs(t.amount || 0), 0);
-                        const outstanding = Math.max(0, expectedPayable - paidToDate);
-                        const progress = Math.min(100, Math.round((paidToDate / expectedPayable) * 100));
-                        const isInsurance = app.productId?.productType === 'Insurance';
-
-                        return (
-                          <tr key={app._id} style={{ borderBottom: `1px solid ${C.border}` }}>
-                            <td style={{ padding: '20px 24px' }}>
-                              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{app.productId?.name || 'Resolve Credit Extension'}</span>
-                                <span style={{ fontSize: 11, color: C.textMuted, marginTop: 4 }}>Size: GH₵ {app.amount?.toLocaleString()} ({app.tenureMonths} months)</span>
-                              </div>
-                            </td>
-                            <td style={{ padding: '20px 24px' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <span style={{ fontSize: 13, color: C.textSub }}>{app.productId?.institutionId?.name || 'ResolveBridge Partner'}</span>
-                                <IconButton 
-                                  size="small"
-                                  onClick={() => {
-                                    if (app.providerId) {
-                                      router.push(`/portal/chat?institutionId=${app.providerId}&institutionName=${encodeURIComponent(app.provider || app.productId?.institutionId?.name || 'Partner')}&institutionLogo=${encodeURIComponent(app.logo || '/resolve_icon.png')}&prefill=${encodeURIComponent(`Hello, I would like to make an enquiry about my active credit facility "${app.productId?.name || 'Resolve Credit Extension'}" with ${app.provider || app.productId?.institutionId?.name || 'ResolveBridge Partner'}.`)}`);
-                                    } else {
-                                      window.dispatchEvent(new CustomEvent('open-chat', { 
-                                        detail: { 
-                                          prefill: `Hello, I would like to make an enquiry about my active credit facility "${app.productId?.name || 'Resolve Credit Extension'}" with ${app.productId?.institutionId?.name || 'ResolveBridge Partner'}.` 
-                                        } 
-                                      }));
-                                    }
-                                  }}
-                                  sx={{ color: C.blue, padding: '4px', '&:hover': { background: `${C.blue}14` } }}
-                                  title="Chat with partner"
-                                >
-                                   <ChatBubbleOutlineRounded sx={{ fontSize: 15 }} />
-                                </IconButton>
-                              </div>
-                            </td>
-                            <td style={{ padding: '20px 24px' }}>
-                              {isInsurance ? (
-                                <span style={{ fontSize: 13, fontWeight: 700, color: C.emerald }}>
-                                  ✓ Policy Premium Active
-                                </span>
-                              ) : (
-                                <>
-                                  <span style={{ fontSize: 14, fontWeight: 700, color: outstanding > 0 ? C.text : C.emerald }}>
-                                    {outstanding > 0 ? `GH₵ ${outstanding.toLocaleString()}` : '✓ Fully Settled'}
-                                  </span>
-                                  <span style={{ fontSize: 10, color: C.textMuted, marginLeft: 6 }}>/ GHS {expectedPayable.toLocaleString()} cap</span>
-                                </>
-                              )}
-                            </td>
-                            <td style={{ padding: '20px 24px', width: 200 }}>
-                              {isInsurance ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                  <span style={{ fontSize: 11, fontWeight: 800, color: C.emerald }}>100% Valid Shield Cover</span>
-                                  <div style={{ width: '100%', height: 6, background: C.bg, borderRadius: 3, overflow: 'hidden' }}>
-                                    <div style={{ width: '100%', height: '100%', background: C.emerald, borderRadius: 3 }} />
-                                  </div>
-                                </div>
-                              ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                  <span style={{ fontSize: 11, fontWeight: 800, color: C.textSub }}>{progress}% Paid</span>
-                                  <div style={{ width: '100%', height: 6, background: C.bg, borderRadius: 3, overflow: 'hidden' }}>
-                                    <div style={{ width: `${progress}%`, height: '100%', background: C.emerald, borderRadius: 3 }} />
-                                  </div>
-                                </div>
-                              )}
-                            </td>
-                            <td style={{ padding: '20px 24px', textAlign: 'right' }}>
-                              {isInsurance ? (
-                                <button
-                                  onClick={() => {
-                                    setSelectedQrApp(app);
-                                    handleLoadQrCode(app._id);
-                                  }}
-                                  style={{
-                                    background: C.emerald, color: '#fff', border: 'none', borderRadius: 10,
-                                    padding: '8px 16px', fontSize: 12, fontWeight: 800, cursor: 'pointer',
-                                    display: 'inline-flex', alignItems: 'center', gap: 6
-                                  }}
-                                >
-                                  <QrCodeRounded sx={{ fontSize: 15 }} /> QR Cover Badge
-                                </button>
-                              ) : app.status === 'Completed' || outstanding <= 0 ? (
-                                <span style={{
-                                  fontSize: 10.5, fontWeight: 900, color: C.emerald,
-                                  background: C.emeraldLight, padding: '6px 12px', borderRadius: 8
-                                }}>
-                                  COMPLETED
-                                </span>
-                              ) : (
-                                <button
-                                  onClick={() => {
-                                    setSelectedPayApp(app);
-                                    setPayAmount(Math.round(expectedPayable / app.tenureMonths));
-                                  }}
-                                  style={{
-                                    background: C.blue, color: '#fff', border: 'none', borderRadius: 10,
-                                    padding: '8px 16px', fontSize: 12, fontWeight: 800, cursor: 'pointer'
-                                  }}
-                                >
-                                  Pay Installment
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
-              </div>
-              )}
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: '#101a33', margin: '0 0 12px', fontFamily: "'Fraunces', Georgia, serif" }}>
+              {selectedBlog.title}
+            </h2>
+            <p style={{ fontSize: 14, color: '#6b7690', lineHeight: 1.6, margin: '0 0 24px' }}>
+              {selectedBlog.content}
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setSelectedBlog(null)}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  borderRadius: 9,
+                  background: '#2f5bea',
+                  color: '#fff',
+                  border: 'none',
+                  fontWeight: 600,
+                  fontSize: 13,
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
             </div>
+          </div>
+        </div>
+      )}
 
-            {/* Repayments History log */}
-            <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 32, overflow: 'hidden' }}>
-              <div style={{ padding: 32, borderBottom: `1px solid ${C.border}` }}>
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: C.text, fontFamily: F.heading }}>My Repayment Statement History</h3>
-                <p style={{ margin: '4px 0 0', fontSize: 12, color: C.textSub }}>Audit trail of your posted MoMo/Bank payments settled to ResolveBridge.</p>
-              </div>
+      <style jsx>{`
+        .portal-overview-container {
+          max-width: 1240px;
+          margin: 0 auto;
+          padding: 32px 36px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+          font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
 
-              {txLoading ? (
-                <div style={{ overflowX: 'auto', width: '100%' }}>
-                  <table style={{ width: '100%', minWidth: 800, borderCollapse: 'collapse', textAlign: 'left' }}>
-                    <thead>
-                      <tr style={{ borderBottom: `1px solid ${C.border}`, background: 'rgba(0,0,0,0.01)' }}>
-                        <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Reference</th>
-                        <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Description</th>
-                        <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Amount Settled</th>
-                        <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Ledger Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Array.from({ length: 3 }).map((_, idx) => (
-                        <tr key={idx} style={{ borderBottom: `1px solid ${C.border}` }}>
-                          <td style={{ padding: '16px 24px' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                              <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }} style={{ height: 14, width: 140, background: '#f1f5f9', borderRadius: 4 }} />
-                              <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.1 }} style={{ height: 10, width: 90, background: '#f1f5f9', borderRadius: 3 }} />
-                            </div>
-                          </td>
-                          <td style={{ padding: '16px 24px' }}>
-                            <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }} style={{ height: 13, width: 220, background: '#f1f5f9', borderRadius: 4 }} />
-                          </td>
-                          <td style={{ padding: '16px 24px' }}>
-                            <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }} style={{ height: 14, width: 80, background: '#f1f5f9', borderRadius: 4 }} />
-                          </td>
-                          <td style={{ padding: '16px 24px' }}>
-                            <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }} style={{ height: 24, width: 70, background: '#f1f5f9', borderRadius: 8 }} />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (txResponse?.data?.items || []).length === 0 ? (
-                <div style={{ padding: 80, textAlign: 'center' }}>
-                  <HistoryRounded sx={{ fontSize: 48, color: C.textMuted, marginBottom: 2 }} />
-                  <h4 style={{ margin: 0, fontSize: 15, color: C.text, fontWeight: 700 }}>Statements Clean</h4>
-                  <p style={{ margin: '4px 0 0', fontSize: 12, color: C.textSub }}>No payment history exists under your wallet account.</p>
-                </div>
-              ) : (
-                <div style={{ overflowX: 'auto', width: '100%' }}>
-                  <table style={{ width: '100%', minWidth: 800, borderCollapse: 'collapse', textAlign: 'left' }}>
-                  <thead>
-                    <tr style={{ borderBottom: `1px solid ${C.border}`, background: 'rgba(0,0,0,0.01)' }}>
-                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Reference</th>
-                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Description</th>
-                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Amount Settled</th>
-                      <th style={{ padding: '16px 24px', fontSize: 11, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Ledger Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(txResponse?.data?.items || [])
-                      .map((tx: any) => (
-                        <tr key={tx._id} style={{ borderBottom: `1px solid ${C.border}` }}>
-                          <td style={{ padding: '16px 24px' }}>
-                            <span style={{ fontSize: 13, fontFamily: 'monospace', fontWeight: 700, color: C.blue }}>
-                              {tx.reference || tx._id?.substring(0, 8).toUpperCase()}
-                            </span>
-                          </td>
-                          <td style={{ padding: '16px 24px' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                              <span style={{ fontSize: 13, color: C.text }}>{tx.desc || tx.description}</span>
-                              <span style={{ fontSize: 10, color: C.textMuted, marginTop: 4 }}>Date: {new Date(tx.createdAt).toLocaleDateString()}</span>
-                            </div>
-                          </td>
-                          <td style={{ padding: '16px 24px' }}>
-                            <span style={{ fontSize: 14, fontWeight: 700, color: tx.type === 'debit' ? C.emerald : C.blue }}>
-                              {tx.type === 'debit' ? '-' : '+'}GH₵ {Math.abs(tx.amount || 0).toLocaleString()}
-                            </span>
-                          </td>
-                          <td style={{ padding: '16px 24px' }}>
-                            <span style={{
-                              fontSize: 10.5, fontWeight: 800,
-                              background: tx.status === 'Completed' ? C.emeraldLight : C.purplePale,
-                              color: tx.status === 'Completed' ? C.emerald : C.blue,
-                              padding: '4px 8px', borderRadius: 4
-                            }}>
-                              {tx.status || 'Completed'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-              )}
-            </div>
+        /* 1. Greeting Row */
+        .portal-greeting-row {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 16px;
+        }
 
-            {/* Repayments Drawer */}
-            <Drawer
-              anchor="right"
-              open={!!selectedPayApp}
-              onClose={() => setSelectedPayApp(null)}
-              PaperProps={{
-                style: { width: '100%', maxWidth: 440, background: '#ffffff', color: C.text, padding: 32, boxSizing: 'border-box' }
-              }}
-            >
-              {selectedPayApp && (
-                <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-                      <h3 style={{ margin: 0, fontSize: 18, color: C.text, fontFamily: F.heading, fontWeight: 700 }}>Mobile Money Settlement</h3>
-                      <IconButton onClick={() => setSelectedPayApp(null)} style={{ color: C.textMuted }}><CloseRounded /></IconButton>
-                    </div>
+        .portal-greeting-title {
+          margin: 0;
+          font-family: 'Fraunces', Georgia, serif;
+          font-size: clamp(30px, 4vw, 42px);
+          font-weight: 600;
+          color: #101a33;
+          line-height: 1.15;
+          letter-spacing: -0.02em;
+        }
 
-                    <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 16, padding: 20, marginBottom: 28 }}>
-                      <p style={{ margin: 0, fontSize: 10, color: C.textMuted, fontWeight: 800, textTransform: 'uppercase' }}>PRODUCT REPAYMENT</p>
-                      <h4 style={{ margin: '4px 0 0', fontSize: 14.5, color: C.text }}>{selectedPayApp.productId?.name}</h4>
-                      <p style={{ margin: '2px 0 0', fontSize: 12, color: C.textSub }}>Lender: {selectedPayApp.productId?.institutionId?.name}</p>
-                    </div>
+        .portal-greeting-subtitle {
+          margin: 6px 0 0;
+          font-size: 14px;
+          color: #6b7690;
+          font-weight: 400;
+        }
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                      
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <label style={{ fontSize: 11, fontWeight: 800, color: C.textSub }}>REPAYMENT CHANNEL</label>
-                        <select
-                          value={momoCarrier}
-                          onChange={(e) => setMomoCarrier(e.target.value)}
-                          style={{ padding: '12px 14px', borderRadius: 10, border: `1px solid ${C.borderStrong}`, background: '#fff', color: C.text, outline: 'none', fontSize: 13, cursor: 'pointer' }}
-                        >
-                          <option value="MTN MoMo">MTN Mobile Money</option>
-                          <option value="Telecel Cash">Telecel Cash</option>
-                          <option value="AT Money">AT Money</option>
-                        </select>
-                      </div>
+        .portal-apply-btn {
+          background-color: #2f5bea;
+          color: #ffffff;
+          border: none;
+          border-radius: 10px;
+          padding: 11px 20px;
+          font-size: 13.5px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background-color 150ms ease;
+          font-family: 'DM Sans', system-ui, sans-serif;
+        }
+        .portal-apply-btn:hover {
+          background-color: #2449c4;
+        }
+        .portal-apply-btn:focus-visible {
+          outline: 2px solid #2f5bea;
+          outline-offset: 2px;
+        }
 
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <label style={{ fontSize: 11, fontWeight: 800, color: C.textSub }}>MOMO PHONE NUMBER</label>
-                        <input
-                          type="tel"
-                          value={momoPhone}
-                          onChange={(e) => setMomoPhone(e.target.value)}
-                          placeholder="e.g. 0244123456"
-                          required
-                          style={{ padding: '12px 14px', borderRadius: 10, border: `1px solid ${C.borderStrong}`, background: '#fff', color: C.text, outline: 'none', fontSize: 13 }}
-                        />
-                      </div>
+        /* 2. Three Stat Cards */
+        .portal-stats-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
+        }
 
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <label style={{ fontSize: 11, fontWeight: 800, color: C.textSub }}>SETTLE PAYMENT AMOUNT (GHS)</label>
-                        <input
-                          type="number"
-                          value={payAmount}
-                          onChange={(e) => setPayAmount(Number(e.target.value))}
-                          required
-                          min={1}
-                          style={{ padding: '12px 14px', borderRadius: 10, border: `1px solid ${C.borderStrong}`, background: '#fff', color: C.text, outline: 'none', fontSize: 13 }}
-                        />
-                      </div>
+        .portal-stat-card {
+          background-color: #ffffff;
+          border: 1px solid #e4e8f1;
+          border-radius: 16px;
+          padding: 22px 24px;
+          display: flex;
+          flex-direction: column;
+          box-sizing: border-box;
+          transition: border-color 150ms ease;
+        }
+        .portal-stat-card.clickable {
+          cursor: pointer;
+        }
+        .portal-stat-card.clickable:hover {
+          border-color: #cbd5e1;
+        }
 
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <label style={{ fontSize: 11, fontWeight: 800, color: C.textSub }}>SECURE MOMO AUTH PIN</label>
-                        <input
-                          type="password"
-                          maxLength={4}
-                          value={momoPin}
-                          onChange={(e) => setMomoPin(e.target.value)}
-                          placeholder="••••"
-                          required
-                          style={{ padding: '12px 14px', borderRadius: 10, border: `1px solid ${C.borderStrong}`, background: '#fff', color: C.text, outline: 'none', fontSize: 13, letterSpacing: 4 }}
-                        />
-                      </div>
+        .portal-stat-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 12px;
+        }
 
-                      <button
-                        onClick={async () => {
-                          if (payAmount <= 0) {
-                            toast.error('Please enter a valid amount.');
-                            return;
-                          }
-                          if (!momoPin || momoPin.length < 4) {
-                            toast.error('Please enter your 4-digit MoMo PIN.');
-                            return;
-                          }
-                          setIsProcessingPayment(true);
-                          try {
-                            const res = await createTransaction({
-                              userId: user?._id || 'SYSTEM',
-                              applicationId: selectedPayApp._id,
-                              institutionId: selectedPayApp.productId?.institutionId?._id || 'SYSTEM',
-                              description: `MoMo Installment Settle: ${selectedPayApp.productId?.name}`,
-                              amount: payAmount,
-                              type: 'debit', // debit on borrower's ledger resolves outstanding debt
-                              category: 'Loan',
-                              status: 'Completed'
-                            }).unwrap();
+        .portal-stat-label {
+          font-size: 13px;
+          font-weight: 500;
+          color: #6b7690;
+        }
 
-                            if (res.success) {
-                              toast.success(`Installment authorized! GHS ${payAmount.toLocaleString()} successfully paid via ${momoCarrier}.`);
-                              setSelectedPayApp(null);
-                              setMomoPin('');
-                              refetchApps();
-                              refetchTx();
-                            } else {
-                              toast.error(res.message || 'Payment processing failed');
-                            }
-                          } catch (err: any) {
-                            toast.error(err.data?.message || 'Error executing settlement payment');
-                          } finally {
-                            setIsProcessingPayment(false);
-                          }
-                        }}
-                        disabled={isProcessingPayment}
-                        style={{
-                          width: '100%', padding: '14px', borderRadius: 10, background: C.emerald, color: '#fff',
-                          border: 'none', cursor: isProcessingPayment ? 'not-allowed' : 'pointer', fontSize: 13.5,
-                          fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                          marginTop: 12, transition: '0.2s'
-                        }}
-                      >
-                        <SmartphoneRounded sx={{ fontSize: 18 }} /> {isProcessingPayment ? 'Authorizing MoMo Cash...' : `Authorize & Settle GH₵ ${payAmount.toLocaleString()}`}
-                      </button>
+        .portal-stat-icon-tile {
+          width: 34px;
+          height: 34px;
+          border-radius: 10px;
+          background-color: #e8eefd;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
 
-                    </div>
-                  </div>
+        .portal-stat-value {
+          font-size: 28px;
+          font-weight: 700;
+          color: #101a33;
+          letter-spacing: -0.02em;
+          margin-bottom: 6px;
+          line-height: 1.2;
+        }
 
-                  <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 20, fontSize: 11.5, color: C.textMuted, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <ShieldRounded sx={{ fontSize: 14, color: C.emerald }} /> Payments are secured by Bank-Grade Cryptographic MoMo SWIFT Nodes.
-                  </div>
-                </div>
-              )}
-            </Drawer>
+        .portal-stat-sub {
+          font-size: 12px;
+          font-weight: 500;
+        }
+        .portal-stat-sub.green {
+          color: #1f8a5b;
+          font-weight: 600;
+        }
+        .portal-stat-sub.mute {
+          color: #6b7690;
+        }
 
-            {/* Policy Verification QR Code Drawer */}
-            <Drawer
-              anchor="right"
-              open={!!selectedQrApp}
-              onClose={() => {
-                setSelectedQrApp(null);
-                setQrUrl('');
-              }}
-              PaperProps={{
-                style: { width: '100%', maxWidth: 440, background: '#0d131f', color: '#f9fafb', padding: 32, boxSizing: 'border-box', borderLeft: '1px solid rgba(255,255,255,0.06)' }
-              }}
-            >
-              {selectedQrApp && (
-                <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
-                      <h3 style={{ margin: 0, fontSize: 18, color: '#fff', fontFamily: F.heading, fontWeight: 800 }}>Digital Coverage Card</h3>
-                      <IconButton 
-                        onClick={() => {
-                          setSelectedQrApp(null);
-                          setQrUrl('');
-                        }} 
-                        style={{ color: '#9ca3af' }}
-                      >
-                        <CloseRounded />
-                      </IconButton>
-                    </div>
+        /* 3. Two-Column Row */
+        .portal-two-col-grid {
+          display: grid;
+          grid-template-columns: 1fr 1.5fr;
+          gap: 16px;
+        }
 
-                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 20, marginBottom: 24, textAlign: 'center' }}>
-                      <p style={{ margin: 0, fontSize: 9.5, color: '#9ca3af', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em' }}>POLICY COVER ID</p>
-                      <h4 style={{ margin: '4px 0 0', fontSize: 16, color: '#fff', fontWeight: 800 }}>RB-{selectedQrApp._id?.substring(0, 12).toUpperCase()}</h4>
-                      <p style={{ margin: '2px 0 0', fontSize: 12.5, color: '#10b981', fontWeight: 700 }}>{selectedQrApp.productId?.name}</p>
-                    </div>
+        .portal-card {
+          background-color: #ffffff;
+          border: 1px solid #e4e8f1;
+          border-radius: 16px;
+          padding: 24px 28px;
+          box-sizing: border-box;
+        }
 
-                    {isGeneratingQr ? (
-                      <div style={{ padding: 40, textAlign: 'center', color: '#9ca3af' }}>
-                        <div style={{
-                          width: 32,
-                          height: 32,
-                          border: '3px solid rgba(255,255,255,0.05)',
-                          borderTopColor: '#3b82f6',
-                          borderRadius: '50%',
-                          animation: 'spin 1s linear infinite',
-                          margin: '0 auto 12px'
-                        }} />
-                        <span style={{ fontSize: 13 }}>Signing Secure Token...</span>
-                        <style dangerouslySetInnerHTML={{__html: `
-                          @keyframes spin {
-                            0% { transform: rotate(0deg); }
-                            100% { transform: rotate(360deg); }
-                          }
-                        `}} />
-                      </div>
-                    ) : qrUrl ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, marginTop: 12 }}>
-                        
-                        {/* High Fidelity Scannable QR Display Card */}
-                        <div style={{ 
-                          background: '#fff', 
-                          padding: 18, 
-                          borderRadius: 20, 
-                          boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          <img 
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}`}
-                            alt="Policy Cover Verification QR Code"
-                            style={{ width: 200, height: 200 }}
-                          />
-                        </div>
+        .portal-card-header-title {
+          margin: 0 0 16px;
+          font-size: 14.5px;
+          font-weight: 700;
+          color: #101a33;
+        }
 
-                        <p style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', lineHeight: 1.5, padding: '0 12px' }}>
-                          Windshield scannable policy certificate. Law enforcement and vehicle inspectors can validate policy validity instantly.
-                        </p>
+        .portal-health-card {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
 
-                        <div style={{ width: '100%', marginTop: 8 }}>
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(qrUrl);
-                              toast.success('Secure validation link copied to clipboard!');
-                            }}
-                            style={{
-                              width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.05)',
-                              color: '#fff', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', fontSize: 12.5,
-                              fontWeight: 800, transition: '0.2s'
-                            }}
-                          >
-                            Copy Verification Link
-                          </button>
-                        </div>
+        .portal-health-content {
+          display: flex;
+          align-items: center;
+          gap: 18px;
+          margin-bottom: 12px;
+        }
 
-                      </div>
-                    ) : null}
+        .portal-gauge-wrapper {
+          width: 120px;
+          height: 65px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
 
-                  </div>
+        .portal-gauge-svg {
+          width: 120px;
+          height: 65px;
+          overflow: visible;
+        }
 
-                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 20, fontSize: 11.5, color: '#9ca3af', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <ShieldRounded sx={{ fontSize: 14, color: '#10b981' }} /> Authenticated by cryptographic JWT cover stamps.
-                  </div>
-                </div>
-              )}
-            </Drawer>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        .portal-health-score-block {
+          display: flex;
+          align-items: baseline;
+          gap: 4px;
+        }
+
+        .portal-health-score-num {
+          font-family: 'Fraunces', Georgia, serif;
+          font-size: 44px;
+          font-weight: 600;
+          color: #101a33;
+          line-height: 1;
+        }
+
+        .portal-health-score-max {
+          font-size: 15px;
+          font-weight: 500;
+          color: #6b7690;
+        }
+
+        .portal-health-helper {
+          margin: 0 0 20px;
+          font-size: 12.5px;
+          color: #6b7690;
+          line-height: 1.45;
+        }
+
+        .portal-health-action-btn {
+          width: 100%;
+          background-color: #2f5bea;
+          color: #ffffff;
+          border: none;
+          border-radius: 10px;
+          padding: 12px 16px;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background-color 150ms ease;
+          font-family: 'DM Sans', system-ui, sans-serif;
+        }
+        .portal-health-action-btn:hover {
+          background-color: #2449c4;
+        }
+        .portal-health-action-btn:focus-visible {
+          outline: 2px solid #2f5bea;
+          outline-offset: 2px;
+        }
+
+        /* Right Card: Instant Health Quote */
+        .portal-quote-card {
+          background: linear-gradient(120deg, #1f7a54 0%, #2a5fb0 50%, #2f4fe0 100%);
+          color: #ffffff;
+          border: none;
+          padding: 28px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          align-items: flex-start;
+          min-height: 220px;
+        }
+
+        .portal-quote-badge {
+          background: rgba(255, 255, 255, 0.2);
+          color: #ffffff;
+          font-size: 11px;
+          font-weight: 700;
+          padding: 3px 10px;
+          border-radius: 9999px;
+          margin-bottom: 12px;
+          display: inline-block;
+          font-family: 'DM Sans', system-ui, sans-serif;
+        }
+
+        .portal-quote-title {
+          font-family: 'Fraunces', Georgia, serif;
+          font-size: 30px;
+          font-weight: 600;
+          color: #ffffff;
+          line-height: 1.2;
+          margin: 0 0 8px;
+        }
+
+        .portal-quote-desc {
+          font-size: 13.5px;
+          color: rgba(255, 255, 255, 0.9);
+          line-height: 1.5;
+          margin: 0 0 24px;
+          max-width: 85%;
+        }
+
+        .portal-quote-btn {
+          background-color: #ffffff;
+          color: #101a33;
+          border: none;
+          border-radius: 10px;
+          padding: 10px 20px;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: background-color 150ms ease, opacity 150ms ease;
+          font-family: 'DM Sans', system-ui, sans-serif;
+        }
+        .portal-quote-btn:hover {
+          background-color: #f8fafc;
+        }
+        .portal-quote-btn:focus-visible {
+          outline: 2px solid #ffffff;
+          outline-offset: 2px;
+        }
+
+        /* 4. Advisory Row */
+        .portal-advisory-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
+        }
+
+        .portal-advisory-card {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          min-height: 170px;
+        }
+
+        .portal-advisory-title {
+          margin: 0 0 8px;
+          font-size: 14px;
+          font-weight: 700;
+          color: #101a33;
+        }
+
+        .portal-advisory-desc {
+          margin: 0 0 18px;
+          font-size: 12.5px;
+          color: #6b7690;
+          line-height: 1.45;
+        }
+
+        .portal-highlight-green {
+          color: #1f8a5b;
+          font-weight: 700;
+        }
+
+        .portal-advisory-btn {
+          align-self: flex-start;
+          border-radius: 9px;
+          padding: 8px 16px;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: 150ms ease;
+          font-family: 'DM Sans', system-ui, sans-serif;
+        }
+        .portal-advisory-btn.dark {
+          background-color: #101a33;
+          color: #ffffff;
+          border: none;
+        }
+        .portal-advisory-btn.dark:hover {
+          background-color: #1e2a48;
+        }
+        .portal-advisory-btn.soft {
+          background-color: #e8eefd;
+          color: #2f5bea;
+          border: none;
+        }
+        .portal-advisory-btn.soft:hover {
+          background-color: #dbe4fc;
+        }
+        .portal-advisory-btn:focus-visible {
+          outline: 2px solid #2f5bea;
+          outline-offset: 2px;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1000px) {
+          .portal-stats-grid {
+            grid-template-columns: 1fr;
+          }
+          .portal-two-col-grid {
+            grid-template-columns: 1fr;
+          }
+          .portal-advisory-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 800px) {
+          .portal-overview-container {
+            padding: 20px 18px;
+          }
+          .portal-greeting-title {
+            font-size: 28px;
+          }
+          .portal-apply-btn {
+            width: 100%;
+          }
+        }
+      `}</style>
     </div>
   );
 }
@@ -1180,52 +692,81 @@ function Dashboard({ onCardClick, isMobile, activeTab, setActiveTab }: any) {
 
 export default function PortalPage() {
   const router = useRouter();
-  const [isMobile, setIsMobile] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
   const [cashFlowOpen, setCashFlowOpen] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    const handleResize = () => setIsMobile(window.innerWidth < 1024);
-    handleResize();
-    window.addEventListener('resize', handleResize);
-
-    const token = localStorage.getItem('rb_token');
-    if (!token) {
-      router.replace('/login');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('rb_token') : null;
+    if (!token && typeof window !== 'undefined') {
+      const storedUser = sessionStorage.getItem('rb_user');
+      if (!storedUser) {
+        router.replace('/login');
+      }
     }
-
-    return () => window.removeEventListener('resize', handleResize);
   }, [router]);
 
-  if (!mounted) return null;
-
   return (
-    <PortalShell title="Command Center" subtitle="Institutional Financial Intelligence">
-       <div style={{ position: 'relative' }}>
-          <Dashboard 
-            onCardClick={() => setCashFlowOpen(true)} 
-            isMobile={isMobile} 
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-          />
-          
-          <AnimatePresence>
-             {cashFlowOpen && (
-               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? 0 : 40 }}>
-                  <div onClick={() => setCashFlowOpen(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(13,27,62,0.9)', backdropFilter: 'blur(10px)' }} />
-                  <motion.div initial={{ y: isMobile ? '100%' : 80 }} animate={{ y: 0 }} exit={{ y: isMobile ? '100%' : 80 }} 
-                    style={{ position: 'relative', width: '100%', maxWidth: isMobile ? '100%' : 1200, height: isMobile ? '100%' : '85vh', background: '#fff', borderRadius: isMobile ? 0 : 24, overflowY: 'auto', padding: isMobile ? 24 : 60, fontFamily: 'sans-serif' }}
-                  >
-                     <button onClick={() => setCashFlowOpen(false)} style={{ marginBottom: 32, fontSize: 15, fontWeight: 700, color: '#2051e5', border: 'none', background: 'none', cursor: 'pointer' }}>← Done</button>
-                     <h2 style={{ fontSize: 36, marginBottom: 48 }}>Cash flow profile</h2>
-                     <div style={{ height: 320, background: '#f8fafc', borderRadius: 20, border: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Analytical Visualization Pending</div>
-                  </motion.div>
-               </motion.div>
-             )}
-          </AnimatePresence>
-       </div>
+    <PortalShell title="Overview">
+      <Dashboard onCardClick={(action) => {
+        if (action === 'cashflow') setCashFlowOpen(true);
+      }} />
+
+      {/* Cash Flow Details Modal */}
+      {cashFlowOpen && (
+        <div 
+          onClick={() => setCashFlowOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1000,
+            background: 'rgba(16,26,51,0.5)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 20
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#ffffff',
+              borderRadius: 16,
+              maxWidth: 700,
+              width: '100%',
+              padding: 32,
+              border: '1px solid #e4e8f1',
+              boxShadow: '0 20px 50px rgba(16,26,51,0.1)'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#101a33', fontFamily: "'Fraunces', Georgia, serif" }}>
+                Cash flow statement
+              </h2>
+              <button
+                onClick={() => setCashFlowOpen(false)}
+                style={{
+                  background: '#f3f5fa',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '6px 12px',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  color: '#6b7690'
+                }}
+              >
+                Close
+              </button>
+            </div>
+            <p style={{ fontSize: 13.5, color: '#6b7690', lineHeight: 1.5, margin: '0 0 20px' }}>
+              Your verified income transactions, scheduled loan repayments, and recurring subscriptions are synchronized daily.
+            </p>
+            <div style={{ background: '#f8fafc', border: '1px solid #e4e8f1', borderRadius: 12, padding: 24, textAlign: 'center', color: '#6b7690', fontSize: 13 }}>
+              Full cash flow ledger analysis is up to date.
+            </div>
+          </div>
+        </div>
+      )}
     </PortalShell>
   );
 }

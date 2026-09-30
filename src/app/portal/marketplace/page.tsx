@@ -33,49 +33,139 @@ import EmptyState from '../components/EmptyState';
 
 /* ─── Components ─────────────────────────────────────────────────────────── */
 
-const ProductLogo = ({ logoUrl, name, size = 64, borderRadius = 20 }: { logoUrl?: string, name: string, size?: number, borderRadius?: number }) => {
-  const [error, setError] = useState(!logoUrl);
-  
-  if (error || !logoUrl) {
-    const initials = name ? name.trim().charAt(0).toUpperCase() : '?';
-    const colors = ['#2051e5', '#10b981', '#7c3aed', '#ef4444', '#f59e0b', '#ec4899'];
-    const charCodeSum = name ? name.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) : 0;
-    const color = colors[charCodeSum % colors.length];
-    
+/* ─── Helpers & Components ────────────────────────────────────────────────── */
+
+const getBannerImage = (prod: any) => {
+  if (prod.bannerUrl) return prod.bannerUrl;
+  const name = (prod.name || '').toLowerCase();
+  const desc = (prod.desc || prod.description || '').toLowerCase();
+  const cat = (prod.cat || '').toLowerCase();
+  const type = (prod.type || '').toLowerCase();
+
+  if (name.includes('fleet') || name.includes('auto') || name.includes('vehicle') || name.includes('car') || cat === 'bnpl') {
+    return '/images/auto_loans.png';
+  }
+  if (name.includes('home') || name.includes('equity') || name.includes('mortgage') || name.includes('estate') || name.includes('housing')) {
+    return '/images/home_loans.png';
+  }
+  if (name.includes('sme') || name.includes('commercial') || name.includes('industrial') || name.includes('trade') || name.includes('agro') || name.includes('equipment')) {
+    return '/images/sme_credit.png';
+  }
+  if (name.includes('health') || cat.includes('health') || desc.includes('health')) {
+    return '/images/health_insurance.png';
+  }
+  if (name.includes('life') || desc.includes('life')) {
+    return '/images/life_insurance.png';
+  }
+  if (cat.includes('insurance') || type.includes('insurance')) {
+    return '/images/auto_insurance.png';
+  }
+  if (name.includes('tech') || name.includes('credit') || name.includes('green') || name.includes('card') || name.includes('consumer')) {
+    return '/images/corporate_card.png';
+  }
+  return '/images/payroll_finance.png';
+};
+
+const getBrandLogoUrl = (prod: any) => {
+  const provider = (prod.provider || prod.name || '').toLowerCase();
+  if (provider.includes('stanbic')) return '/stanbic_logo.png';
+  if (provider.includes('fidelity')) return '/fidelity_logo.png';
+  if (provider.includes('absa')) return '/absa_logo.png';
+  if (provider.includes('mutual')) return '/old_mutual_logo.png';
+  if (provider.includes('kredete')) return '/kredete_logo.png';
+  if (prod.logo && !prod.logo.includes('404') && !prod.logo.includes('undefined')) return prod.logo;
+  return null;
+};
+
+const getBrandEmblem = (name: string) => {
+  const n = (name || '').toLowerCase();
+  if (n.includes('gcb')) {
+    return { bg: 'linear-gradient(135deg, #0d1b3e, #1e3a8a)', text: '#f59e0b', subText: '#93c5fd', label: 'GCB', sub: 'BANK' };
+  }
+  if (n.includes('calbank') || n.includes('cal')) {
+    return { bg: 'linear-gradient(135deg, #f97316, #ea580c)', text: '#ffffff', subText: 'rgba(255,255,255,0.85)', label: 'Cal', sub: 'BANK' };
+  }
+  if (n.includes('nib') || n.includes('national investment')) {
+    return { bg: 'linear-gradient(135deg, #047857, #065f46)', text: '#ffffff', subText: '#a7f3d0', label: 'NIB', sub: 'GHANA' };
+  }
+  if (n.includes('ecobank') || n.includes('eco')) {
+    return { bg: 'linear-gradient(135deg, #0284c7, #0369a1)', text: '#ffffff', subText: '#7dd3fc', label: 'Eco', sub: 'BANK' };
+  }
+  if (n.includes('cbg') || n.includes('consolidated')) {
+    return { bg: 'linear-gradient(135deg, #881337, #9f1239)', text: '#fde047', subText: 'rgba(255,255,255,0.85)', label: 'CBG', sub: 'BANK' };
+  }
+  return null;
+};
+
+const ProductLogo = ({ logoUrl, name, size = 52, borderRadius = 14 }: { logoUrl?: string, name: string, size?: number, borderRadius?: number }) => {
+  const resolvedLogo = getBrandLogoUrl({ logo: logoUrl, provider: name });
+  const emblem = getBrandEmblem(name);
+  const [error, setError] = useState(!resolvedLogo);
+
+  if (resolvedLogo && !error) {
+    return (
+      <div style={{ 
+        width: size, height: size, background: '#ffffff', borderRadius: borderRadius, 
+        display: 'flex', alignItems: 'center', justifyContent: 'center', 
+        padding: Math.round(size * 0.16), border: `1px solid ${C.border}`, flexShrink: 0,
+        boxShadow: '0 4px 12px rgba(16,26,51,0.08)'
+      }}>
+        <img 
+          src={resolvedLogo} 
+          alt={name} 
+          onError={() => setError(true)}
+          style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} 
+        />
+      </div>
+    );
+  }
+
+  if (emblem) {
     return (
       <div style={{
         width: size,
         height: size,
         borderRadius: borderRadius,
-        background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
-        color: '#fff',
+        background: emblem.bg,
+        color: emblem.text,
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: Math.round(size * 0.42),
-        fontWeight: 900,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+        boxShadow: '0 4px 12px rgba(16,26,51,0.08)',
+        border: '2px solid #ffffff',
         flexShrink: 0,
-        fontFamily: F.heading
+        fontFamily: "'DM Sans', sans-serif"
       }}>
-        {initials}
+        <span style={{ fontSize: Math.round(size * 0.32), fontWeight: 900, lineHeight: 1 }}>{emblem.label}</span>
+        <span style={{ fontSize: Math.round(size * 0.16), fontWeight: 700, color: emblem.subText, letterSpacing: '0.06em', marginTop: 1 }}>{emblem.sub}</span>
       </div>
     );
   }
-  
+
+  const initials = name ? name.trim().charAt(0).toUpperCase() : '?';
+  const colors = ['#2f5bea', '#1f8a5b', '#7c3aed', '#ef4444', '#f59e0b'];
+  const charCodeSum = name ? name.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) : 0;
+  const color = colors[charCodeSum % colors.length];
+
   return (
-    <div style={{ 
-      width: size, height: size, background: '#f8fafc', borderRadius: borderRadius, 
-      display: 'flex', alignItems: 'center', justifyContent: 'center', 
-      padding: Math.round(size * 0.18), border: `1px solid ${C.border}`, flexShrink: 0,
-      boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
+    <div style={{
+      width: size,
+      height: size,
+      borderRadius: borderRadius,
+      background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
+      color: '#fff',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: Math.round(size * 0.42),
+      fontWeight: 800,
+      boxShadow: '0 4px 12px rgba(16,26,51,0.08)',
+      border: '2px solid #ffffff',
+      flexShrink: 0,
+      fontFamily: "'DM Sans', sans-serif"
     }}>
-      <img 
-        src={logoUrl} 
-        alt={name} 
-        onError={() => setError(true)}
-        style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} 
-      />
+      {initials}
     </div>
   );
 };
@@ -83,122 +173,153 @@ const ProductLogo = ({ logoUrl, name, size = 64, borderRadius = 20 }: { logoUrl?
 const ProductCard = ({ prod, viewMode, onInstantApply }: { prod: any, viewMode: 'grid' | 'list', onInstantApply: (prod: any) => void }) => {
   const isList = viewMode === 'list';
   const router = useRouter();
+  const bannerImage = getBannerImage(prod);
   
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0,0,0,0.06)' }}
+    <div
       style={{
-        background: '#fff',
-        borderRadius: 32,
+        background: '#ffffff',
+        borderRadius: 20,
         border: `1px solid ${C.border}`,
-        padding: isList ? '24px 32px' : '32px',
         display: 'flex',
         flexDirection: isList ? 'row' : 'column',
         alignItems: isList ? 'center' : 'stretch',
-        gap: isList ? 32 : 24,
         position: 'relative',
         overflow: 'hidden',
-        transition: 'all 0.3s ease'
+        boxSizing: 'border-box',
+        transition: 'border-color 150ms ease, box-shadow 150ms ease'
       }}
     >
-      {/* Premium Tag */}
-      {prod.tag && (
-        <div style={{ 
-          position: 'absolute', top: 0, right: 0, 
-          background: `linear-gradient(135deg, ${C.blue} 0%, ${C.blueLight} 100%)`,
-          color: '#fff', padding: '6px 16px', borderRadius: '0 0 0 20px',
-          fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em'
-        }}>
-          {prod.tag}
+      {/* Visual Image Banner */}
+      {!isList ? (
+        <div style={{ position: 'relative', width: '100%', height: 135, background: '#f1f5f9', overflow: 'hidden' }}>
+          <img 
+            src={bannerImage} 
+            alt="" 
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+          />
+          <div style={{ 
+            position: 'absolute', inset: 0, 
+            background: 'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(16,26,51,0.4) 100%)' 
+          }} />
+          
+          {/* Badge Tag */}
+          <div style={{ 
+            position: 'absolute', top: 12, right: 12, 
+            background: 'rgba(255, 255, 255, 0.95)',
+            color: '#101a33', padding: '3px 10px', borderRadius: 9999,
+            fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+          }}>
+            {prod.tag || 'Verified'}
+          </div>
+
+          {/* Overlapping Brand Logo */}
+          <div style={{ position: 'absolute', bottom: -16, left: 20, zIndex: 2 }}>
+            <ProductLogo logoUrl={prod.logo} name={prod.provider || prod.name} size={50} borderRadius={12} />
+          </div>
+        </div>
+      ) : (
+        <div style={{ position: 'relative', width: 140, height: 100, borderRadius: 14, overflow: 'hidden', margin: '16px 0 16px 16px', flexShrink: 0 }}>
+          <img src={bannerImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div style={{ position: 'absolute', bottom: 6, left: 6 }}>
+            <ProductLogo logoUrl={prod.logo} name={prod.provider || prod.name} size={36} borderRadius={8} />
+          </div>
         </div>
       )}
 
-      {/* Identity Area */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-        <ProductLogo logoUrl={prod.logo} name={prod.provider || prod.name} size={64} borderRadius={20} />
-        <div style={{ flex: 1 }}>
-          <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 800, color: C.textSub, textTransform: 'uppercase' }}>{prod.provider}</p>
-          <h4 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: C.text, fontFamily: F.heading }}>{prod.name}</h4>
+      {/* Card Content Body */}
+      <div style={{ 
+        padding: isList ? '20px 24px' : '24px 22px 22px', 
+        display: 'flex', flexDirection: 'column', flex: 1, 
+        gap: 16, boxSizing: 'border-box' 
+      }}>
+        {/* Title and Provider */}
+        <div>
+          <p style={{ margin: '0 0 3px', fontSize: 11.5, fontWeight: 700, color: '#6b7690', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            {prod.provider}
+          </p>
+          <h4 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#101a33', lineHeight: 1.3, fontFamily: "'DM Sans', sans-serif" }}>
+            {prod.name}
+          </h4>
+        </div>
+
+        {/* Key Metrics Chips */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div style={{ background: '#f8fafc', padding: '10px 14px', borderRadius: 12, border: `1px solid ${C.border}` }}>
+             <p style={{ margin: '0 0 2px', fontSize: 10, fontWeight: 700, color: '#6b7690', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                {prod.cat === 'loan' ? 'APR Rate' : prod.cat === 'insurance' ? 'Premium' : 'Interest'}
+             </p>
+             <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: '#2f5bea', letterSpacing: '-0.01em' }}>
+               {prod.rate}{prod.rateSuffix || '%'}
+             </p>
+          </div>
+          <div style={{ background: '#f8fafc', padding: '10px 14px', borderRadius: 12, border: `1px solid ${C.border}` }}>
+             <p style={{ margin: '0 0 2px', fontSize: 10, fontWeight: 700, color: '#6b7690', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Trust Match</p>
+             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <StarRounded sx={{ fontSize: 16, color: '#f59e0b' }} />
+                <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: '#101a33' }}>{prod.match}%</p>
+             </div>
+          </div>
+        </div>
+
+        {!isList && (
+          <p style={{ margin: 0, fontSize: 12.5, color: '#6b7690', lineHeight: 1.5, minHeight: 38 }}>
+            {prod.desc}
+          </p>
+        )}
+
+        {/* Action Buttons */}
+        <div style={{ display: 'flex', gap: 10, marginTop: 'auto', paddingTop: 4 }}>
+          <button 
+            onClick={() => onInstantApply(prod)}
+            style={{ 
+              background: '#101a33', color: '#ffffff', border: 'none',
+              padding: '11px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+              flex: 2, textAlign: 'center', cursor: 'pointer', transition: 'background-color 150ms ease',
+              fontFamily: "'DM Sans', sans-serif"
+            }}
+          >
+            Instant apply
+          </button>
+          <button 
+            onClick={() => (window as any).openProductDetails(prod)}
+            style={{ 
+              flex: 1, background: '#ffffff', border: `1px solid ${C.border}`, 
+              color: '#101a33', padding: '11px 14px', borderRadius: 10, 
+              fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'background-color 150ms ease',
+              fontFamily: "'DM Sans', sans-serif"
+            }}
+          >
+            Details
+          </button>
+          <button 
+            onClick={() => {
+              if (prod.providerId) {
+                router.push(`/portal/chat?institutionId=${prod.providerId}&institutionName=${encodeURIComponent(prod.provider || 'Partner')}&institutionLogo=${encodeURIComponent(prod.logo || '/resolve_icon.png')}&prefill=${encodeURIComponent(`Hello, I'd like to chat about the product "${prod.name}" offered by ${prod.provider || 'your institution'}.`)}`);
+              } else {
+                window.dispatchEvent(new CustomEvent('open-chat', { 
+                  detail: { 
+                    prefill: `Hello, I'd like to chat about the product "${prod.name}" offered by ${prod.provider || 'your institution'}.`
+                  } 
+                }));
+              }
+            }}
+            style={{ 
+              background: '#e8eefd', border: 'none', 
+              color: '#2f5bea', padding: '10px', borderRadius: 10, 
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', transition: 'background-color 150ms ease',
+              minWidth: '42px'
+            }}
+            title="Chat with partner"
+            aria-label="Chat with partner"
+          >
+            <ChatBubbleOutlineRounded sx={{ fontSize: 18 }} />
+          </button>
         </div>
       </div>
-
-      {/* Info Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <div style={{ background: '#f8fafc', padding: '16px', borderRadius: 20, border: `1px solid ${C.border}` }}>
-           <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>
-              {prod.cat === 'loan' ? 'APR' : prod.cat === 'insurance' ? 'Premium' : 'Interest'}
-           </p>
-           <p style={{ margin: 0, fontSize: 20, fontWeight: 900, color: C.blue }}>{prod.rate}{prod.rateSuffix || '%'}</p>
-        </div>
-        <div style={{ background: '#f8fafc', padding: '16px', borderRadius: 20, border: `1px solid ${C.border}` }}>
-           <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Trust Match</p>
-           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <StarRounded sx={{ fontSize: 18, color: C.amber }} />
-              <p style={{ margin: 0, fontSize: 20, fontWeight: 900, color: C.text }}>{prod.match}%</p>
-           </div>
-        </div>
-      </div>
-
-      {!isList && (
-        <p style={{ margin: 0, fontSize: 13, color: C.textSub, lineHeight: 1.6 }}>{prod.desc}</p>
-      )}
-
-      {/* Actions */}
-      <div style={{ display: 'flex', gap: 12, marginTop: isList ? 0 : 'auto' }}>
-        <button 
-          onClick={() => onInstantApply(prod)}
-          style={{ 
-            textDecoration: 'none', background: C.text, color: '#fff', border: 'none',
-            padding: '16px', borderRadius: 16, fontSize: 14, fontWeight: 800,
-            flex: 2, textAlign: 'center', transition: '0.2s', cursor: 'pointer'
-          }}
-        >
-          Instant Apply
-        </button>
-        <button 
-          onClick={() => (window as any).openProductDetails(prod)}
-          style={{ 
-            flex: 1, background: '#fff', border: `2px solid ${C.border}`, 
-            color: C.textSub, padding: '16px', borderRadius: 16, 
-            fontSize: 14, fontWeight: 800, cursor: 'pointer' 
-          }}
-        >
-          Details
-        </button>
-        <button 
-          onClick={() => {
-            if (prod.providerId) {
-              router.push(`/portal/chat?institutionId=${prod.providerId}&institutionName=${encodeURIComponent(prod.provider || 'Partner')}&institutionLogo=${encodeURIComponent(prod.logo || '/resolve_icon.png')}&prefill=${encodeURIComponent(`Hello, I'd like to chat about the product "${prod.name}" offered by ${prod.provider || 'your institution'}.`)}`);
-            } else {
-              window.dispatchEvent(new CustomEvent('open-chat', { 
-                detail: { 
-                  prefill: `Hello, I'd like to chat about the product "${prod.name}" offered by ${prod.provider || 'your institution'}.`
-                } 
-              }));
-            }
-          }}
-          style={{ 
-            background: 'rgba(32, 81, 229, 0.08)', border: 'none', 
-            color: C.blue, padding: '16px', borderRadius: 16, 
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', transition: '0.2s',
-            minWidth: '52px'
-          }}
-          title="Chat with partner"
-          onMouseEnter={e => {
-            e.currentTarget.style.background = 'rgba(32, 81, 229, 0.15)';
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.background = 'rgba(32, 81, 229, 0.08)';
-          }}
-        >
-          <ChatBubbleOutlineRounded sx={{ fontSize: 20 }} />
-        </button>
-      </div>
-    </motion.div>
+    </div>
   );
 };
 
@@ -460,7 +581,7 @@ function MarketplaceContent() {
 
   return (
     <PortalShell title="Marketplace" backHref="/portal">
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 16px 100px' : '0 24px 100px' }}>
+      <div style={{ maxWidth: 1240, margin: '0 auto', padding: isMobile ? '24px 18px 100px' : '32px 36px 100px' }}>
         
         {/* Transparent Banner */}
 

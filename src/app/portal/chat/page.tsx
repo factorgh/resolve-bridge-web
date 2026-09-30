@@ -201,17 +201,18 @@ function ChatContent() {
 
   return (
     <PortalShell title="Direct Messages" subtitle="Chat directly with your facility providers">
-      <div style={{
-        height: isMobile ? 'calc(100vh - 150px)' : 'calc(100vh - 180px)',
-        display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr' : '320px 1fr',
-        gap: isMobile ? 0 : 24,
-        background: '#fff',
-        border: `1px solid ${C.border}`,
-        borderRadius: 24,
-        overflow: 'hidden'
-      }}
-      >
+      <div style={{ maxWidth: 1240, margin: '0 auto', padding: isMobile ? '20px 18px 40px' : '32px 36px 40px' }}>
+        <div style={{
+          height: isMobile ? 'calc(100vh - 160px)' : 'calc(100vh - 180px)',
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '320px 1fr',
+          gap: isMobile ? 0 : 24,
+          background: '#fff',
+          border: `1px solid ${C.border}`,
+          borderRadius: 24,
+          overflow: 'hidden'
+        }}
+        >
         {/* Left Pane: Partner Queue */}
         {(!isMobile || !showWorkspace) && (
           <div style={{
@@ -474,8 +475,9 @@ function ChatContent() {
               </p>
             </div>
           )}
+          </div>
+        )}
         </div>
-      )}
       </div>
     </PortalShell>
   );

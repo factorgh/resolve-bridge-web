@@ -153,7 +153,7 @@ export default function StatementPage() {
 
   return (
     <PortalShell title="Portfolio Hub" subtitle="Monitor your active institutional applications and financial history.">
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: isMobile ? '0 16px 120px' : '0 24px' }}>
+      <div style={{ maxWidth: 1240, margin: '0 auto', padding: isMobile ? '24px 18px 120px' : '32px 36px 120px' }}>
         
         {/* Modern Tab Navigation */}
         <div style={{ 

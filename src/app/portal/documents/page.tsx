@@ -101,13 +101,14 @@ export default function DocumentsPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const filtered = docs.filter((d: any) => {
+  const safeDocs = Array.isArray(docs) ? docs : [];
+  const filtered = safeDocs.filter((d: any) => {
     if (activeCat === 'all') return true;
     return d.type?.toLowerCase() === activeCat || d.cat === activeCat;
   });
 
   // Calculate completion / trust score progress
-  const hasIdentity = docs.some((d: any) => d.type?.toLowerCase() === 'identity' || d.name?.toLowerCase().includes('identity') || d.name?.toLowerCase().includes('card') || d.name?.toLowerCase().includes('passport'));
+  const hasIdentity = safeDocs.some((d: any) => d.type?.toLowerCase() === 'identity' || d.name?.toLowerCase().includes('identity') || d.name?.toLowerCase().includes('card') || d.name?.toLowerCase().includes('passport'));
   const hasFinance = docs.some((d: any) => d.type?.toLowerCase() === 'finance' || d.name?.toLowerCase().includes('statement') || d.name?.toLowerCase().includes('bill'));
   const hasAssets = docs.some((d: any) => d.type?.toLowerCase() === 'assets' || d.name?.toLowerCase().includes('title') || d.name?.toLowerCase().includes('deed'));
   
@@ -192,7 +193,7 @@ export default function DocumentsPage() {
 
   return (
     <PortalShell title="Secure Vault" subtitle="Institutional-grade encrypted storage for your financial credentials.">
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: isMobile ? '0 16px 100px' : '0 24px 100px' }}>
+      <div style={{ maxWidth: 1240, margin: '0 auto', padding: isMobile ? '24px 18px 100px' : '32px 36px 100px' }}>
         
         {/* Modern Header Navigation Hub with Glassmorphism */}
         <div style={{ 
