@@ -758,7 +758,15 @@ export default function ApplyLoanPage() {
                      { l: 'Undertaking Letter', i: '📜', help: 'Required for salaried loans' },
                      { l: 'Passport Picture', i: '📸' }
                    ].map(doc => {
-                     const existingDoc = documentsData?.success && documentsData?.data?.find(
+                     const docsList: any[] = Array.isArray(documentsData?.data)
+                       ? documentsData.data
+                       : Array.isArray(documentsData?.data?.items)
+                         ? documentsData.data.items
+                         : Array.isArray(documentsData)
+                           ? documentsData
+                           : [];
+
+                     const existingDoc = docsList.find(
                        (d: any) => d.name?.toLowerCase() === doc.l?.toLowerCase()
                      );
                      const isUploadingThis = uploadingDocLabel === doc.l;

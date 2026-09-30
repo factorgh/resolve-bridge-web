@@ -138,7 +138,7 @@ const GOAL_OPTIONS = [
   },
 ];
 
-const ID_TYPES = ['Ghana Card', 'NIN (Nigeria)', 'Kenyan ID', 'EcoBank ID', 'Other'];
+const ID_TYPES = ['Ghana Card ID'];
 
 const ANALYSIS_STEPS = [
   { label: 'Profile validated',      delay: 0    },
@@ -741,10 +741,11 @@ function KycStep({
             {ID_TYPES.map((t) => (
               <button
                 key={t}
+                type="button"
                 onClick={() => onChange('idType', t)}
                 className={`px-3.5 h-8 rounded-full text-xs transition-all border ${
-                  data.idType === t
-                    ? 'border-[#1a56db] bg-[#eff4ff] text-[#1a56db] font-medium'
+                  (data.idType || 'Ghana Card ID') === t
+                    ? 'border-[#1a56db] bg-[#eff4ff] text-[#1a56db] font-semibold shadow-sm'
                     : 'border-slate-200 text-slate-400 bg-white hover:border-[#c7d8f8] hover:text-[#1a56db]'
                 }`}
               >
@@ -1376,7 +1377,7 @@ export default function OnboardingFlow() {
     firstName: '',
     lastName: '',
     dob: '',
-    idType: '',
+    idType: 'Ghana Card ID',
     idNumber: '',
     employmentStatus: '',
     monthlyIncome: '',

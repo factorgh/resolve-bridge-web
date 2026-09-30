@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PortalShell, { C, F } from '../components/PortalShell';
 import { 
@@ -56,8 +56,19 @@ export default function DocumentsPage() {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const docs = apiData?.success ? apiData.data : [];
-  const applications = appData?.success ? appData.data : [];
+  const docs: any[] = useMemo(() => {
+    if (Array.isArray(apiData?.data)) return apiData.data;
+    if (Array.isArray(apiData?.data?.items)) return apiData.data.items;
+    if (Array.isArray(apiData)) return apiData;
+    return [];
+  }, [apiData]);
+
+  const applications: any[] = useMemo(() => {
+    if (Array.isArray(appData?.data)) return appData.data;
+    if (Array.isArray(appData?.data?.items)) return appData.data.items;
+    if (Array.isArray(appData)) return appData;
+    return [];
+  }, [appData]);
 
   // Derive handshakes from live applications
   const handshakes = applications.slice(0, 3).map((app: any) => ({
