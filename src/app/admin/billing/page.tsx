@@ -18,6 +18,7 @@ import {
   usePayInvoiceMutation,
   useInitializeInvoicePaymentMutation,
   useTriggerBillingRunMutation,
+  useTriggerSubscriptionDueRemindersMutation,
 } from "@/lib/redux/api/billingApi";
 import { useGetInstitutionsQuery } from "@/lib/redux/api/productApi";
 import {
@@ -37,6 +38,7 @@ import {
   SecurityRounded,
   SwapHorizRounded,
   WarningRounded,
+  NotificationsActiveRounded,
 } from "@mui/icons-material";
 
 export default function AdminBillingPage() {
@@ -106,6 +108,8 @@ export default function AdminBillingPage() {
     useInitializeInvoicePaymentMutation();
   const [triggerBillingRun, { isLoading: isRunningBilling }] =
     useTriggerBillingRunMutation();
+  const [triggerDueReminders, { isLoading: isSendingReminders }] =
+    useTriggerSubscriptionDueRemindersMutation();
   const [createFeePlan, { isLoading: isCreatingPlan }] =
     useCreateFeePlanMutation();
   const [updateFeePlan, { isLoading: isUpdatingPlan }] =
@@ -399,6 +403,21 @@ export default function AdminBillingPage() {
     }
   };
 
+  const handleTriggerDueReminders = async () => {
+    try {
+      const res = await triggerDueReminders().unwrap();
+      if (res.success) {
+        toast.success(
+          res.message || `Processed 3-day subscription due notices! (${res.data?.count ?? 0} notices sent)`
+        );
+        refetchInvoices();
+        refetchTenants();
+      }
+    } catch (err: any) {
+      toast.error(err.data?.message || "Failed to dispatch subscription due notices");
+    }
+  };
+
   return (
     <AdminShell>
       <div style={{ maxWidth: 1200, margin: "0 auto", width: "100%" }}>
@@ -435,29 +454,63 @@ export default function AdminBillingPage() {
           </div>
 
           {isPlatformAdmin && (
-            <button
-              onClick={handleTriggerRun}
-              disabled={isRunningBilling}
+            <div
               style={{
-                background: C.blue,
-                color: "#fff",
-                border: "none",
-                borderRadius: 10,
-                padding: "12px 20px",
-                fontSize: 12.5,
-                fontWeight: 800,
-                cursor: "pointer",
-                display: "inline-flex",
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 12,
                 alignItems: "center",
-                gap: 8,
-                transition: "0.2s",
                 width: isMobile ? "100%" : "auto",
-                justifyContent: "center",
               }}
             >
-              <BoltRounded sx={{ fontSize: 16 }} />{" "}
-              {isRunningBilling ? "Billing..." : "Trigger Cycle Run"}
-            </button>
+              <button
+                onClick={handleTriggerDueReminders}
+                disabled={isSendingReminders}
+                style={{
+                  background: "rgba(245, 158, 11, 0.12)",
+                  color: "#d97706",
+                  border: "1px solid rgba(245, 158, 11, 0.3)",
+                  borderRadius: 10,
+                  padding: "12px 18px",
+                  fontSize: 12.5,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  transition: "0.2s",
+                  flex: isMobile ? 1 : "none",
+                  justifyContent: "center",
+                }}
+              >
+                <NotificationsActiveRounded sx={{ fontSize: 16 }} />{" "}
+                {isSendingReminders ? "Sending..." : "Send 3-Day Due Notices"}
+              </button>
+
+              <button
+                onClick={handleTriggerRun}
+                disabled={isRunningBilling}
+                style={{
+                  background: C.blue,
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 10,
+                  padding: "12px 20px",
+                  fontSize: 12.5,
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  transition: "0.2s",
+                  flex: isMobile ? 1 : "none",
+                  justifyContent: "center",
+                }}
+              >
+                <BoltRounded sx={{ fontSize: 16 }} />{" "}
+                {isRunningBilling ? "Billing..." : "Trigger Cycle Run"}
+              </button>
+            </div>
           )}
         </div>
 

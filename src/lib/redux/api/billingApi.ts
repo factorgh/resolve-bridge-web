@@ -184,6 +184,16 @@ export const billingApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Billing", "Institution"],
     }),
+    triggerSubscriptionDueReminders: builder.mutation<
+      { success: boolean; data: { count: number }; message: string },
+      void
+    >({
+      query: () => ({
+        url: "/Billing/send-due-reminders",
+        method: "POST",
+      }),
+      invalidatesTags: ["Billing", "Institution"],
+    }),
   }),
   overrideExisting: true,
 });
@@ -201,4 +211,5 @@ export const {
   usePayInvoiceMutation,
   useInitializeInvoicePaymentMutation,
   useTriggerBillingRunMutation,
+  useTriggerSubscriptionDueRemindersMutation,
 } = billingApi;
