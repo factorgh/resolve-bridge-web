@@ -26,7 +26,8 @@ import {
   VerifiedRounded,
   HistoryRounded,
   ErrorOutlineRounded,
-  ChatBubbleOutlineRounded
+  ChatBubbleOutlineRounded,
+  DirectionsCarRounded
 } from '@mui/icons-material';
 import { Drawer, Box, Typography, IconButton } from '@mui/material';
 import EmptyState from '../components/EmptyState';
@@ -431,7 +432,8 @@ function MarketplaceContent() {
   const router = useRouter();
   const providerParam = searchParams.get('provider');
   
-  const [activeCat, setActiveCat] = useState('loan');
+  const [activeCat, setActiveCat] = useState('vehicles');
+  const [vehicleBodyFilter, setVehicleBodyFilter] = useState('All');
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isMobile, setIsMobile] = useState(false);
@@ -547,11 +549,24 @@ function MarketplaceContent() {
   });
 
   const { data: apiData, isLoading, isError } = useGetProductsQuery({ 
-    productType: activeCat, 
+    productType: activeCat === 'vehicles' ? 'Loan' : activeCat, 
     searchTerm: search,
     providerType: filters.providers
   });
-  const { data: vehiclesRes } = useGetPublicVehiclesQuery(undefined, { skip: activeCat !== 'bnpl' });
+  const { data: vehiclesRes, isLoading: vehiclesLoading } = useGetPublicVehiclesQuery(undefined);
+
+  const publicVehicles = useMemo(() => {
+    return (vehiclesRes?.data || []).filter((v: any) => {
+      const matchBody = vehicleBodyFilter === 'All' || v.bodyType?.toLowerCase() === vehicleBodyFilter.toLowerCase();
+      const matchSearch =
+        !search ||
+        v.make?.toLowerCase().includes(search.toLowerCase()) ||
+        v.model?.toLowerCase().includes(search.toLowerCase()) ||
+        v.location?.toLowerCase().includes(search.toLowerCase()) ||
+        v.fuel?.toLowerCase().includes(search.toLowerCase());
+      return matchBody && matchSearch;
+    });
+  }, [vehiclesRes, vehicleBodyFilter, search]);
 
   const products = useMemo(() => {
     if (apiData?.success && apiData?.data) {
@@ -583,44 +598,124 @@ function MarketplaceContent() {
     <PortalShell title="Marketplace" backHref="/portal">
       <div style={{ maxWidth: 1240, margin: '0 auto', padding: isMobile ? '24px 18px 100px' : '32px 36px 100px' }}>
         
-        {/* Transparent Banner */}
-
-
         {/* Discovery Hub Header */}
-        <div style={{ marginBottom: 48 }}>
+        <div style={{ marginBottom: 36 }}>
            <h1 style={{ margin: '0 0 12px', fontSize: isMobile ? 32 : 44, fontWeight: 900, color: C.text, fontFamily: F.heading }}>Marketplace Hub</h1>
+           <p style={{ margin: '0 0 20px', color: C.textSub, fontSize: 14 }}>
+             Compare institutional credit, insurance policies, and verified vehicles with built-in Auto BNPL financing.
+           </p>
            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
               {[
-                { id: 'loan', label: 'Lending', icon: <AccountBalanceRounded sx={{ fontSize: 18 }} /> },
+                { id: 'vehicles', label: 'Car Purchase (Auto BNPL)', icon: <DirectionsCarRounded sx={{ fontSize: 18 }} />, badge: 'Featured' },
+                { id: 'loan', label: 'Lending & Credit', icon: <AccountBalanceRounded sx={{ fontSize: 18 }} /> },
                 { id: 'insurance', label: 'Insurance', icon: <ShieldRounded sx={{ fontSize: 18 }} /> },
-                { id: 'bnpl', label: 'Buy Now and Pay Later', icon: <ShoppingCartRounded sx={{ fontSize: 18 }} /> },
+                { id: 'bnpl', label: 'Consumer BNPL', icon: <ShoppingCartRounded sx={{ fontSize: 18 }} /> },
               ].map(cat => (
                 <button 
                   key={cat.id} 
                   onClick={() => setActiveCat(cat.id)}
                   style={{ 
-                    padding: '14px 24px', borderRadius: 20, border: 'none', 
+                    padding: '14px 22px', borderRadius: 20, border: 'none', 
                     background: activeCat === cat.id ? C.text : '#fff', 
                     color: activeCat === cat.id ? '#fff' : C.textSub,
                     boxShadow: activeCat === cat.id ? `0 10px 20px rgba(0,0,0,0.1)` : `0 4px 12px rgba(0,0,0,0.03)`,
-                    fontSize: 14, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', transition: '0.2s'
+                    fontSize: 14, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', transition: '0.2s',
+                    position: 'relative'
                   }}
                 >
                    {cat.icon}
                    {cat.label}
+                   {cat.badge && activeCat !== cat.id && (
+                     <span style={{ fontSize: 10, fontWeight: 800, background: '#e0f2fe', color: '#0284c7', padding: '2px 8px', borderRadius: 10 }}>
+                       {cat.badge}
+                     </span>
+                   )}
                 </button>
               ))}
            </div>
         </div>
 
+        {/* Auto BNPL Spotlight Banner when viewing vehicles or BNPL */}
+        {(activeCat === 'vehicles' || activeCat === 'bnpl') && (
+          <div
+            style={{
+              background: 'linear-gradient(135deg, #0d1b3e 0%, #1e293b 100%)',
+              borderRadius: 24,
+              padding: isMobile ? '20px 20px' : '28px 32px',
+              color: '#fff',
+              marginBottom: 32,
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              alignItems: isMobile ? 'flex-start' : 'center',
+              justifyContent: 'space-between',
+              gap: 20,
+              boxShadow: '0 10px 30px rgba(13,27,62,0.15)',
+            }}
+          >
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <span style={{ background: 'rgba(59,130,246,0.2)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.4)', fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 12, textTransform: 'uppercase' }}>
+                  Auto BNPL Financing
+                </span>
+                <span style={{ fontSize: 12, color: '#94a3b8' }}>• Certified Dealer Inventory</span>
+              </div>
+              <h2 style={{ margin: '0 0 8px', fontSize: isMobile ? 22 : 26, fontWeight: 900, fontFamily: F.heading }}>
+                Drive Now, Pay Later Over 12–60 Months
+              </h2>
+              <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.7)', maxWidth: 650, lineHeight: 1.5 }}>
+                Every vehicle below is verified with clean paperwork and pre-packaged with institutional bank financing. Pay a 10% minimum down payment and spread the rest into affordable monthly installments.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 16, flexShrink: 0 }}>
+              <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: '12px 18px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <p style={{ margin: 0, fontSize: 11, color: '#94a3b8', textTransform: 'uppercase' }}>Min. Down</p>
+                <p style={{ margin: '2px 0 0', fontSize: 18, fontWeight: 900, color: '#10b981' }}>10%</p>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: '12px 18px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <p style={{ margin: 0, fontSize: 11, color: '#94a3b8', textTransform: 'uppercase' }}>Tenure</p>
+                <p style={{ margin: '2px 0 0', fontSize: 18, fontWeight: 900, color: '#60a5fa' }}>Up to 5 Yrs</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Body Type Filter Chips (when activeCat === 'vehicles') */}
+        {activeCat === 'vehicles' && (
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 16, marginBottom: 24 }}>
+            {['All', 'SUV', 'Sedan', '4x4', 'Pick-up', 'Hatchback', 'Van'].map((type) => (
+              <button
+                key={type}
+                onClick={() => setVehicleBodyFilter(type)}
+                style={{
+                  padding: '8px 18px',
+                  borderRadius: 14,
+                  border: vehicleBodyFilter === type ? '2px solid #0d1b3e' : `1px solid ${C.border}`,
+                  background: vehicleBodyFilter === type ? '#0d1b3e' : '#fff',
+                  color: vehicleBodyFilter === type ? '#fff' : C.textSub,
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {type === 'All' ? 'All Car Types' : type}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Modern Search & Tool Area */}
         <div style={{ 
-          display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 16, marginBottom: 48,
+          display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 16, marginBottom: 36,
           position: 'sticky', top: 80, zIndex: 100, background: 'rgba(240,242,248,0.9)', backdropFilter: 'blur(16px)', padding: '12px 0'
         }}>
            <div style={{ position: 'relative', flex: 1 }}>
               <input 
-                type="text" placeholder="Search institutional products..." value={search} onChange={e => setSearch(e.target.value)}
+                type="text" 
+                placeholder={activeCat === 'vehicles' ? "Search car make, model, fuel, or location..." : "Search institutional products..."} 
+                value={search} 
+                onChange={e => setSearch(e.target.value)}
                 style={{ 
                   width: '100%', padding: '16px 20px 16px 52px', borderRadius: 20, border: `2px solid ${C.border}`, 
                   outline: 'none', fontSize: 15, fontFamily: F.body, background: '#fff', boxSizing: 'border-box'
@@ -634,16 +729,18 @@ function MarketplaceContent() {
                  <button onClick={() => setViewMode('grid')} style={{ width: 44, height: 44, borderRadius: 12, border: 'none', background: viewMode === 'grid' ? C.bg : 'transparent', color: viewMode === 'grid' ? C.text : C.textMuted, cursor: 'pointer' }}><GridViewRounded /></button>
                  <button onClick={() => setViewMode('list')} style={{ width: 44, height: 44, borderRadius: 12, border: 'none', background: viewMode === 'list' ? C.bg : 'transparent', color: viewMode === 'list' ? C.text : C.textMuted, cursor: 'pointer' }}><ViewStreamRounded /></button>
               </div>
-              <button 
-                onClick={() => setShowFilters(!showFilters)}
-                style={{ 
-                  padding: '0 24px', borderRadius: 16, border: `2px solid ${C.border}`, background: showFilters ? C.text : '#fff', color: showFilters ? '#fff' : C.text, 
-                  fontSize: 14, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' 
-                }}
-              >
-                 <FilterListRounded sx={{ fontSize: 18 }} />
-                 Filters
-              </button>
+              {activeCat !== 'vehicles' && (
+                <button 
+                  onClick={() => setShowFilters(!showFilters)}
+                  style={{ 
+                    padding: '0 24px', borderRadius: 16, border: `2px solid ${C.border}`, background: showFilters ? C.text : '#fff', color: showFilters ? '#fff' : C.text, 
+                    fontSize: 14, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' 
+                  }}
+                >
+                   <FilterListRounded sx={{ fontSize: 18 }} />
+                   Filters
+                </button>
+              )}
            </div>
         </div>
 
@@ -651,45 +748,180 @@ function MarketplaceContent() {
         <div style={{ display: 'flex', gap: 0, alignItems: 'flex-start' }}>
            {/* Results Grid - Now Full Width */}
            <div style={{ flex: 1 }}>
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: viewMode === 'grid' ? `repeat(auto-fill, minmax(${isMobile ? '100%' : '320px'}, 1fr))` : '1fr', 
-                gap: 24 
-              }}>
-                  {isLoading ? (
+              {/* Vehicles / Car Purchase View */}
+              {activeCat === 'vehicles' ? (
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: viewMode === 'grid' ? `repeat(auto-fill, minmax(${isMobile ? '100%' : '340px'}, 1fr))` : '1fr', 
+                  gap: 24 
+                }}>
+                  {vehiclesLoading ? (
                     Array.from({ length: 6 }).map((_, idx) => (
                       <ProductCardSkeleton key={idx} viewMode={viewMode} />
                     ))
-                  ) : (
-                    <>
-                      {activeCat === 'bnpl' && (vehiclesRes?.data || []).map((v: any) => (
-                        <div key={v.id} style={{ background: '#fff', borderRadius: 32, border: `1px solid ${C.border}`, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                          {v.photos?.[0]?.url && <img src={v.photos[0].url} alt="" style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 20 }} />}
-                          <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: C.textSub }}>{v.make}</p>
-                          <h4 style={{ margin: 0, fontSize: 18, fontWeight: 900 }}>{v.model}</h4>
-                          <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: C.blue }}>GH₵ {Number(v.customerPrice).toLocaleString()}</p>
-                          <p style={{ margin: 0, fontSize: 12, color: C.textSub }}>Recommended: {v.recommendedBank?.name || 'Lender assigned'}</p>
-                          <button
-                            onClick={() => router.push(`/portal/apply-vehicle/${v.id}`)}
-                            style={{ background: C.text, color: '#fff', border: 'none', padding: 14, borderRadius: 16, fontWeight: 800, cursor: 'pointer' }}
-                          >
-                            Get financed
-                          </button>
-                        </div>
-                      ))}
-                      {filteredProducts.map(prod => (
-                        <ProductCard 
-                          key={prod.id} 
-                          prod={prod} 
-                          viewMode={viewMode} 
-                          onInstantApply={handleInstantApplyStart} 
-                        />
-                      ))}
-                    </>
-                  )}
-              </div>
+                  ) : publicVehicles.length > 0 ? (
+                    publicVehicles.map((v: any) => {
+                      const price = Number(v.customerPrice || 0);
+                      const downPct = Number(v.minDownPaymentPercent || 10);
+                      const down = Math.ceil(price * (downPct / 100));
+                      const financed = Math.max(0, price - down);
+                      const rate = Number(v.finance?.interestRate || 16) / 100;
+                      const tenure = 36;
+                      const monthly = Math.round((financed + financed * rate * (tenure / 12)) / tenure);
 
-              {filteredProducts.length === 0 && !isLoading && !(activeCat === 'bnpl' && (vehiclesRes?.data || []).length) && (
+                      return (
+                        <div
+                          key={v.id}
+                          style={{
+                            background: '#fff',
+                            borderRadius: 24,
+                            border: `1px solid ${C.border}`,
+                            overflow: 'hidden',
+                            boxShadow: '0 4px 20px -2px rgba(0,0,0,0.06)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                          }}
+                        >
+                          {/* Vehicle Photo Banner */}
+                          <div style={{ position: 'relative', width: '100%', height: 200, background: '#f1f5f9' }}>
+                            {v.photos?.[0]?.url ? (
+                              <img
+                                src={v.photos[0].url}
+                                alt={`${v.make} ${v.model}`}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            ) : (
+                              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e2e8f0' }}>
+                                <DirectionsCarRounded sx={{ fontSize: 48, color: '#94a3b8' }} />
+                              </div>
+                            )}
+
+                            {/* Top Badges */}
+                            <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 6 }}>
+                              <span style={{ background: '#0d1b3e', color: '#fff', fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 8, letterSpacing: '0.04em' }}>
+                                {v.year}
+                              </span>
+                              <span style={{ background: '#ecfdf5', color: '#059669', fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 8, border: '1px solid #a7f3d0' }}>
+                                {v.condition || 'Verified'}
+                              </span>
+                            </div>
+
+                            {v.photos?.length > 1 && (
+                              <span style={{ position: 'absolute', bottom: 12, right: 12, background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 6 }}>
+                                📷 {v.photos.length} photos
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Vehicle Information */}
+                          <div style={{ padding: 20, display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between', gap: 16 }}>
+                            <div>
+                              <p style={{ margin: '0 0 2px', fontSize: 12, fontWeight: 800, color: C.blue, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                {v.make}
+                              </p>
+                              <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 900, color: C.text, fontFamily: F.heading }}>
+                                {v.year} {v.model}
+                              </h3>
+                              <p style={{ margin: 0, fontSize: 12, color: C.textSub, lineHeight: 1.4 }}>
+                                {v.bodyType || 'SUV'} · {v.fuel || 'Petrol'} · {v.transmission || 'Auto'} · {v.location || 'Accra'}
+                              </p>
+                            </div>
+
+                            {/* BNPL Financing Summary Box */}
+                            <div style={{ background: '#f8fafc', border: `1.5px solid ${C.border}`, borderRadius: 16, padding: '14px 16px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+                                <div>
+                                  <span style={{ fontSize: 10, fontWeight: 800, color: C.textMuted, textTransform: 'uppercase' }}>Purchase Price</span>
+                                  <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: C.text }}>
+                                    GH₵ {price.toLocaleString()}
+                                  </p>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                  <span style={{ fontSize: 10, fontWeight: 800, color: '#059669', textTransform: 'uppercase' }}>BNPL From</span>
+                                  <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: '#059669' }}>
+                                    GH₵ {monthly.toLocaleString()}<span style={{ fontSize: 12, fontWeight: 600 }}>/mo</span>
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div style={{ paddingTop: 8, borderTop: `1px dashed ${C.border}`, display: 'flex', justifyContent: 'space-between', fontSize: 11, color: C.textSub }}>
+                                <span>Down payment ({downPct}%): <strong>GH₵ {down.toLocaleString()}</strong></span>
+                                <span>36 mos est.</span>
+                              </div>
+
+                              {v.recommendedBank?.name && (
+                                <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#334155' }}>
+                                  <span style={{ color: C.textMuted }}>Financing Partner:</span>
+                                  <strong style={{ color: '#0f172a' }}>{v.recommendedBank.name}</strong>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Purchase CTA */}
+                            <button
+                              onClick={() => router.push(`/portal/apply-vehicle/${v.id}`)}
+                              style={{
+                                width: '100%',
+                                background: '#0d1b3e',
+                                color: '#fff',
+                                border: 'none',
+                                padding: '14px 18px',
+                                borderRadius: 14,
+                                fontWeight: 800,
+                                fontSize: 14,
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 8,
+                                transition: 'background 0.2s',
+                              }}
+                            >
+                              <ShoppingCartRounded sx={{ fontSize: 18 }} />
+                              <span>Purchase via Auto-BNPL</span>
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <EmptyState 
+                        title="No Vehicles Available" 
+                        description="There are currently no listed vehicles matching your filters. Check back soon as new dealer inventory is added daily."
+                        icon={<DirectionsCarRounded sx={{ fontSize: 48, opacity: 0.2 }} />}
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Institutional Products View (Lending, Insurance, BNPL) */
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: viewMode === 'grid' ? `repeat(auto-fill, minmax(${isMobile ? '100%' : '320px'}, 1fr))` : '1fr', 
+                  gap: 24 
+                }}>
+                    {isLoading ? (
+                      Array.from({ length: 6 }).map((_, idx) => (
+                        <ProductCardSkeleton key={idx} viewMode={viewMode} />
+                      ))
+                    ) : (
+                      <>
+                        {filteredProducts.map(prod => (
+                          <ProductCard 
+                            key={prod.id} 
+                            prod={prod} 
+                            viewMode={viewMode} 
+                            onInstantApply={handleInstantApplyStart} 
+                          />
+                        ))}
+                      </>
+                    )}
+                </div>
+              )}
+
+              {activeCat !== 'vehicles' && filteredProducts.length === 0 && !isLoading && (
                 <EmptyState 
                   title="No Products Found" 
                   description="We couldn't find any financial products matching your current filters. Try adjusting your search term or exploring another category."
