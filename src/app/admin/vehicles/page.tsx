@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { toast } from 'react-hot-toast';
-import { Drawer, IconButton, Tooltip } from '@mui/material';
+import { Dialog, DialogContent, IconButton, Tooltip } from '@mui/material';
 import {
   CloseRounded,
   DirectionsCarRounded,
@@ -24,6 +24,15 @@ import {
   StorefrontRounded,
   ViewAgendaRounded,
   GridViewRounded,
+  SpeedRounded,
+  LocalGasStationRounded,
+  PinDropRounded,
+  CalendarTodayRounded,
+  PaletteRounded,
+  FingerprintRounded,
+  OpenInNewRounded,
+  InfoOutlined,
+  AccountBalanceRounded,
 } from '@mui/icons-material';
 import AdminShell, { C, F } from '../components/AdminShell';
 import {
@@ -60,6 +69,7 @@ export default function AdminVehiclesPage() {
   const [collapsedDealers, setCollapsedDealers] = useState<Record<string, boolean>>({});
 
   const [selected, setSelected] = useState<any>(null);
+  const [activePhotoIdx, setActivePhotoIdx] = useState(0);
   const [markup, setMarkup] = useState('');
   const [institutionId, setInstitutionId] = useState('');
   const [minDown, setMinDown] = useState('10');
@@ -85,6 +95,17 @@ export default function AdminVehiclesPage() {
     if (!selected) return 0;
     return Number(selected.dealerPrice || 0) + Number(markup || 0);
   }, [selected, markup]);
+
+  // Downpayment & monthly calculation estimates
+  const downPaymentAmount = useMemo(() => {
+    return Math.ceil(customerPrice * (Number(minDown || 10) / 100));
+  }, [customerPrice, minDown]);
+
+  const estMonthly36 = useMemo(() => {
+    const financed = Math.max(0, customerPrice - downPaymentAmount);
+    const rate = 0.16; // 16% standard auto APR
+    return Math.round((financed + financed * rate * 3) / 36);
+  }, [customerPrice, downPaymentAmount]);
 
   useEffect(() => {
     setMounted(true);
@@ -202,6 +223,7 @@ export default function AdminVehiclesPage() {
 
   const openVehicle = (v: any) => {
     setSelected(v);
+    setActivePhotoIdx(0);
     setMarkup(String(v.markup || ''));
     setInstitutionId(v.recommendedInstitutionId?._id || v.recommendedInstitutionId || '');
     setMinDown(String(v.minDownPaymentPercent || 10));
@@ -905,203 +927,496 @@ export default function AdminVehiclesPage() {
         )}
       </div>
 
-      {/* Vehicle Verification & Pricing Drawer */}
-      <Drawer anchor="right" open={!!selected} onClose={() => setSelected(null)}>
+      {/* Comprehensive Vehicle Details & Verification Modal */}
+      <Dialog
+        open={!!selected}
+        onClose={() => setSelected(null)}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: {
+            background: C.surface,
+            border: `1px solid ${C.borderStrong}`,
+            borderRadius: '24px',
+            color: C.text,
+            overflow: 'hidden',
+            boxShadow: '0 25px 60px -15px rgba(0,0,0,0.7)',
+            m: { xs: 1.5, sm: 3 },
+          },
+        }}
+      >
         {selected && (
-          <div style={{ width: 460, maxWidth: '100vw', background: C.bg, minHeight: '100%', padding: 24, color: C.text, boxSizing: 'border-box' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <div>
-                <span style={{ fontSize: 11, fontWeight: 800, color: C.blueLight, textTransform: 'uppercase' }}>
-                  {selected.dealerCompany || 'Independent Dealer'}
-                </span>
-                <h2 style={{ margin: '2px 0 0', fontSize: 22, fontWeight: 700 }}>
-                  {selected.year} {selected.make} {selected.model || selected.vehicleModel}
-                </h2>
-              </div>
-              <IconButton onClick={() => setSelected(null)} sx={{ color: C.text }}>
-                <CloseRounded />
-              </IconButton>
-            </div>
-
-            {/* Dealer Contact Pill */}
-            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'grid', gap: 4, fontSize: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: C.textSub }}>Dealer Contact:</span>
-                <strong style={{ color: C.text }}>{selected.dealerName || 'N/A'}</strong>
-              </div>
-              {selected.dealerPhone && (
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: C.textSub }}>Phone:</span>
-                  <a href={`tel:${selected.dealerPhone}`} style={{ color: C.blueLight }}>{selected.dealerPhone}</a>
-                </div>
-              )}
-              {selected.dealerEmail && (
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: C.textSub }}>Email:</span>
-                  <a href={`mailto:${selected.dealerEmail}`} style={{ color: C.blueLight }}>{selected.dealerEmail}</a>
-                </div>
-              )}
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: C.textSub }}>Location & Condition:</span>
-                <span style={{ color: C.text }}>{selected.location || 'Accra'} · {selected.condition || 'Used'}</span>
-              </div>
-              {selected.vin && (
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: C.textSub }}>VIN / Chassis:</span>
-                  <span style={{ color: C.text, fontFamily: 'monospace' }}>{selected.vin}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Vehicle Photos Gallery */}
-            {(selected.photos || []).length > 0 && (
-              <div style={{ marginBottom: 16 }}>
-                <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: C.textSub }}>
-                  Attached Photos ({selected.photos.length})
-                </p>
-                <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-                  {selected.photos.map((p: any, idx: number) => (
-                    <a key={idx} href={p.url} target="_blank" rel="noreferrer" style={{ flexShrink: 0 }}>
-                      <img
-                        src={p.url}
-                        alt=""
-                        style={{ width: 120, height: 80, borderRadius: 8, objectFit: 'cover', border: `1px solid ${C.border}` }}
-                      />
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Attached Documents */}
-            {(selected.documents || []).length > 0 && (
-              <div style={{ marginBottom: 16 }}>
-                <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: C.textSub }}>
-                  Verification Paperwork ({selected.documents.length})
-                </p>
-                <div style={{ display: 'grid', gap: 6 }}>
-                  {selected.documents.map((d: any, i: number) => (
-                    <a
-                      key={i}
-                      href={d.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        background: C.surface,
-                        padding: '8px 12px',
-                        borderRadius: 8,
-                        border: `1px solid ${C.border}`,
-                        color: C.blueLight,
-                        fontSize: 12,
-                        textDecoration: 'none',
-                      }}
-                    >
-                      <DescriptionRounded sx={{ fontSize: 16 }} />
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {d.name || `Document ${i + 1}`}
-                      </span>
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Price Settlement info */}
-            <div style={{ background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: 12, padding: 14, marginBottom: 16 }}>
-              <p style={{ margin: 0, fontSize: 11, color: C.textSub, textTransform: 'uppercase' }}>
-                Dealer Settlement Amount (Private)
-              </p>
-              <p style={{ margin: '2px 0 0', fontSize: 20, fontWeight: 800, color: C.text }}>
-                GH₵ {Number(selected.dealerPrice).toLocaleString()}
-              </p>
-            </div>
-
-            {/* Pricing & Institution Configurator */}
-            {selected.status !== 'Sold' && (
-              <div style={{ display: 'grid', gap: 12 }}>
-                <label style={label}>
-                  ResolveBridge Markup (GH₵)
-                  <input
-                    type="number"
-                    min={0}
-                    value={markup}
-                    onChange={(e) => setMarkup(e.target.value)}
-                    placeholder="e.g. 15000"
-                    style={field}
-                  />
-                </label>
-
-                <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: 10, padding: '10px 14px' }}>
-                  <p style={{ margin: 0, fontSize: 11, color: C.textSub }}>Final Customer & Financing Price</p>
-                  <p style={{ margin: '2px 0 0', fontSize: 18, fontWeight: 800, color: C.emerald }}>
-                    GH₵ {customerPrice.toLocaleString()}
-                  </p>
-                </div>
-
-                <label style={label}>
-                  Recommended Lending Institution <span style={{ color: C.red }}>*</span>
-                  <select
-                    value={institutionId}
-                    onChange={(e) => setInstitutionId(e.target.value)}
-                    style={field}
-                  >
-                    <option value="">Select financing partner…</option>
-                    {lenders.map((i: any) => (
-                      <option key={i._id} value={i._id}>
-                        {i.name} ({i.type})
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label style={label}>
-                  Minimum Down Payment %
-                  <input
-                    type="number"
-                    min={10}
-                    max={90}
-                    value={minDown}
-                    onChange={(e) => setMinDown(e.target.value)}
-                    style={field}
-                  />
-                </label>
-
-                <button
-                  onClick={handleList}
-                  disabled={verifying || !institutionId}
+          <DialogContent sx={{ p: 0, background: C.surface }}>
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: '20px 24px',
+                background: 'rgba(255,255,255,0.03)',
+                borderBottom: `1px solid ${C.border}`,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div
                   style={{
-                    ...primaryBtn,
-                    marginTop: 8,
-                    opacity: verifying || !institutionId ? 0.5 : 1,
-                    cursor: verifying || !institutionId ? 'not-allowed' : 'pointer',
+                    width: 44,
+                    height: 44,
+                    borderRadius: 12,
+                    background: C.bluePale,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: C.blueLight,
                   }}
                 >
-                  {verifying ? 'Listing…' : 'Verify & List on ResolveBridge'}
-                </button>
-
-                {selected.status === 'Reserved' && (
-                  <button onClick={handleRelease} disabled={releasing} style={{ ...ghostBtn, marginTop: 4 }}>
-                    {releasing ? 'Releasing…' : 'Release Reservation'}
-                  </button>
-                )}
-
-                {selected.status === 'PendingReview' && (
-                  <button
-                    onClick={handleReject}
-                    disabled={verifying}
-                    style={{ ...ghostBtn, marginTop: 4, color: C.red, borderColor: 'rgba(239,68,68,0.3)' }}
-                  >
-                    Reject Vehicle Submission
-                  </button>
-                )}
+                  <DirectionsCarRounded sx={{ fontSize: 24 }} />
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: C.blueLight, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      {selected.dealerCompany || 'Dealer Submission'}
+                    </span>
+                    <span style={{ color: C.textMuted }}>•</span>
+                    <span style={{ fontSize: 11, color: C.textSub }}>
+                      Intake: {new Date(selected.createdAt || Date.now()).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: C.text }}>
+                    {selected.year} {selected.make} {selected.model || selected.vehicleModel}
+                  </h2>
+                </div>
               </div>
-            )}
-          </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                {(() => {
+                  const badge = getStatusBadge(selected.status);
+                  const BadgeIcon = badge.icon;
+                  return (
+                    <div
+                      style={{
+                        background: badge.bg,
+                        color: badge.text,
+                        padding: '6px 14px',
+                        borderRadius: 10,
+                        fontSize: 12,
+                        fontWeight: 800,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                      }}
+                    >
+                      <BadgeIcon sx={{ fontSize: 15 }} />
+                      <span>{badge.label}</span>
+                    </div>
+                  );
+                })()}
+
+                <IconButton
+                  onClick={() => setSelected(null)}
+                  sx={{
+                    background: 'rgba(255,255,255,0.05)',
+                    color: C.text,
+                    '&:hover': { background: 'rgba(255,255,255,0.1)' },
+                  }}
+                >
+                  <CloseRounded />
+                </IconButton>
+              </div>
+            </div>
+
+            {/* Modal Body - 2 Columns Layout */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+                gap: 24,
+                padding: 24,
+                maxHeight: 'calc(85vh - 80px)',
+                overflowY: 'auto',
+              }}
+            >
+              {/* Left Column: Media Gallery, Vehicle Specifications & Documents */}
+              <div style={{ display: 'grid', gap: 20 }}>
+                {/* Photo Viewer */}
+                <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 16, overflow: 'hidden' }}>
+                  {(selected.photos || []).length > 0 ? (
+                    <div>
+                      <div style={{ position: 'relative', width: '100%', height: 260, background: '#0a0f1d' }}>
+                        <img
+                          src={selected.photos[activePhotoIdx]?.url || selected.photos[0]?.url}
+                          alt={`${selected.make} ${selected.model}`}
+                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                        />
+                        <span
+                          style={{
+                            position: 'absolute',
+                            bottom: 12,
+                            right: 12,
+                            background: 'rgba(0,0,0,0.7)',
+                            color: '#fff',
+                            fontSize: 12,
+                            fontWeight: 700,
+                            padding: '4px 10px',
+                            borderRadius: 8,
+                          }}
+                        >
+                          {activePhotoIdx + 1} of {selected.photos.length} photos
+                        </span>
+                      </div>
+
+                      {/* Photo Thumbnail Strip */}
+                      {selected.photos.length > 1 && (
+                        <div style={{ display: 'flex', gap: 8, padding: 12, overflowX: 'auto', background: 'rgba(0,0,0,0.2)' }}>
+                          {selected.photos.map((p: any, idx: number) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => setActivePhotoIdx(idx)}
+                              style={{
+                                width: 72,
+                                height: 50,
+                                borderRadius: 8,
+                                overflow: 'hidden',
+                                border: activePhotoIdx === idx ? `2px solid ${C.blue}` : `1px solid ${C.border}`,
+                                padding: 0,
+                                background: '#1e293b',
+                                cursor: 'pointer',
+                                flexShrink: 0,
+                                opacity: activePhotoIdx === idx ? 1 : 0.6,
+                                transition: 'all 0.15s ease',
+                              }}
+                            >
+                              <img src={p.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ height: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: C.textMuted }}>
+                      <DirectionsCarRounded sx={{ fontSize: 48, marginBottom: 1 }} />
+                      <p style={{ margin: 0, fontSize: 13 }}>No photos uploaded for this vehicle</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Complete Specifications Grid */}
+                <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 16, padding: 18 }}>
+                  <h3 style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 800, color: C.text, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Vehicle Specifications
+                  </h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+                    <div style={specItem}>
+                      <span style={specKey}>Make & Model</span>
+                      <strong style={specVal}>{selected.make} {selected.model || selected.vehicleModel}</strong>
+                    </div>
+                    <div style={specItem}>
+                      <span style={specKey}>Model Year</span>
+                      <strong style={specVal}>{selected.year}</strong>
+                    </div>
+                    <div style={specItem}>
+                      <span style={specKey}>Body Type</span>
+                      <strong style={specVal}>{selected.bodyType || 'SUV'}</strong>
+                    </div>
+                    <div style={specItem}>
+                      <span style={specKey}>Condition</span>
+                      <strong style={specVal}>{selected.condition || 'Used'}</strong>
+                    </div>
+                    <div style={specItem}>
+                      <span style={specKey}>Fuel Type</span>
+                      <strong style={specVal}>{selected.fuel || 'Petrol'}</strong>
+                    </div>
+                    <div style={specItem}>
+                      <span style={specKey}>Transmission</span>
+                      <strong style={specVal}>{selected.transmission || 'Auto'}</strong>
+                    </div>
+                    <div style={specItem}>
+                      <span style={specKey}>Mileage</span>
+                      <strong style={specVal}>{Number(selected.mileageKm || 0).toLocaleString()} km</strong>
+                    </div>
+                    <div style={specItem}>
+                      <span style={specKey}>Colour</span>
+                      <strong style={specVal}>{selected.color || 'Standard'}</strong>
+                    </div>
+                    <div style={specItem}>
+                      <span style={specKey}>Location / Yard</span>
+                      <strong style={specVal}>{selected.location || 'Accra'}</strong>
+                    </div>
+                    <div style={specItem}>
+                      <span style={specKey}>VIN / Chassis</span>
+                      <strong style={{ ...specVal, fontFamily: 'monospace' }}>{selected.vin || 'Not provided'}</strong>
+                    </div>
+                  </div>
+
+                  {selected.description && (
+                    <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.border}` }}>
+                      <span style={specKey}>Dealer Notes / Features</span>
+                      <p style={{ margin: '4px 0 0', fontSize: 13, color: C.text, lineHeight: 1.5 }}>
+                        {selected.description}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Attached Verification Documents */}
+                <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 16, padding: 18 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <h3 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: C.text, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Verification Documents ({(selected.documents || []).length})
+                    </h3>
+                    <span style={{ fontSize: 11, color: C.textMuted }}>DVLA, duty, valuation & invoices</span>
+                  </div>
+
+                  {(selected.documents || []).length > 0 ? (
+                    <div style={{ display: 'grid', gap: 8 }}>
+                      {selected.documents.map((d: any, i: number) => (
+                        <a
+                          key={i}
+                          href={d.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            background: C.surface,
+                            padding: '10px 14px',
+                            borderRadius: 10,
+                            border: `1px solid ${C.border}`,
+                            color: C.blueLight,
+                            fontSize: 13,
+                            textDecoration: 'none',
+                            transition: 'border-color 0.15s ease',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <DescriptionRounded sx={{ fontSize: 18, color: '#34d399' }} />
+                            <span style={{ color: C.text, fontWeight: 600 }}>{d.name || `Document ${i + 1}`}</span>
+                          </div>
+                          <OpenInNewRounded sx={{ fontSize: 16, color: C.textMuted }} />
+                        </a>
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ margin: 0, fontSize: 12, color: C.textMuted }}>
+                      No legal/valuation documents attached for this vehicle.
+                    </p>
+                  )}
+                </div>
+
+                {/* Dealer Origin Card */}
+                <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 16, padding: 18 }}>
+                  <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 800, color: C.text, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Originating Dealer
+                  </h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 13 }}>
+                    <div>
+                      <span style={specKey}>Dealership / Business</span>
+                      <strong style={{ color: C.text, display: 'block', marginTop: 2 }}>{selected.dealerCompany || 'Independent'}</strong>
+                    </div>
+                    <div>
+                      <span style={specKey}>Contact Person</span>
+                      <strong style={{ color: C.text, display: 'block', marginTop: 2 }}>{selected.dealerName || 'Direct'}</strong>
+                    </div>
+                    {selected.dealerPhone && (
+                      <div>
+                        <span style={specKey}>Phone</span>
+                        <a href={`tel:${selected.dealerPhone}`} style={{ color: C.blueLight, display: 'block', marginTop: 2, textDecoration: 'none', fontWeight: 600 }}>
+                          {selected.dealerPhone}
+                        </a>
+                      </div>
+                    )}
+                    {selected.dealerEmail && (
+                      <div>
+                        <span style={specKey}>Email</span>
+                        <a href={`mailto:${selected.dealerEmail}`} style={{ color: C.blueLight, display: 'block', marginTop: 2, textDecoration: 'none', fontWeight: 600 }}>
+                          {selected.dealerEmail}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Pricing, Financing & Marketplace Actions */}
+              <div style={{ display: 'grid', gap: 20, alignContent: 'start' }}>
+                {/* Financial Overview Card */}
+                <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 16, padding: 20 }}>
+                  <h3 style={{ margin: '0 0 16px', fontSize: 14, fontWeight: 800, color: C.text, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Financial Settlement & Pricing
+                  </h3>
+
+                  {/* Dealer Asking Box */}
+                  <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 16px', marginBottom: 14 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase' }}>
+                      Dealer Settlement Asking (Private)
+                    </span>
+                    <p style={{ margin: '2px 0 0', fontSize: 24, fontWeight: 900, color: C.text }}>
+                      GH₵ {Number(selected.dealerPrice || 0).toLocaleString()}
+                    </p>
+                  </div>
+
+                  {selected.status !== 'Sold' ? (
+                    <div style={{ display: 'grid', gap: 14 }}>
+                      {/* Markup Input */}
+                      <div>
+                        <label style={label}>
+                          ResolveBridge Markup (GH₵)
+                          <input
+                            type="number"
+                            min={0}
+                            value={markup}
+                            onChange={(e) => setMarkup(e.target.value)}
+                            placeholder="e.g. 15000"
+                            style={field}
+                          />
+                        </label>
+                        <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                          {[5000, 10000, 15000, 20000].map((quick) => (
+                            <button
+                              key={quick}
+                              type="button"
+                              onClick={() => setMarkup(String(quick))}
+                              style={{
+                                background: markup === String(quick) ? C.bluePale : 'rgba(255,255,255,0.04)',
+                                color: markup === String(quick) ? C.blueLight : C.textSub,
+                                border: `1px solid ${markup === String(quick) ? C.blue + '50' : C.border}`,
+                                borderRadius: 6,
+                                padding: '3px 8px',
+                                fontSize: 11,
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              +GH₵ {quick / 1000}k
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Final Listing Price Highlight Box */}
+                      <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: 12, padding: '14px 16px' }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#34d399', textTransform: 'uppercase' }}>
+                          Final ResolveBridge Customer Listing Price
+                        </span>
+                        <p style={{ margin: '2px 0 0', fontSize: 26, fontWeight: 900, color: '#10b981' }}>
+                          GH₵ {customerPrice.toLocaleString()}
+                        </p>
+                      </div>
+
+                      {/* Lender Selection */}
+                      <div>
+                        <label style={label}>
+                          Recommended Lending Institution <span style={{ color: '#ef4444' }}>*</span>
+                          <select
+                            value={institutionId}
+                            onChange={(e) => setInstitutionId(e.target.value)}
+                            style={field}
+                          >
+                            <option value="">Select financing partner…</option>
+                            {lenders.map((i: any) => (
+                              <option key={i._id} value={i._id}>
+                                {i.name} ({i.type})
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <p style={{ margin: '4px 0 0', fontSize: 11, color: C.textMuted }}>
+                          This lender will be pre-attached to the vehicle on the client marketplace.
+                        </p>
+                      </div>
+
+                      {/* Minimum Down Payment % */}
+                      <div>
+                        <label style={label}>
+                          Minimum Down Payment %
+                          <input
+                            type="number"
+                            min={10}
+                            max={90}
+                            value={minDown}
+                            onChange={(e) => setMinDown(e.target.value)}
+                            style={field}
+                          />
+                        </label>
+                      </div>
+
+                      {/* Auto-BNPL Projection Breakdown */}
+                      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, display: 'grid', gap: 6, fontSize: 12 }}>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: C.textSub, textTransform: 'uppercase' }}>
+                          Client Auto-BNPL Projection
+                        </span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', color: C.textSub }}>
+                          <span>Down Payment ({minDown}%):</span>
+                          <strong style={{ color: C.text }}>GH₵ {downPaymentAmount.toLocaleString()}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', color: C.textSub }}>
+                          <span>Financed Balance:</span>
+                          <strong style={{ color: C.text }}>GH₵ {Math.max(0, customerPrice - downPaymentAmount).toLocaleString()}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', color: C.textSub }}>
+                          <span>Est. Monthly (36 mos @ 16% APR):</span>
+                          <strong style={{ color: '#34d399' }}>GH₵ {estMonthly36.toLocaleString()}/mo</strong>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div style={{ display: 'grid', gap: 10, marginTop: 8 }}>
+                        <button
+                          type="button"
+                          onClick={handleList}
+                          disabled={verifying || !institutionId}
+                          style={{
+                            ...primaryBtn,
+                            padding: '14px 20px',
+                            fontSize: 14,
+                            opacity: verifying || !institutionId ? 0.5 : 1,
+                            cursor: verifying || !institutionId ? 'not-allowed' : 'pointer',
+                          }}
+                        >
+                          {verifying ? 'Verifying & Listing…' : 'Verify & List on Marketplace'}
+                        </button>
+
+                        {selected.status === 'Reserved' && (
+                          <button
+                            type="button"
+                            onClick={handleRelease}
+                            disabled={releasing}
+                            style={{ ...ghostBtn, borderColor: C.blue }}
+                          >
+                            {releasing ? 'Releasing…' : 'Release Reservation'}
+                          </button>
+                        )}
+
+                        {selected.status === 'PendingReview' && (
+                          <button
+                            type="button"
+                            onClick={handleReject}
+                            disabled={verifying}
+                            style={{
+                              ...ghostBtn,
+                              color: '#f87171',
+                              borderColor: 'rgba(239,68,68,0.3)',
+                            }}
+                          >
+                            Reject Vehicle Submission
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <p style={{ margin: 0, color: C.textMuted, fontSize: 13 }}>
+                      This vehicle has been marked as <strong>Sold</strong>.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </DialogContent>
         )}
-      </Drawer>
+      </Dialog>
     </AdminShell>
   );
 }
@@ -1175,5 +1490,28 @@ const metricLabel: CSSProperties = {
 const metricVal: CSSProperties = {
   fontSize: 16,
   fontWeight: 800,
+  color: C.text,
+};
+
+const specItem: CSSProperties = {
+  background: C.surface,
+  padding: '10px 12px',
+  borderRadius: 10,
+  border: `1px solid ${C.border}`,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 3,
+};
+
+const specKey: CSSProperties = {
+  fontSize: 10,
+  fontWeight: 700,
+  color: C.textMuted,
+  textTransform: 'uppercase',
+  letterSpacing: '0.03em',
+};
+
+const specVal: CSSProperties = {
+  fontSize: 13,
   color: C.text,
 };
