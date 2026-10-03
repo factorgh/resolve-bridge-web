@@ -2024,6 +2024,27 @@ export default function AdminBillingPage() {
                     outline: "none",
                   }}
                 />
+                <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                  {[80000, 100000, 120000].map((fee) => (
+                    <button
+                      key={fee}
+                      type="button"
+                      onClick={() => setNewFee(fee)}
+                      style={{
+                        background: newFee === fee ? C.bluePale : "rgba(255,255,255,0.04)",
+                        color: newFee === fee ? C.blueLight : C.textSub,
+                        border: `1px solid ${newFee === fee ? C.blue + "50" : C.border}`,
+                        borderRadius: 8,
+                        padding: "4px 10px",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      GH₵ {fee.toLocaleString()} {fee === 80000 ? "(Standard)" : ""}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div>
