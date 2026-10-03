@@ -33,7 +33,10 @@ export default function LoginPage() {
       
       const adminRoles = ['Admin', 'SuperAdmin', 'InstitutionAdmin', 'InsuranceAdmin', 'BNPLAdmin', 'Insurance', 'BNPL', 'InstitutionStaff', 'InsuranceStaff', 'BNPLStaff'];
       const next = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('next') : null;
-      if (adminRoles.includes(response.data.user.role)) {
+      if (response.data?.user?.isSubscriptionOverdue) {
+        // Direct overdue institutions straight to their billing console
+        router.push('/admin/billing');
+      } else if (adminRoles.includes(response.data?.user?.role)) {
         router.push('/admin');
       } else if (next && next.startsWith('/') && !next.startsWith('//')) {
         router.push(next);

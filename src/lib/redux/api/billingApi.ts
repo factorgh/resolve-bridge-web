@@ -194,6 +194,28 @@ export const billingApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Billing", "Institution"],
     }),
+    getMySubscriptionStatus: builder.query<
+      {
+        success: boolean;
+        data: {
+          institutionId?: string;
+          institutionName?: string;
+          subscriptionFee?: number;
+          billingCycle?: string;
+          billingStatus?: string;
+          nextBillingDate?: string;
+          isOverdue: boolean;
+          overdueInvoicesCount?: number;
+          overdueInvoices?: BillingInvoice[];
+          isPlatformAdmin?: boolean;
+          hasInstitution?: boolean;
+        };
+      },
+      void
+    >({
+      query: () => "/Billing/my-status",
+      providesTags: ["Billing", "Institution"],
+    }),
   }),
   overrideExisting: true,
 });
@@ -212,4 +234,5 @@ export const {
   useInitializeInvoicePaymentMutation,
   useTriggerBillingRunMutation,
   useTriggerSubscriptionDueRemindersMutation,
+  useGetMySubscriptionStatusQuery,
 } = billingApi;

@@ -29,11 +29,14 @@ import {
   NotificationsActiveRounded,
   DoneAllRounded,
   DirectionsCarRounded,
+  WarningRounded,
+  PaymentRounded,
 } from "@mui/icons-material";
 import {
   useGetNotificationsQuery,
   useMarkNotificationReadMutation,
 } from "../../../lib/redux/api/notificationApi";
+import { useGetMySubscriptionStatusQuery } from "../../../lib/redux/api/billingApi";
 
 /* ─── Premium Admin Design Tokens ────────────────────────────────────────── */
 export const C = {
@@ -264,6 +267,23 @@ export default function AdminShell({
   const notifications = notificationPayload?.data || [];
   const unreadCount = notifications.filter((item) => !item.isRead).length;
 
+  const { data: mySubStatusPayload } = useGetMySubscriptionStatusQuery(undefined, {
+    pollingInterval: 30000,
+  });
+
+  const isOverdue = Boolean(
+    (mySubStatusPayload?.data?.isOverdue ?? user?.isSubscriptionOverdue) &&
+    user?.role !== "SuperAdmin" &&
+    user?.role !== "Admin"
+  );
+
+  // Overdue subscription enforcement: If subscription is unpaid & overdue, lock to billing console
+  useEffect(() => {
+    if (ready && isOverdue && pathname !== "/admin/billing") {
+      router.replace("/admin/billing");
+    }
+  }, [ready, isOverdue, pathname, router]);
+
   const handleMarkAllRead = async () => {
     const unread = notifications.filter((n: any) => !n.isRead);
     try {
@@ -339,6 +359,11 @@ export default function AdminShell({
     // SuperAdmin oversees everything
     if (user.role === "SuperAdmin") {
       return true;
+    }
+
+    // Overdue Subscription Lockdown: When payment is overdue, ONLY show Billing Console
+    if (isOverdue) {
+      return n.id === "billing";
     }
 
     // Platform Admin handles daily operations (no billing, compliance audit logs, or analytics)
@@ -1677,6 +1702,90 @@ export default function AdminShell({
             flexDirection: "column",
           }}
         >
+          {isOverdue && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(239, 68, 68, 0.16) 0%, rgba(185, 28, 28, 0.22) 100%)",
+                border: "1px solid rgba(239, 68, 68, 0.45)",
+                borderRadius: 14,
+                padding: "16px 20px",
+                marginBottom: 28,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 16,
+                flexWrap: "wrap",
+                boxShadow: "0 8px 24px rgba(239, 68, 68, 0.15)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <div
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 10,
+                    background: "rgba(239, 68, 68, 0.25)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#ef4444",
+                    flexShrink: 0,
+                  }}
+                >
+                  <WarningRounded sx={{ fontSize: 24 }} />
+                </div>
+                <div>
+                  <div
+                    style={{
+                      fontWeight: 800,
+                      fontSize: 13.5,
+                      color: "#fecaca",
+                      letterSpacing: "0.02em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Subscription Overdue — Console Access Only
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 12.5,
+                      color: "rgba(255,255,255,0.88)",
+                      marginTop: 2,
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    Your monthly institutional platform subscription payment has
+                    not been completed and is overdue. Underwriting, KYC vaults,
+                    and partner desk operations are locked until your invoice is
+                    settled.
+                  </div>
+                </div>
+              </div>
+              {pathname !== "/admin/billing" && (
+                <Link
+                  href="/admin/billing"
+                  style={{
+                    background: "#ef4444",
+                    color: "#fff",
+                    fontWeight: 800,
+                    fontSize: 12,
+                    padding: "10px 18px",
+                    borderRadius: 10,
+                    textDecoration: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    boxShadow: "0 4px 12px rgba(239, 68, 68, 0.3)",
+                  }}
+                >
+                  <PaymentRounded sx={{ fontSize: 16 }} /> Settle Invoice Now
+                </Link>
+              )}
+            </motion.div>
+          )}
           {children}
         </div>
       </main>
