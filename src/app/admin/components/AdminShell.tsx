@@ -578,39 +578,75 @@ export default function AdminShell({
             borderRight: `1px solid ${C.border}`,
           }}
         >
-          <div
+          <Link
+            href="/admin"
             style={{
-              padding: "24px 20px",
+              padding: "22px 20px 20px",
               display: "flex",
               alignItems: "center",
               gap: 12,
+              textDecoration: "none",
+              borderBottom: `1px solid ${C.border}`,
             }}
           >
             <div
               style={{
-                background: "#fff",
-                padding: 5,
-                borderRadius: 8,
+                background: "rgba(255, 255, 255, 0.08)",
+                border: "1px solid rgba(255, 255, 255, 0.14)",
+                padding: 4,
+                borderRadius: 10,
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "center",
+                width: 36,
+                height: 36,
+                boxShadow: "0 3px 10px rgba(0,0,0,0.2)",
+                flexShrink: 0,
               }}
             >
-              <img src="/resolve_icon.png" style={{ height: 22 }} />
+              <img
+                src="/images/resolve_logo.png"
+                alt="ResolveBridge"
+                style={{
+                  height: 26,
+                  width: 26,
+                  objectFit: "contain",
+                  filter: "brightness(1.15)",
+                }}
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = "/resolve_icon.png";
+                }}
+              />
             </div>
             {!collapsed && (
-              <span
-                style={{
-                  fontWeight: 800,
-                  color: "#fff",
-                  fontSize: 16,
-                  fontFamily: F.heading,
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                ResolveAdmin
-              </span>
+              <div style={{ minWidth: 0 }}>
+                <span
+                  style={{
+                    fontWeight: 800,
+                    color: "#fff",
+                    fontSize: 15,
+                    fontFamily: F.heading,
+                    letterSpacing: "-0.02em",
+                    display: "block",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  ResolveBridge
+                </span>
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: "rgba(255,255,255,0.5)",
+                    fontWeight: 500,
+                    display: "block",
+                    marginTop: 2,
+                  }}
+                >
+                  Institutional Console
+                </span>
+              </div>
             )}
-          </div>
+          </Link>
 
           <div style={{ flex: 1, padding: "10px", overflowY: "auto" }}>
             {visibleNav.map((n) => {
