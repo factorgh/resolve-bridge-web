@@ -147,19 +147,23 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
       {/* Desktop & Tablet Sticky Sidebar */}
       <aside className="portal-sidebar-desktop">
         {/* Brand Block */}
-        <div className="portal-sidebar-brand">
+        <Link href="/portal" className="portal-sidebar-brand" style={{ textDecoration: 'none' }}>
           <div className="portal-sidebar-logo">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f1a33" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 19V9a8 8 0 0 1 16 0v10" />
-              <line x1="2" y1="19" x2="22" y2="19" />
-              <line x1="12" y1="9" x2="12" y2="19" />
-            </svg>
+            <img
+              src="/images/resolve_logo.png"
+              alt="ResolveBridge"
+              className="portal-sidebar-logo-img"
+              onError={(e) => {
+                // Fallback to resolve_icon if resolve_logo is unavailable
+                (e.currentTarget as HTMLImageElement).src = '/resolve_icon.png';
+              }}
+            />
           </div>
           <div style={{ minWidth: 0 }}>
             <div className="portal-sidebar-brand-name">ResolveBridge</div>
             <div className="portal-sidebar-brand-sub">Personal finance portal</div>
           </div>
-        </div>
+        </Link>
 
         {/* Navigation Grouped */}
         <div className="portal-sidebar-nav">
@@ -223,15 +227,19 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
       {/* Mobile Horizontal Top Strip (< 800px) */}
       <div className="portal-sidebar-mobile">
         <div className="portal-sidebar-mobile-inner">
-          <div className="portal-sidebar-mobile-brand">
-            <div className="portal-sidebar-logo" style={{ width: 28, height: 28, borderRadius: 8 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0f1a33" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 19V9a8 8 0 0 1 16 0v10" />
-                <line x1="2" y1="19" x2="22" y2="19" />
-              </svg>
+          <Link href="/portal" className="portal-sidebar-mobile-brand" style={{ textDecoration: 'none' }}>
+            <div className="portal-sidebar-logo" style={{ width: 30, height: 30, borderRadius: 8, padding: 3 }}>
+              <img
+                src="/images/resolve_logo.png"
+                alt="ResolveBridge"
+                className="portal-sidebar-logo-img"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = '/resolve_icon.png';
+                }}
+              />
             </div>
-            <span style={{ color: '#fff', fontWeight: 700, fontSize: 13.5 }}>ResolveBridge</span>
-          </div>
+            <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>ResolveBridge</span>
+          </Link>
 
           <div className="portal-sidebar-mobile-nav">
             {SIDEBAR_NAV_GROUPS.flatMap((g) => g.items).map((item) => {
@@ -289,21 +297,35 @@ export default function Sidebar({ user, onLogout }: SidebarProps) {
         .portal-sidebar-brand {
           padding: 20px 20px 18px;
           display: flex;
-          alignItems: center;
+          align-items: center;
           gap: 12px;
           border-bottom: 1px solid var(--sidebar-divider);
+          transition: background 150ms ease;
+        }
+        .portal-sidebar-brand:hover {
+          background: rgba(255, 255, 255, 0.02);
         }
 
         .portal-sidebar-logo {
-          width: 34px;
-          height: 34px;
+          width: 36px;
+          height: 36px;
           border-radius: 10px;
-          background: linear-gradient(135deg, #c9a24b, #e8cf8e);
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.14);
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+          box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+          overflow: hidden;
+          padding: 4px;
+        }
+
+        .portal-sidebar-logo-img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          filter: brightness(1.15) contrast(1.1);
         }
 
         .portal-sidebar-brand-name {
